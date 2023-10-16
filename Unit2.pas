@@ -1468,8 +1468,6 @@ begin
   if AppConfiguration.getValue('TMDb API Key') <> nil
   then edTMDbAPI.Text := (AppConfiguration.getValue('TMDb API Key') as TJSONString).Value;
 
-  mmInfo.Lines.Add('');
-
 
   // Default XData UpdateGUI call
   UpdateGUI;
