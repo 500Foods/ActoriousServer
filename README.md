@@ -1,5 +1,5 @@
 # ActoriousServer
-TMS XData app that implements the REST API 
+TMS XData app that implements the REST API that serves as the backend of the Actorious website.  This, essentially, builds out a cache of all of the Actorious data from its original sources at WikiData and The Movie Database.
 
 ## Repository Information
 [![Count Lines of Code](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml)
