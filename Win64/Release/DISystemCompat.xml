@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<namespace name="DISystemCompat" platform="Win64">
+  <array name="TPAnsiCharArray" low="0" high="268435454">
+    <element type="PAnsiChar" />
+  </array>
+  <pointer name="PPAnsiCharArray" type="TPAnsiCharArray" indircnt="1" />
+  <pointer name="PPPAnsiCharArray" type="PPAnsiCharArray" indircnt="1" />
+  <pointer name="PUtf8Char" alias="System.PAnsiChar" type="AnsiChar" indircnt="1" file="System.pas" line="12" />
+  <pointer name="PPUtf8Char" type="PAnsiChar" indircnt="1" />
+  <array name="TPUtf8CharArray" low="0" high="268435454">
+    <element type="PAnsiChar" />
+  </array>
+  <pointer name="PPUtf8CharArray" type="TPUtf8CharArray" indircnt="1" />
+  <pointer name="PPPUtf8CharArray" type="PPUtf8CharArray" indircnt="1" />
+</namespace>
