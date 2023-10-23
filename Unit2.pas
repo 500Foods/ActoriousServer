@@ -85,6 +85,7 @@ type
     mmStats: TMemo;
     btClean: TButton;
     ckRegenerate: TCheckBox;
+    btRedoc: TButton;
     procedure GetAppVersionString;
     procedure LogException(Source: String; EClass: String; EMessage: String; Data: String);
     procedure btStartClick(ASender: TObject);
@@ -120,6 +121,7 @@ type
     procedure btInternalClick(Sender: TObject);
     procedure tmrProgressTimer(Sender: TObject);
     procedure btCleanClick(Sender: TObject);
+    procedure btRedocClick(Sender: TObject);
   public
     Progress: TStringList;
     WaitingMessage: String;
@@ -582,6 +584,16 @@ begin
   end;
 
   mmStats.Lines.EndUpdate;
+end;
+
+procedure TMainForm.btRedocClick(Sender: TObject);
+var
+  URL: String;
+begin
+  if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
+  then URL := 'http://localhost:2001/tms/xdata/redoc'
+  else URL := 'https://carnival.500foods.com:10999/tms/xdata/redoc';
+  ShellExecute(0, 'open', PChar(URL), nil, nil, SW_SHOWNORMAL);
 end;
 
 procedure TMainForm.btStartClick(ASender: TObject);

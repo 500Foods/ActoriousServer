@@ -358,8 +358,8 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object ProgressDetail: TLabel
-      Left = 10
-      Top = 83
+      Left = 142
+      Top = 81
       Width = 199
       Height = 25
       AutoSize = False
@@ -613,6 +613,16 @@ object MainForm: TMainForm
       Checked = True
       State = cbChecked
       TabOrder = 21
+    end
+    object btRedoc: TButton
+      Left = 8
+      Top = 83
+      Width = 64
+      Height = 25
+      Caption = 'Redoc'
+      TabOrder = 22
+      WordWrap = True
+      OnClick = btRedocClick
     end
   end
   object sparqlRelatives: TMemo
