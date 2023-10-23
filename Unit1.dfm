@@ -4,7 +4,7 @@ object ServerContainer: TServerContainer
   Height = 210
   Width = 431
   object XDataServer: TXDataServer
-    BaseUrl = 'https://+:10999/tms/xdata'
+    BaseUrl = 'https://+:10999/actorious'
     Dispatcher = SparkleHttpSysDispatcher
     Pool = XDataConnectionPool
     ModelName = 'Actorious'

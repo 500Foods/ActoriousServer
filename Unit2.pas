@@ -38,11 +38,10 @@ uses
   Vcl.WinXPickers,
   Vcl.ComCtrls,
 
-  Unit1, Vcl.Imaging.pngimage;
+  Unit1, Vcl.Imaging.pngimage, AdvMemo;
 
 type
   TMainForm = class(TForm)
-    mmInfo: TMemo;
     sparqlBirthDays: TMemo;
     CacheTimer: TTimer;
     StartTimer: TTimer;
@@ -76,7 +75,6 @@ type
     tmrTopUpdate: TTimer;
     Image1: TImage;
     sparqlRelatives: TMemo;
-    NetHTTPClient1: TNetHTTPClient;
     tmrWaiting: TTimer;
     btInternal: TButton;
     tmrProgress: TTimer;
@@ -86,8 +84,9 @@ type
     btClean: TButton;
     ckRegenerate: TCheckBox;
     btRedoc: TButton;
+    Shape1: TShape;
+    mmInfo: TAdvMemo;
     procedure GetAppVersionString;
-    procedure LogException(Source: String; EClass: String; EMessage: String; Data: String);
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
     procedure FormCreate(ASender: TObject);
@@ -122,6 +121,9 @@ type
     procedure tmrProgressTimer(Sender: TObject);
     procedure btCleanClick(Sender: TObject);
     procedure btRedocClick(Sender: TObject);
+    procedure LogEvent(Details: String);
+    procedure LogException(Source: String; EClass: String; EMessage: String; Data: String);
+
   public
     Progress: TStringList;
     WaitingMessage: String;
@@ -153,6 +155,12 @@ type
     CleanFiles: Integer;
 
     AppConfiguration: TJSONObject;
+    AppBaseURL: String;
+    AppURL: String;
+    AppSwagger: String;
+    AppRedoc: String;
+    AppHAURL: String;
+    AppHAToken: String;
 
   strict private
     procedure UpdateGUI;
@@ -162,9 +170,11 @@ type
   private
     local_Description: String;
     local_CacheFile: String;
+    local_URL: String;
   public
     property Description: String read local_Description write local_Description;
     property CacheFile: String read local_CacheFile write local_CacheFile;
+    property URL: String read local_URL write local_URL;
   end;
 
 
@@ -206,15 +216,12 @@ var
   URL: String;
   Client: TFancyNetHTTPClient;
 begin
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Regenerating Top1000 Data');
+  LogEvent('');
+  LogEvent('Regenerating Top1000 Data');
   CurrentProgress.Caption := 'ManReGenTop1000: '+TGUID.NewGUID.ToString;
   CacheTimer.Enabled := False;
 
-  // Change URL of server depending on machine it is running on
-  if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-  then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/TopOneThousand'
-  else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/TopOneThousand';
+  URL := AppURL+'/ActorInfoService/TopOneThousand';
 
   // Setup the Request
   URL := URL+'?Secret='+edSecret.Text;
@@ -227,14 +234,16 @@ begin
   Client.Asynchronous := True;
   Client.ConnectionTimeout := 3600000;  // 1 hour
   Client.ResponseTimeout :=   3600000;  // 1 hour
-  Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
   Client.onRequestCompleted := ManualRequestCompleted;
   Client.onRequestError := ManualRequestError;
+  Client.URL := TidURI.URLEncode(URL);
+  if Pos('https', URL) > 0
+  then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
   try
-    Client.Get(TidURI.URLEncode(URL));
+    Client.Get(Client.URL);
    except on E: Exception do
      begin
-       mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+       LogException('Regen Top1000', E.ClassName, E.Message, Client.URL);
      end;
    end;
 end;
@@ -244,15 +253,12 @@ var
   URL: String;
   Client: TFancyNetHTTPClient;
 begin
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Regenerating Top5000 Data');
+  LogEvent('');
+  LogEvent('Regenerating Top5000 Data');
   CurrentProgress.Caption := 'ManReGenTop5000: '+TGUID.NewGUID.ToString;
   CacheTimer.Enabled := False;
 
-  // Change URL of server depending on machine it is running on
-  if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-  then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/TopFiveThousand'
-  else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/TopFiveThousand';
+  URL := AppURL+'/ActorInfoService/TopFiveThousand';
 
   // Setup the Request
   URL := URL+'?Secret='+edSecret.Text;
@@ -265,14 +271,16 @@ begin
   client.Asynchronous := True;
   Client.ConnectionTimeout := 3600000; // 1 hour
   Client.ResponseTimeout :=   3600000; // 1 hour
-  Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
   Client.onRequestCompleted := ManualRequestCompleted;
   Client.onRequestError := ManualRequestError;
+  Client.URL := TidURI.URLEncode(URL);
+  if Pos('https', URL) > 0
+  then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
   try
-    Client.Get(TidURI.URLEncode(URL));
+    Client.Get(Client.URL);
    except on E: Exception do
      begin
-       mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+       LogException('Regen Top5000', E.ClassName, E.Message, Client.URL);
      end;
    end;
 end;
@@ -293,7 +301,7 @@ begin
     Response := Client.Get(TidURI.URLEncode(URL)).ContentAsString;
   except on E: Exception do
     begin
-      mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+      LogEvent(E.ClassName+': '+E.Message);
     end;
   end;
 
@@ -307,8 +315,7 @@ begin
     if (edtClientVersion.Text <> NewVersion) then
     begin
       edtClientVersion.Text := NewVersion;
-      mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-      mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Actorious Client Version Updated: '+NewVersion);
+      LogEvent('- Actorious Client Version Updated: '+NewVersion);
     end;
   end;
 
@@ -332,66 +339,71 @@ begin
 
   // Decide if you're going to use a Home Assistant Internal vs. External URL
   // And that they might differ in whether SSL is used
-  URL := 'https://pintura.500foods.com';
-//  URL := 'http://192.168.0.238:8123';
-  Token := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIwYjU4ODUwYWU3Y2Y0YWI3OWM2MWRjOTA0MGZkOTFiNSIsImlhdCI6MTY3MzI5NzI3NCwiZXhwIjoxOTg4NjU3Mjc0fQ.sAq_Y5nAz00okuxdD-EV9o1zyr4cSBbT94nMVoPxpsI';
+  URL := AppHAURL;
+  Token := AppHAToken;
 
-  // Setup the Main Request
-  Client := TNetHTTPClient.Create(nil);
-  Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
-  Client.ContentType := 'application/json';
-  Client.CustomHeaders['Authorization'] := 'Bearer '+Token;
+  if AppHAURL <> '' then
+  begin
 
-  try
+    // Setup the Main Request
+    Client := TNetHTTPClient.Create(nil);
+    if Pos('https', URL) > 0
+    then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+    Client.ContentType := 'application/json';
+    Client.CustomHeaders['Authorization'] := 'Bearer '+Token;
 
-    Endpoint := '/api/states/sensor.actorious_server_start';
-    Data := TStringStream.Create('{"state": "'+FormatDateTime('mmm dd (ddd) hh:nn', ElapsedTime)+'" }');
-    Response := Client.Post(URL+Endpoint, Data).ContentAsString;
-    if Pos('"entity_id"', Response) = 0 then mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz', ElapsedTime)+'  '+Response);
-    Data.Free();
+    try
 
-    Endpoint := '/api/states/sensor.actorious_server_runtime';
-    Data := TStringStream.Create('{"state": "'+IntToStr(DaysBetween(Now, ElapsedTime))+'d '+FormatDateTime('h"h "n"m"', Now-ElapsedTime)+'" }');
-    Response := Client.Post(URL+Endpoint, Data).ContentAsString;
-    if Pos('"entity_id"', Response) = 0 then mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz', ElapsedTime)+'  '+Response);
-    Data.Free();
+      Endpoint := '/api/states/sensor.actorious_server_start';
+      Data := TStringStream.Create('{"state": "'+FormatDateTime('mmm dd (ddd) hh:nn', ElapsedTime)+'" }');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
 
-    Endpoint := '/api/states/sensor.actorious_server_version';
-    Data := TStringStream.Create('{"state": "'+AppVersion+'" }');
-    Response := Client.Post(URL+Endpoint, Data).ContentAsString;
-    if Pos('"entity_id"', Response) = 0 then mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+Response);
-    Data.Free();
+      Endpoint := '/api/states/sensor.actorious_server_runtime';
+      Data := TStringStream.Create('{"state": "'+IntToStr(DaysBetween(Now, ElapsedTime))+'d '+FormatDateTime('h"h "n"m"', Now-ElapsedTime)+'" }');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
 
-    Endpoint := '/api/states/sensor.actorious_server_release';
-    Data := TStringStream.Create('{"state": "'+AppRelease+'" }');
-    Response := Client.Post(URL+Endpoint, Data).ContentAsString;
-    if Pos('"entity_id"', Response) = 0 then mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+Response);
-    Data.Free();
+      Endpoint := '/api/states/sensor.actorious_server_version';
+      Data := TStringStream.Create('{"state": "'+AppVersion+'" }');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
 
-    Endpoint := '/api/states/sensor.actorious_server_memory';
-    Data := TStringStream.Create('{"state":'+MemoryUsage+', "attributes":{"unit_of_measurement":"MB"}}');
-    Response := Client.Post(URL+Endpoint, Data).ContentAsString;
-    if Pos('"entity_id"', Response) = 0 then mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+Response);
-    Data.Free();
+      Endpoint := '/api/states/sensor.actorious_server_release';
+      Data := TStringStream.Create('{"state": "'+AppRelease+'" }');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
 
-    Endpoint := '/api/states/sensor.actorious_server_memory_nice';
-    Data := TStringStream.Create('{"state":"'+MemoryUsageNice+'", "attributes":{"unit_of_measurement":"MB"}}');
-    Response := Client.Post(URL+Endpoint, Data).ContentAsString;
-    if Pos('"entity_id"', Response) = 0 then mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+Response);
-    Data.Free();
+      Endpoint := '/api/states/sensor.actorious_server_memory';
+      Data := TStringStream.Create('{"state":'+MemoryUsage+', "attributes":{"unit_of_measurement":"MB"}}');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
 
-    Endpoint := '/api/states/sensor.actorious_server_working_date';
-    Data := TStringStream.Create('{"state":"'+ProgMonth.text+' '+ProgDay.Text+'"}');
-    Response := Client.Post(URL+Endpoint, Data).ContentAsString;
-    if Pos('"entity_id"', Response) = 0 then mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+Response);
-    Data.Free();
+      Endpoint := '/api/states/sensor.actorious_server_memory_nice';
+      Data := TStringStream.Create('{"state":"'+MemoryUsageNice+'", "attributes":{"unit_of_measurement":"MB"}}');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
 
-    Client.Free;
+      Endpoint := '/api/states/sensor.actorious_server_working_date';
+      Data := TStringStream.Create('{"state":"'+ProgMonth.text+' '+ProgDay.Text+'"}');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+       Data.Free();
 
-  except on E: Exception do
-    begin
-      mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+      Client.Free;
+
+    except on E: Exception do
+      begin
+        LogEvent(E.ClassName+': '+E.Message);
+      end;
     end;
+
   end;
 
 end;
@@ -405,12 +417,12 @@ var
   d3: String;
 begin
   // What are the last 20 progress items recorded?
-  if Progress.Count > 0 then
-  begin
+//  if Progress.Count > 0 then
+//  begin
     mmInfo.DisableAlign;
     mmInfo.Lines.BeginUpdate;
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  ______________________________________________________');
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  EXTERNAL PROGRESS INFORMATION');
+    LogEvent('______________________________________________________');
+    LogEvent('EXTERNAL PROGRESS INFORMATION');
 
     // What are the last 50 progress items recorded?
     for i := Progress.Count -1 downto 0 do
@@ -430,7 +442,7 @@ begin
           if (d.getValue('DT') <> nil)
           then d3 := D3 +'DT:'+(d.getValue('DT') as TJSONString).Value.PadLeft(6)+'  ';
 
-          mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'    '+
+          LogEvent(
             d1+'  '+
             d2+'  '+
             (d.getValue('IP') as TJSONString).Value.PadRight(17)+
@@ -442,16 +454,17 @@ begin
         d.Free;
       except on E: Exception do
         begin
-          mmInfo.Lines.Add(Progress[i]);
+          LogEvent(Progress[i]);
         end;
       end;
     end;
 
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
+    LogEvent('');
     mmInfo.Lines.EndUpdate;
     mmInfo.EnableAlign;
-  end;
-  SendMessage(mmInfo.Handle, EM_LINESCROLL, 0, mmInfo.Lines.Count);
+//  end;
+  mmInfo.scrolltoBottom;
+  mmInfo.Repaint;
 end;
 
 procedure TMainForm.btRecentProgressClick(Sender: TObject);
@@ -590,9 +603,7 @@ procedure TMainForm.btRedocClick(Sender: TObject);
 var
   URL: String;
 begin
-  if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-  then URL := 'http://localhost:2001/tms/xdata/redoc'
-  else URL := 'https://carnival.500foods.com:10999/tms/xdata/redoc';
+  URL := AppRedoc;
   ShellExecute(0, 'open', PChar(URL), nil, nil, SW_SHOWNORMAL);
 end;
 
@@ -612,9 +623,7 @@ procedure TMainForm.btSwaggerClick(Sender: TObject);
 var
   URL: String;
 begin
-  if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-  then URL := 'http://localhost:2001/tms/xdata/swaggerui'
-  else URL := 'https://carnival.500foods.com:10999/tms/xdata/swaggerui';
+  URL := AppSwagger;
   ShellExecute(0, 'open', PChar(URL), nil, nil, SW_SHOWNORMAL);
 end;
 
@@ -692,11 +701,19 @@ begin
     end;
 end;
 
+procedure TMainForm.LogEvent(Details: String);
+begin
+  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz', Now)+'  '+Details);
+  mminfo.ScrollToBottom;
+end;
+
 procedure TMainForm.LogException(Source, EClass, EMessage, Data: String);
 begin
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  EXCEPTION in '+Source+':');
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  [ '+EClass+' ] '+EMessage);
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  [ Data ] '+Data);
+  LogEvent('');
+  LogEvent('[ EXCEPTION ] '+Source);
+  LogEvent('[ '+EClass+' ] '+EMessage);
+  LogEvent('[ Data ] '+Data);
+  LogEvent('');
 end;
 
 procedure TMainForm.btCleanClick(Sender: TObject);
@@ -746,14 +763,14 @@ begin
   CleanSize := 0;
   CleanFiles := 0;
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Cache Clean Started');
+  LogEvent('');
+  LogEvent('Cache Clean Started');
 
   // Cleaning anything older than 10 days
   OlderThan := Now() - 10;
 
   // Days
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning Days');
+  LogEvent('- Cleaning Days');
   CacheDir := 'cache\days\actorious-births';
   CleanDays := CleanDays + CleanDir;
   CacheDir := 'cache\days\actorious-deaths';
@@ -771,14 +788,14 @@ begin
   btRecentProgressClick(nil);
 
   // People
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning People/Top');
+  LogEvent('- Cleaning People/Top');
   CacheDir := 'cache\people\top1000';
   CleanPeople := CleanPeople + CleanDir;
   CacheDir := 'cache\people\top5000';
   CleanPeople := CleanPeople + CleanDir;
   btRecentProgressClick(nil);
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning People/Actorious');
+  LogEvent('- Cleaning People/Actorious');
   for i :=  0 to 999 do
   begin
     CacheDir := 'cache\people\actorious\'+RightStr('000'+IntToStr(i),3);
@@ -786,14 +803,14 @@ begin
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
       begin
-        mmInfo.Lines.Add('Exception?');
+        LogEvent('Exception?');
       end;
     end;
     Application.ProcessMessages;
     btRecentProgressClick(nil);
   end;
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning People/TMDb');
+  LogEvent('- Cleaning People/TMDb');
   for i :=  0 to 999 do
   begin
     CacheDir := 'cache\people\tmdb\'+RightStr('000'+IntToStr(i),3);
@@ -801,7 +818,7 @@ begin
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
       begin
-        mmInfo.Lines.Add('Exception?');
+        LogEvent('Exception?');
       end;
     end;
     Application.ProcessMessages;
@@ -810,14 +827,14 @@ begin
 
 
   // Movies
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning Movies/Top');
+  LogEvent('- Cleaning Movies/Top');
   CacheDir := 'cache\movies\top1000';
   CleanPeople := CleanPeople + CleanDir;
   CacheDir := 'cache\movies\top5000';
   CleanPeople := CleanPeople + CleanDir;
   btRecentProgressClick(nil);
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning Movies/Actorious');
+  LogEvent('- Cleaning Movies/Actorious');
   for i :=  0 to 999 do
   begin
     CacheDir := 'cache\movies\actorious\'+RightStr('000'+IntToStr(i),3);
@@ -825,14 +842,14 @@ begin
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
       begin
-        mmInfo.Lines.Add('Exception?');
+        LogEvent('Exception?');
       end;
     end;
     Application.ProcessMessages;
     btRecentProgressClick(nil);
   end;
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning Movies/TMDb');
+  LogEvent('- Cleaning Movies/TMDb');
   for i :=  0 to 999 do
   begin
     CacheDir := 'cache\movies\tmdb\'+RightStr('000'+IntToStr(i),3);
@@ -840,7 +857,7 @@ begin
       CleanMovies := CleanMovies + CleanDir;
     except on E: Exception do
       begin
-        mmInfo.Lines.Add('Exception?');
+        LogEvent('Exception?');
       end;
     end;
     Application.ProcessMessages;
@@ -849,14 +866,14 @@ begin
 
 
   // TV Shows
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning TVShows/Top');
+  LogEvent('- Cleaning TVShows/Top');
   CacheDir := 'cache\tvshows\top1000';
   Cleantvshows := Cleantvshows + CleanDir;
   CacheDir := 'cache\tvshows\top5000';
   Cleantvshows := Cleantvshows + CleanDir;
   btRecentProgressClick(nil);
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning TVShows/Actorious');
+  LogEvent('- Cleaning TVShows/Actorious');
   for i :=  0 to 999 do
   begin
     CacheDir := 'cache\tvshows\actorious\'+RightStr('000'+IntToStr(i),3);
@@ -864,14 +881,14 @@ begin
       CleanTVShows := CleanTVShows + CleanDir;
     except on E: Exception do
       begin
-        mmInfo.Lines.Add('Exception?');
+        LogEvent('Exception?');
       end;
     end;
     Application.ProcessMessages;
     btRecentProgressClick(nil);
   end;
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - Cleaning TVShows/TMDb');
+  LogEvent('- Cleaning TVShows/TMDb');
   for i :=  0 to 999 do
   begin
     CacheDir := 'cache\tvshows\tmdb\'+RightStr('000'+IntToStr(i),3);
@@ -879,14 +896,14 @@ begin
       Cleantvshows := Cleantvshows + CleanDir;
     except on E: Exception do
       begin
-        mmInfo.Lines.Add('Exception?');
+        LogEvent('Exception?');
       end;
     end;
     Application.ProcessMessages;
     btRecentProgressClick(nil);
   end;
 
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Cache Clean Completed: '+FloatToStrF(CleanFiles-CleanNum,ffNumber,8,0)+' Files, '+FloatToStrF((CleanSize - CleanData)/(1024*1024),ffNumber,8,0)+' MB ('+FormatDateTime('hh:nn:ss.zzz',Now-CleanTime)+')');
+  LogEvent('Cache Clean Completed: '+FloatToStrF(CleanFiles-CleanNum,ffNumber,8,0)+' Files, '+FloatToStrF((CleanSize - CleanData)/(1024*1024),ffNumber,8,0)+' MB ('+FormatDateTime('hh:nn:ss.zzz',Now-CleanTime)+')');
 
 end;
 
@@ -904,12 +921,12 @@ var
   d3: String;
 begin
   // What are the last 20 progress items recorded?
-  if Progress.Count > 0 then
-  begin
+//  if Progress.Count > 0 then
+//  begin
     mmInfo.DisableAlign;
     mmInfo.Lines.BeginUpdate;
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  ______________________________________________________');
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  INTERNAL PROGRESS INFORMATION');
+    LogEvent('______________________________________________________');
+    LogEvent('INTERNAL PROGRESS INFORMATION');
 
     // What are the last 50 progress items recorded?
     for i := Progress.Count -1 downto 0 do
@@ -929,7 +946,7 @@ begin
           if (d.getValue('DT') <> nil)
           then d3 := D3 +'DT:'+(d.getValue('DT') as TJSONString).Value.PadLeft(6)+'  ';
 
-          mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'    '+
+          LogEvent(
             d1+'  '+
             d2+'  '+
             (d.getValue('RQ') as TJSONString).Value.PadRight(16)+'  '+
@@ -940,16 +957,17 @@ begin
         d.Free;
       except on E: Exception do
         begin
-          mmInfo.Lines.Add(Progress[i]);
+          LogEvent(Progress[i]);
         end;
       end;
     end;
 
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
+    LogEvent('');
     mmInfo.Lines.EndUpdate;
     mmInfo.EnableAlign;
-  end;
-  SendMessage(mmInfo.Handle, EM_LINESCROLL, 0, mmInfo.Lines.Count);
+//  end;
+  mmInfo.scrolltoBottom;
+  mmInfo.Repaint;
 end;
 
 procedure TMainForm.CacheTimerTimer(Sender: TObject);
@@ -1075,21 +1093,15 @@ begin
       // Change URL of server depending on machine it is running on
       if (Pos('BirthDay',Update) > 0) then
       begin
-        if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-        then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/ActorBirthDay'
-        else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/ActorBirthDay';
+        URL := AppURL+'/ActorInfoService/ActorBirthDay';
       end
       else if (Pos('DeathDay',Update) > 0) then
       begin
-        if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-        then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/ActorDeathDay'
-        else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/ActorDeathDay';
+        URL := AppURL+'/ActorInfoService/ActorDeathDay';
       end
       else if (Pos('Releases',Update) > 0) then
       begin
-        if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-        then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/MovieReleaseDay'
-        else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/MovieReleaseDay';
+        URL := AppURL+'/ActorInfoService/MovieReleaseDay';
       end;
 
       // Setup the Request
@@ -1106,9 +1118,12 @@ begin
       Client.Asynchronous := True;
       Client.ConnectionTimeout := 1800000;  // 30 minutes
       Client.ResponseTimeout := 1800000;    // 30 minutes
-      Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
       Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
       Client.onRequestError := NetHTTPClient1RequestError;
+      Client.URL := TidURI.URLEncode(URL);
+
+      if Pos('https', URL) > 0
+      then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
 
       // Write out a file indicating something is being worked on
       Progress.SaveToFile(Client.CacheFile+'.working');
@@ -1117,7 +1132,7 @@ begin
         Client.Get(TidURI.URLEncode(URL));
       except on E: Exception do
         begin
-          mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+          LogException(Client.Description, E.ClassName, E.Message, Client.URL);
         end;
       end;
 
@@ -1154,8 +1169,8 @@ begin
   begin
     DateTimePicker1.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker1.Date),DayOfTheMonth(DateTimePicker1.Date)));
     CacheTimer.Tag := DateTimePicker1.Tag;
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Regenerating BirthDay Data [ '+FormatDateTime('mmmdd',DateTimePicker1.Date)+' / d'+IntToStr(DateTimePicker1.Tag)+' ]');
+    LogEvent('');
+    LogEvent('Regenerating BirthDay Data [ '+FormatDateTime('mmmdd',DateTimePicker1.Date)+' / d'+IntToStr(DateTimePicker1.Tag)+' ]');
     CurrentProgress.Caption := 'ManReGenBirthDay['+FormatDateTime('mmmdd',DateTimePicker1.Date)+'/d'+IntToStr(DateTimePicker1.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
@@ -1165,10 +1180,7 @@ begin
     progDay.Enabled := True;
     CacheTimer.Tag := DayOfTheYear(DateTimePicker1.Date);
 
-    // Change URL of server depending on machine it is running on
-    if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-    then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/ActorBirthDay'
-    else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/ActorBirthDay';
+    URL := AppURL+'/ActorInfoService/ActorBirthDay';
 
     // Setup the Request
     URL := URL+'?Secret='+edSecret.Text;
@@ -1183,14 +1195,17 @@ begin
     client.Asynchronous := True;
     Client.ConnectionTimeout := 1200000;
     Client.ResponseTimeout := 1200000;
-    Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
     Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
-    client.onRequestError := NetHTTPClient1RequestError;
+    Client.onRequestError := NetHTTPClient1RequestError;
+    Client.URL := TidURI.URLEncode(URL);
+    if Pos('https', URL) > 0
+    then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+
     try
-      Client.Get(TidURI.URLEncode(URL));
+      Client.Get(Client.URL);
      except on E: Exception do
        begin
-         mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+         LogException(Client.Description, E.ClassName, E.Message, Client.URL);
        end;
      end;
   end;
@@ -1205,8 +1220,8 @@ begin
   begin
     DateTimePicker2.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker2.Date),DayOfTheMonth(DateTimePicker2.Date)));
     CacheTimer.Tag := DateTimePicker2.Tag;
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Regenerating DeathDay Data [ '+FormatDateTime('mmmdd',DateTimePicker2.Date)+' / d'+IntToStr(DateTimePicker2.Tag)+' ]');
+    LogEvent('');
+    LogEvent('Regenerating DeathDay Data [ '+FormatDateTime('mmmdd',DateTimePicker2.Date)+' / d'+IntToStr(DateTimePicker2.Tag)+' ]');
     CurrentProgress.Caption := 'ManReGenDeathDay['+FormatDateTime('mmmdd',DateTimePicker2.Date)+'/d'+IntToStr(DateTimePicker2.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
@@ -1216,10 +1231,7 @@ begin
     progDay.Enabled := True;
     CacheTimer.Tag := DayOfTheYear(DateTimePicker2.Date);
 
-    // Change URL of server depending on machine it is running on
-    if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-    then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/ActorDeathDay'
-    else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/ActorDeathDay';
+    URL := AppURL+'/ActorInfoService/ActorDeathDay';
 
     // Setup the Request
     URL := URL+'?Secret='+edSecret.Text;
@@ -1234,14 +1246,17 @@ begin
     client.Asynchronous := True;
     Client.ConnectionTimeout := 1200000;
     Client.ResponseTimeout := 1200000;
-    Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
     Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
-    client.onRequestError := NetHTTPClient1RequestError;
+    Client.onRequestError := NetHTTPClient1RequestError;
+    Client.URL := TidURI.URLEncode(URL);
+    if Pos('https', URL) > 0
+    then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+
     try
-      Client.Get(TidURI.URLEncode(URL));
+      Client.Get(Client.URL);
      except on E: Exception do
        begin
-         mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+         LogException(Client.Description, E.ClassName, E.Message, Client.URL);
        end;
      end;
   end;
@@ -1256,8 +1271,8 @@ begin
   begin
     DateTimePicker3.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker3.Date),DayOfTheMonth(DateTimePicker3.Date)));
     CacheTimer.Tag := DateTimePicker3.Tag;
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Regenerating Releases Data [ '+FormatDateTime('mmmdd',DateTimePicker3.Date)+' / d'+IntToStr(DateTimePicker3.Tag)+' ]');
+    LogEvent('');
+    LogEvent('Regenerating Releases Data [ '+FormatDateTime('mmmdd',DateTimePicker3.Date)+' / d'+IntToStr(DateTimePicker3.Tag)+' ]');
     CurrentProgress.Caption := 'ManReGenReleases['+FormatDateTime('mmmdd',DateTimePicker3.Date)+'/d'+IntToStr(DateTimePicker3.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
@@ -1267,10 +1282,7 @@ begin
     progDay.Enabled := True;
     CacheTimer.Tag := DayOfTheYear(DateTimePicker3.Date);
 
-    // Change URL of server depending on machine it is running on
-    if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-    then URL := 'http://localhost:2001/tms/xdata/ActorInfoService/MovieReleaseDay'
-    else URL := 'https://carnival.500foods.com:10999/tms/xdata/ActorInfoService/MovieReleaseDay';
+    URL := AppURL+'/ActorInfoService/MovieReleaseDay';
 
     // Setup the Request
     URL := URL+'?Secret='+edSecret.Text;
@@ -1285,14 +1297,17 @@ begin
     client.Asynchronous := True;
     Client.ConnectionTimeout := 1200000;
     Client.ResponseTimeout := 1200000;
-    Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
     Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
-    client.onRequestError := NetHTTPClient1RequestError;
+    Client.onRequestError := NetHTTPClient1RequestError;
+    Client.URL := TidURI.URLEncode(URL);
+    if Pos('https', URL) > 0
+    then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+
     try
-      Client.Get(TidURI.URLEncode(URL));
+      Client.Get(Client.URL);
      except on E: Exception do
        begin
-         mmInfo.LInes.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+E.ClassName+': '+E.Message);
+         LogException(Client.Description, E.ClassName, E.Message, Client.URL);
        end;
      end;
   end;
@@ -1312,7 +1327,7 @@ procedure TMainForm.ManualRequestCompleted(const Sender: TObject; const ARespons
 var
   MainHandle : THandle;
 begin
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+  LogEvent('Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   CurrentProgress.Caption := 'Waiting';
   CacheTimer.Enabled := True;
   Sender.Free;
@@ -1331,8 +1346,12 @@ end;
 
 procedure TMainForm.ManualRequestError(const Sender: TObject; const AError: string);
 begin
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-  mmInfo.Lines.Add(AError);
+  LogEvent('| ');
+  LogEvent('| Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+  LogEvent('| ERROR: '+AError);
+  LogEvent('| COMMS: '+(Sender as TFancyNetHTTPClient).uRL);
+  LogEvent('| ');
+
   CacheTimer.Enabled := True;
   CurrentProgress.Caption := 'Waiting';
   Sender.Free;
@@ -1344,8 +1363,8 @@ var
 begin
   if Pos('BirthDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('');
+    LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Short API Delay (Continue in 10s)';
     CacheTimer.Interval := 90000; // 90 seconds
     CacheTimer.Enabled := True;
@@ -1356,7 +1375,7 @@ begin
   end
   else if Pos('DeathDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Short API Delay (Continue in 90s)';
     CacheTimer.Interval := 90000; // 90 seconds
     CacheTimer.Enabled := True;
@@ -1367,7 +1386,7 @@ begin
   end
   else if Pos('Releases',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Long API Delay (Continue in 300s)';
     CacheTimer.Interval := 300000;  // 5 minutes
     CacheTimer.Enabled := True;
@@ -1401,17 +1420,21 @@ procedure TMainForm.NetHTTPClient1RequestError(const Sender: TObject; const AErr
 begin
   if Pos('BirthDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('');
+    LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   end
   else if Pos('DeathDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   end
   else if Pos('Releases',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   end;
+  LogEvent('| ');
+  LogEvent('| ERROR: '+AError);
+  LogEvent('| COMMS: '+(Sender as TFancyNetHTTPClient).uRL);
+  LogEvent('| ');
 
   Sender.Free;
 
@@ -1437,65 +1460,229 @@ var
 begin
   StartTimer.Enabled := False;
 
+  ProgressDetail.Caption := 'Startup';
+  ProgressStep.Caption := '0 of 16';
+
+  LogEvent('');
+  LogEvent('______________________________________________________');
+  LogEvent('');
+  LogEvent('SERVER STARTUP.');
+
   // Load JSON Configuration
-  mmInfo.Lines.Add('');
-  mmInfo.Lines.Add('Loading Configuration ...');
+  LogEvent('');
+  LogEvent('Loading Configuration.');
   AppConfigFile := 'Actorious.json';
   ConfigFile := TStringList.Create;
   if FileExists(AppConfigFile) then
   begin
     try
       ConfigFile.LoadFromFile(AppConfigFile);
-      mmInfo.Lines.Add('...Configuration File Loaded: '+AppConfigFile);
+      LogEvent('- Loaded Configuration from '+AppConfigFile);
       AppConfiguration := TJSONObject.ParseJSONValue(ConfigFile.Text) as TJSONObject;
     except on E: Exception do
       begin
-        mmInfo.Lines.Add('...Configuration File Error: '+AppConfigFile);
-        mmInfo.Lines.Add('...['+E.ClassName+'] '+E.Message);
+        LogException('Load Configuration', E.ClassName, E.Message, AppConfigFile);
       end;
     end;
   end
   else // File doesn't exist
   begin
-    mmInfo.Lines.Add('...Configuration File Not Found: '+AppConfigFile);
+    LogEvent('File Not Found: '+AppConfigFile);
   end;
   ConfigFile.Free;
   Application.ProcessMessages;
+  ProgressStep.Caption := '1 of 16';
 
   if Appconfiguration = nil then
   begin
     // Create an empty AppConfiguration
-    mmInfo.Lines.Add('...Using Default Configuration');
+    LogEvent('- Invalid Configuration');
     AppConfiguration := TJSONObject.Create;
-    AppConfiguration.AddPair('Actorious App Secret','NOT DEFINED');
-    AppConfiguration.AddPair('TMDb API Key','NOT DEFINED');
   end;
-  mmInfo.Lines.Add('Done.');
-  mmInfo.Lines.Add('');
+
+  // Used to access this Actorious REST API
+  if AppConfiguration.getValue('Actorious API Secret') <> nil then
+  begin
+    edSecret.Text := (AppConfiguration.getValue('Actorious API Secret') as TJSONString).Value;
+    LogEvent('- Actorious API Secret Loaded');
+  end
+  else
+  begin
+    LogEvent('- ERROR: Missing Required Entry For [Actorious API Secret]');
+  end;
+  ProgressStep.Caption := '2 of 16';
+
+  // Used to access The Movie Database API
+  if AppConfiguration.getValue('TMDb API Key') <> nil then
+  begin
+    edTMDbAPI.Text := (AppConfiguration.getValue('TMDb API Key') as TJSONString).Value;
+    LogEvent('- TMDb API Key Loaded');
+  end
+  else
+  begin
+    LogEvent('- ERROR: Missing Required Entry For [TMDb API Key]');
+  end;
+  ProgressStep.Caption := '3 of 16';
+
+  // BaseURL
+  if AppConfiguration.getValue('BaseURL') <> nil then
+  begin
+    AppBaseURL := (AppConfiguration.getValue('BaseURL') as TJSONString).Value;
+    LogEvent('- BaseURL set to '+AppBaseURL);
+  end
+  else
+  begin
+    LogEvent('- ERROR: Missing Required Entry For [BaseURL]');
+  end;
+  ProgressStep.Caption := '4 of 16';
+
+  // AppURL
+  if AppConfiguration.getValue('AppURL') <> nil then
+  begin
+    AppURL := (AppConfiguration.getValue('AppURL') as TJSONString).Value;
+    LogEvent('- AppURL set to '+AppURL);
+  end
+  else
+  begin
+    LogEvent('- ERROR: Missing Required Entry For [AppURL]');
+  end;
+  ProgressStep.Caption := '5 of 16';
+
+  // Swagger Support
+  if AppConfiguration.getValue('Swagger') <> nil then
+  begin
+    AppSwagger := (AppConfiguration.getValue('Swagger') as TJSONString).Value;
+    LogEvent('- Swagger configured at '+AppSwagger);
+    btSwagger.Enabled := True;
+  end
+  else
+  begin
+    btSwagger.Enabled := False;
+    LogEvent('- Swagger not configured');
+  end;
+  ProgressStep.Caption := '6 of 16';
+
+  // Redoc Support
+  if AppConfiguration.getValue('Redoc') <> nil then
+  begin
+    AppRedoc := (AppConfiguration.getValue('Redoc') as TJSONString).Value;
+    LogEvent('- Redoc configured at '+AppRedoc);
+    btRedoc.Enabled := True;
+  end
+  else
+  begin
+    btRedoc.Enabled := False;
+    LogEvent('- Redoc not configured');
+  end;
+  ProgressStep.Caption := '7 of 16';
+
+  // HomeAssistant Support
+  if AppConfiguration.getValue('HA_URL') <> nil then
+  begin
+    AppHAURL := (AppConfiguration.getValue('HA_URL') as TJSONString).Value;
+    LogEvent('- Home Assistant configured at '+AppHAURL);
+  end
+  else
+  begin
+    AppHAURL := '';
+    LogEvent(' - HomeAssistant not configured');
+  end;
+  ProgressStep.Caption := '8 of 16';
+
+  // HomeAssistant Token
+  if AppConfiguration.getValue('HA_Token') <> nil then
+  begin
+    AppHAToken := (AppConfiguration.getValue('HA_Token') as TJSONString).Value;
+    LogEvent('- Home Assistant Token loaded');
+  end
+  else
+  begin
+    AppHAToken := '';
+  end;
+  ProgressStep.Caption := '9 of 16';
+
+  LogEvent('Configuration Loaded.');
+  LogEvent('');
+
   Application.ProcessMessages;
-
-  if AppConfiguration.getValue('Actorious API Secret') <> nil
-  then edSecret.Text := (AppConfiguration.getValue('Actorious API Secret') as TJSONString).Value;
-
-  if AppConfiguration.getValue('TMDb API Key') <> nil
-  then edTMDbAPI.Text := (AppConfiguration.getValue('TMDb API Key') as TJSONString).Value;
-
-
-  // Default XData UpdateGUI call
-  UpdateGUI;
 
   // Kick off Cache Populator
   CurrentProgress.Caption := 'Startup Delay (Continue in 15s)';
   CacheTimer.Interval := 15000;
   CacheTimer.Enabled := True;
+  ProgressStep.Caption := '10 of 16';
 
   WaitingMessage := 'Startup Delay (Continue in %s)';
   tmrWaiting.Tag := 15;
   tmrWaiting.Enabled := True;
+  ProgressStep.Caption := '11 of 16';
+
+  // Change URL of server depending on machine it is running on
+  if AppBaseURL <> '' then
+  begin
+    ServerContainer.XDataServer.BaseURL := AppBaseURL;
+    ServerContainer.SparkleHttpSysDispatcher.Active := True;
+  end;
+  ProgressStep.Caption := '12 of 16';
+
+  // Create Cache directory structure
+  LogEvent('Creating Cache Directories');
+
+  CreateDir('cache'); // Cache Root
+
+  CreateDir('cache\people');                  // Data cached by TMDb ID, either Actors or Directors or Writers
+  CreateDir('cache\people\tmdb');             // JSON as it originated from TMDb
+  CreateDir('cache\people\actorious');        // JSON formatted for Actorious
+  CreateDir('cache\people\top1000');          // Top 1000 all ready to go
+  CreateDir('cache\people\top5000');          // Top 5000 all ready to go
+
+  CreateDir('cache\days');                    // Data cached by Julian Day
+  CreateDir('cache\days\actorious-births');   // People with this birthday
+  CreateDir('cache\days\actorious-deaths');   // People with this birthday
+  CreateDir('cache\days\actorious-releases'); // People with this birthday
+  CreateDir('cache\days\first');              // The first person to appear for this given birthday
+  CreateDir('cache\days\wikidata-births');    // Wikidata response to this birthday
+  CreateDir('cache\days\wikidata-deaths');    // Wikidata response to this deathday
+  CreateDir('cache\days\wikidata-releases');  // Wikidata response to this releaseday
+  CreateDir('cache\days\toptoday');
+
+  CreateDir('cache\movies');
+  CreateDir('cache\movies\tmdb');
+  CreateDir('cache\movies\actorious');
+  CreateDir('cache\movies\top1000');
+  CreateDir('cache\movies\top5000');
+
+  CreateDir('cache\tvshows');
+  CreateDir('cache\tvshows\tmdb');
+  CreateDir('cache\tvshows\actorious');
+  CreateDir('cache\tvshows\top1000');
+  CreateDir('cache\tvshows\top5000');
+  ProgressStep.Caption := '13 of 16';
+
+  // Show encoded Base64 version of secret
+  LogEvent('Encoding Actorious API Secret');
+  edSecretChange(nil);
+  ProgressStep.Caption := '14 of 16';
+
+  // Check for new ActoriousClient Version right away
+  LogEvent('Updating Client Version');
+  btUpdateVersionClick(nil);
+  ProgressStep.Caption := '15 of 16';
 
   // Display the progress at start
+  LogEvent('Updating Progress');
   btRecentProgressClick(Sender);
+  ProgressStep.Caption := '16 of 16';
 
+  LogEvent('');
+  LogEvent('SERVER STARTUP COMPLETE.');
+  LogEvent('______________________________________________________');
+  LogEvent('');
+
+  ProgressDetail.Caption := 'Startup Complete';
+
+  // Default XData UpdateGUI call
+  UpdateGUI;
 
 end;
 
@@ -1660,8 +1847,6 @@ begin
 end;
 
 procedure TMainForm.FormCreate(ASender: TObject);
-var
-  ClientVer: TStringList;
 begin
 
   // How long has server been running?
@@ -1672,26 +1857,8 @@ begin
   // Sort out the Server Version
   GetAppVersionString;
 
-  // Sort out the Client Version
-  ClientVer := TStringList.Create;
-  try
-    ClientVer.LoadFromFile('clientversion.txt');
-  except on E: Exception do
-    begin
-      edtClientVersion.Text := '0';
-    end;
-  end;
-  edtClientVersion.Text := ClientVer.Text;
-  ClientVer.Free;
-
   // Having a black form in the IDE makes it hard to read component names
   MainForm.Color := clBlack;
-
-  // Change URL of server depending on machine it is running on
-  if (GetEnvironmentVariable('COMPUTERNAME') = 'ARATAN')
-  then ServerContainer.XDataServer.BaseURL := 'http://+:2001/tms/xdata'
-  else ServerContainer.XDataServer.BaseURL := 'https://+:10999/tms/xdata';
-  ServerContainer.SparkleHttpSysDispatcher.Active := True;
 
   // Initialize Progress History
   Progress := TStringList.Create;
@@ -1705,40 +1872,6 @@ begin
   TVShowCacheRequests := 0;
   CleanRequests       := 0;
 
-  // Create Cache directory structure
-  CreateDir('cache'); // Cache Root
-
-  CreateDir('cache\people');                  // Data cached by TMDb ID, either Actors or Directors or Writers
-  CreateDir('cache\people\tmdb');             // JSON as it originated from TMDb
-  CreateDir('cache\people\actorious');        // JSON formatted for Actorious
-  CreateDir('cache\people\top1000');          // Top 1000 all ready to go
-  CreateDir('cache\people\top5000');          // Top 5000 all ready to go
-
-  CreateDir('cache\days');                    // Data cached by Julian Day
-  CreateDir('cache\days\actorious-births');   // People with this birthday
-  CreateDir('cache\days\actorious-deaths');   // People with this birthday
-  CreateDir('cache\days\actorious-releases'); // People with this birthday
-  CreateDir('cache\days\first');              // The first person to appear for this given birthday
-  CreateDir('cache\days\wikidata-births');    // Wikidata response to this birthday
-  CreateDir('cache\days\wikidata-deaths');    // Wikidata response to this deathday
-  CreateDir('cache\days\wikidata-releases');  // Wikidata response to this releaseday
-  CreateDir('cache\days\toptoday');
-
-  CreateDir('cache\movies');
-  CreateDir('cache\movies\tmdb');
-  CreateDir('cache\movies\actorious');
-  CreateDir('cache\movies\top1000');
-  CreateDir('cache\movies\top5000');
-
-  CreateDir('cache\tvshows');
-  CreateDir('cache\tvshows\tmdb');
-  CreateDir('cache\tvshows\actorious');
-  CreateDir('cache\tvshows\top1000');
-  CreateDir('cache\tvshows\top5000');
-
-  // Show encoded Base64 version of secret
-  edSecretChange(ASender);
-
   // Set starting time for cache to today
   progMonth.Text := FormatDateTime('mmm',Now);
   progDay.Text   := FormatDateTime('dd',Now);
@@ -1746,9 +1879,6 @@ begin
 
   // Do it this way so we don't wait for screen to appear
   StartTimer.Enabled := True;
-
-  // Check for new ActoriousClient Version right away
-  btUpdateVersionClick(nil);
 
 end;
 
@@ -1776,13 +1906,12 @@ begin
   btStart.Enabled := not ServerContainer.SparkleHttpSysDispatcher.Active;
   btStop.Enabled := not btStart.Enabled;
   if ServerContainer.SparkleHttpSysDispatcher.Active then
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+SServerStartedAt + StringReplace(
+    LogEvent(SServerStartedAt + StringReplace(
       ServerContainer.XDataServer.BaseUrl,
       cHttp, cHttpLocalhost, [rfIgnoreCase]))
   else
-    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  '+SServerStopped);
-
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now));
+  LogEvent(SServerStopped);
+  LogEvent('');
 end;
 
 end.
