@@ -1,0 +1,42 @@
+﻿
+
+[Exception Log]
+EurekaLog Version=8000
+_CustomProfile=""
+Activate=1
+atFixSafeCallException=1
+atNonVisual=1
+atVCL=1
+atWin32=1
+AutoCrashNumber=5
+AutoCrashOperation=2
+boCopyLogInCaseOfError=0
+bugIDUseCallStack=1
+bugIDUseLineNumber=1
+bugIDUseLocation=0
+DeleteMapAfterCompile=0
+Dialog Class=""
+dpJCL=1
+Encrypt Password=""
+Freeze Activate=1
+Freeze Timeout=5
+InjectCode=1
+InjectInfo=1
+InjectOptions=1
+loAddBugIDInLogFileName=1
+loAddComputerNameInLogFileName=1
+loAddDateInLogFileName=1
+loEnableMMDebugMode=1
+ProjectID="{F255E47E-358A-472A-8D5C-9F0DEB95C587}"
+Sender Classes="TELMailSMTPClientSender"
+seSMTP=1
+sndShowFailureMsg=0
+sndShowSendDialog=0
+sndShowSuccessMsg=0
+sndSMTPClientAppendLogs=1
+sndSMTPClientFrom="concierge@actorious.com"
+sndSMTPClientHost="mail.500foods.com"
+sndSMTPClientPort=587
+sndSMTPClientTarget="willard@500foods.com"
+sndSMTPClientTLS=1
+

@@ -71,6 +71,7 @@
         <SanitizedProjectName>Project1</SanitizedProjectName>
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_Define>EUREKALOG_VER7;EUREKALOG;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;RESTComponents;fmxase;DBXDb2Driver;DBXInterBaseDriver;VCLTMSFNCChartPkgDXE12;TMSLogging;vclactnband;FmxTeeUI926;vclFireDAC;emsclientfiredac;tethering;svnui;DataSnapFireDAC;FireDACADSDriver;FMXfrxDB26;DBXMSSQLDriver;TMSQueryStudio;TMSScripter;DatasnapConnectorsFreePascal;FireDACMSSQLDriver;FMXfrxIBX26;vcltouch;FMXTMSFNCUIPackPkgDXE12;JSExtend;vcldb;bindcompfmx;svn;TMSWEBCorePkgLibDXE12;DBXOracleDriver;rbUSERDesign2126;inetdb;IcsFmxD103Run;CEF4Delphi;IcsVclD103Run;rbTC2126;FMXTMSFNCWXPackPkgDXE12;TMSScripter_Memo;emsedge;fmx;FireDACIBDriver;fmxdae;FMXfrx26;vclib;rbBDE2126;FireDACDBXDriver;dbexpress;IndyCore;DCEF_XE5;xdata;vclx;dsnap;emsclient;DataSnapCommon;rbRCL2126;FireDACCommon;VCLTMSFNCUIPackPkgDXE12;RESTBackendComponents;DataSnapConnectors;FMXfs26;VCLRESTComponents;soapserver;TMSScripter_Legacy;remotedb;vclie;TMSScripter_VCL;bindengine;DBXMySQLDriver;CloudService;FireDACOracleDriver;FireDACMySQLDriver;DBXFirebirdDriver;CData.QuickBooksOnline.D26;FMXTeeDB926;FireDACCommonODBC;FireDACCommonDriver;VCLTMSFNCCorePkgDXE12;DataSnapClient;inet;rbTCUI2126;IndyIPCommon;bindcompdbx;vcl;IndyIPServer;DBXSybaseASEDriver;sparkle;tmsbcl;IndySystem;FireDACDb2Driver;FMXTee926;dsnapcon;FMXfrxTee26;FMXTMSFNCCorePkgDXE12;TMSWorkflow;FireDACMSAccDriver;fmxFireDAC;FireDACInfxDriver;vclimg;FMXfsIBX26;FireDAC;emshosting;FireDACSqliteDriver;FireDACPgDriver;ibmonitor;FireDACASADriver;advmemopkgdXE12;DBXOdbcDriver;FireDACTDataDriver;TMSDiagram;soaprtl;DbxCommonDriver;ibxpress;DataSnapServer;xmlrtl;soapmidas;DataSnapNativeClient;fmxobj;vclwinx;FireDACDSDriver;rtl;emsserverresource;DbxClientDriver;ibxbindings;DBXSybaseASADriver;TMSScripter_IDE;CustomIPTransport;vcldsnap;rbIDE2126;bindcomp;appanalytics;DBXInformixDriver;IndyIPClient;EurekaLogCore;TMSWEBCorePkgDXE12;bindcompvcl;IcsCommonD103Run;TMSCryptoPkgDXE12;rbCloudSC2126;dclTMSQueryStudio;rbUSER2126;FMXfsDB26;FMXfrxe26;dbxcds;VclSmp;adortl;FireDACODBCDriver;VCLTMSFNCWXPackPkgDXE12;DataSnapIndy10ServerTransport;aurelius;dsnapxml;DataSnapProviderClient;dbrtl;IndyProtocols;inetdbxpress;FireDACMongoDBDriver;FMXfrxDBX26;FMXTMSFNCChartPkgDXE12;TMSCryptoPkgDEDXE12;FMXfsTee26;DataSnapServerMidas;$(DCC_UsePackage)</DCC_UsePackage>
@@ -129,9 +130,9 @@
         <Icon_MainIcon>Project1_Icon.ico</Icon_MainIcon>
         <DCC_OutputXMLDocumentation>true</DCC_OutputXMLDocumentation>
         <DCC_XmlOutput>Win64\Release\</DCC_XmlOutput>
-        <VerInfo_Build>58</VerInfo_Build>
+        <VerInfo_Build>61</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_Keys>CompanyName=500 Foods Corporation;FileDescription=Actorious Server;FileVersion=1.0.0.58;InternalName=Actorious Server;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.1;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=500 Foods Corporation;FileDescription=Actorious Server;FileVersion=1.0.0.61;InternalName=Actorious Server;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.1;Comments=</VerInfo_Keys>
         <UWP_DelphiLogo44>Project1_Icon.ico</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>Project1_Icon.ico</UWP_DelphiLogo150>
     </PropertyGroup>

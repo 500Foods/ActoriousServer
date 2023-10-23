@@ -38,7 +38,7 @@ uses
   Vcl.WinXPickers,
   Vcl.ComCtrls,
 
-  Unit1, Vcl.Imaging.pngimage, AdvMemo;
+  Unit1, Vcl.Imaging.pngimage;
 
 type
   TMainForm = class(TForm)
@@ -85,7 +85,7 @@ type
     ckRegenerate: TCheckBox;
     btRedoc: TButton;
     Shape1: TShape;
-    mmInfo: TAdvMemo;
+    mmInfo: TMemo;
     procedure GetAppVersionString;
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
@@ -463,8 +463,8 @@ begin
     mmInfo.Lines.EndUpdate;
     mmInfo.EnableAlign;
 //  end;
-  mmInfo.scrolltoBottom;
-  mmInfo.Repaint;
+//  mmInfo.scrolltoBottom;
+//  mmInfo.Repaint;
 end;
 
 procedure TMainForm.btRecentProgressClick(Sender: TObject);
@@ -703,8 +703,13 @@ end;
 
 procedure TMainForm.LogEvent(Details: String);
 begin
-  mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz', Now)+'  '+Details);
-  mminfo.ScrollToBottom;
+  try
+    mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz', Now)+'  '+Details);
+    SendMessage(mmInfo.Handle, EM_LINESCROLL, 0, mmInfo.Lines.Count);
+  except on E: Exception do
+    begin
+    end;
+  end;
 end;
 
 procedure TMainForm.LogException(Source, EClass, EMessage, Data: String);
@@ -713,7 +718,6 @@ begin
   LogEvent('[ EXCEPTION ] '+Source);
   LogEvent('[ '+EClass+' ] '+EMessage);
   LogEvent('[ Data ] '+Data);
-  LogEvent('');
 end;
 
 procedure TMainForm.btCleanClick(Sender: TObject);
@@ -966,8 +970,8 @@ begin
     mmInfo.Lines.EndUpdate;
     mmInfo.EnableAlign;
 //  end;
-  mmInfo.scrolltoBottom;
-  mmInfo.Repaint;
+//  mmInfo.scrolltoBottom;
+//  mmInfo.Repaint;
 end;
 
 procedure TMainForm.CacheTimerTimer(Sender: TObject);
@@ -1857,7 +1861,7 @@ begin
   // Sort out the Server Version
   GetAppVersionString;
 
-  // Having a black form in the IDE makes it hard to read component names
+  // Having a dark form in the IDE makes it hard to read component names
   MainForm.Color := clBlack;
 
   // Initialize Progress History

@@ -290,7 +290,7 @@ begin
     begin
       Update := True;
       Reason := 'Miss';
-      MainForm.mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - GetPerson Cache Miss: '+IntToStr(TMDb_ID));
+      MainForm.LogEvent('- GetPerson Cache Miss: '+IntToStr(TMDb_ID));
     end;
   end
   else
@@ -1035,8 +1035,8 @@ begin
     TMDB_Data := TJSONObject.ParseJSONValue(TMDB_Data_String) as TJSONObject;
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('TMDB JSON Error: ');
-      MainForm.mmInfo.Lines.Add(TMDB_Data_String);
+      MainForm.LogEvent('TMDB JSON Error: ');
+      MainForm.LogEvent(Copy(TMDB_Data_String,1,150));
     end;
   end;
 
@@ -1045,8 +1045,8 @@ begin
     WikiData := TJSONObject.ParseJSONValue(WikiData_String) as TJSONArray;
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('WIKI JSON Error: ');
-      MainForm.mmInfo.Lines.Add(WikiData_String);
+      MainForm.LogEvent('WIKI JSON Error: ');
+      MainForm.LogEvent(Copy(WikiData_String,1,150));
     end;
   end;
 
@@ -1407,7 +1407,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/Header', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
     end;
   end;
 
@@ -1434,7 +1434,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/Photos', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
     end;
   end;
 
@@ -1486,7 +1486,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/TopRoles', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
     end;
   end;
 
@@ -1536,7 +1536,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/TopMovieRoles', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
     end;
   end;
 
@@ -1587,7 +1587,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/TopTVRoles', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
     end;
   end;
 
@@ -1884,7 +1884,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/AllMovieRoles', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
     end;
   end;
 
@@ -2204,7 +2204,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/AllTVRoles', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
     end;
   end;
 
@@ -2283,7 +2283,7 @@ begin
   except on E: Exception do
     begin
       MainForm.LogException('ProcessPerson/Validation', E.ClassName, E.Message, ActorRef);
-      MainForm.mmInfo.Lines.Add(Actor);
+      MainForm.LogEvent(Copy(Actor,1,150));
       Result := '';
     end;
   end;
@@ -2320,16 +2320,16 @@ begin
     if not(TMDB_Data.getValue('success') = nil) and (TMDB_Data.getValue('success') is TJSONBool) then
     begin
       if (WikiIndex <> -1)
-      then MainForm.mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - ProcessMovie: No data for '+MovieRef+': '+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value)
-      else MainForm.mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - ProcessMovie: No data for '+MovieRef+' (no WikiData reference)');
+      then MainForm.LogEvent('- ProcessMovie: No data for '+MovieRef+': '+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value)
+      else MainForm.LogEvent('- ProcessMovie: No data for '+MovieRef+' (no WikiData reference)');
       Result := '';
       exit;
     end;
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('EXCEPTION Processing Movie Validation Check '+MovieRef);
-      MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
-      MainForm.mmInfo.Lines.Add(Movie);
+      MainForm.LogEvent('EXCEPTION Processing Movie Validation Check '+MovieRef);
+      MainForm.LogEvent(E.ClassName+': '+E.Message);
+      MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
 
@@ -2398,9 +2398,9 @@ begin
 
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('EXCEPTION Processing Movie Data '+MovieRef);
-      MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
-      MainForm.mmInfo.Lines.Add(Movie);
+      MainForm.LogEvent('EXCEPTION Processing Movie Data '+MovieRef);
+      MainForm.LogEvent(E.ClassName+': '+E.Message);
+      MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
 
@@ -2449,7 +2449,7 @@ begin
     begin
       Update := True;
       Reason := 'Miss';
-      MainForm.mmInfo.Lines.Add(FormatDateTime('yyyy-mm-dd HH:nn:ss.zzz',Now)+'  - GetPerson Cache Miss: '+ActorRef);
+      MainForm.LogEvent('- GetPerson Cache Miss: '+ActorRef);
     end;
   end
   else
@@ -2559,7 +2559,7 @@ begin
     CacheBRResponse.LoadFromFile(CacheFile+'.br');
   except on E: Exception do
     begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
 //      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData Data Not Cached","TP":'+FloatToStr(Now)+'}';
     end;
   end;
@@ -2613,7 +2613,7 @@ begin
       Brotli.Free;
     except on E: Exception do
       begin
-//        MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//        MainForm.LogEvent(E.ClassName+': '+E.Message);
       end;
     end;
 
@@ -2623,7 +2623,7 @@ begin
       CacheBRResponse.LoadFromFile(CacheFile+'.br');
     except on E: Exception do
       begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
       end;
     end;
 
@@ -2650,7 +2650,7 @@ begin
     ClientReq.Free;
   end;
 
-//  MainForm.mmInfo.Lines.Add(MainForm.Progress[ProgressKey]);
+//  MainForm.LogEvent(MainForm.Progress[ProgressKey]);
 
 end;
 
@@ -2712,7 +2712,7 @@ begin
     CacheBRResponse.LoadFromFile(CacheFile+'.br');
   except on E: Exception do
     begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
 //      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData Data Not Cached","TP":'+FloatToStr(Now)+'}';
     end;
   end;
@@ -2766,7 +2766,7 @@ begin
       Brotli.Free;
     except on E: Exception do
       begin
-//        MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//        MainForm.LogEvent(E.ClassName+': '+E.Message);
       end;
     end;
 
@@ -2776,7 +2776,7 @@ begin
       CacheBRResponse.LoadFromFile(CacheFile+'.br');
     except on E: Exception do
       begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
       end;
     end;
 
@@ -2803,7 +2803,7 @@ begin
     ClientReq.Free;
   end;
 
-//  MainForm.mmInfo.Lines.Add(MainForm.Progress[ProgressKey]);
+//  MainForm.LogEvent(MainForm.Progress[ProgressKey]);
 
 end;
 
@@ -2939,7 +2939,7 @@ begin
   ActorCount := ActorCount - 1;
 
   Response.Text := Actors;
-//  MainFOrm.mmInfo.lines.add(Response.Text);
+//  MainForm.LogEvent(Response.Text);
 
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+QuotedStr(Lookup)+' ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
 
@@ -3195,7 +3195,7 @@ begin
             except on E: Exception do
               begin
                 // Got a response that isn't valid JSON?!
-                MainForm.mmInfo.Lines.Add('Invalid TMDb Response received');
+                MainForm.LogEvent('Invalid TMDb Response received');
               end;
             end;
 
@@ -3296,7 +3296,7 @@ begin
         Movies.Free;
       except on E: Exception do
          begin
-//          MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
+//          MainForm.LogEvent(E.ClassName+': '+E.Message);
          end;
       end;
     end;
@@ -3400,21 +3400,21 @@ begin
       SearchResponse := ClientReq.Get(URL).ContentAsString(TEncoding.UTF8);
     except on E:Exception do
       begin
-        MainForm.mmInfo.Lines.Add('EXCEPTION in WikiData Relatives ClientReq.Get');
-        MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+        MainForm.LogEvent('EXCEPTION in WikiData Relatives ClientReq.Get');
+        MainForm.LogEvent(E.Classname+': '+E.Message);
       end;
     end;
-//    MainForm.mmInfo.Lines.add(qry);
-//    MainForm.mmInfo.Lines.add(SearchResponse);
+//    MainForm.LogEvent(qry);
+//    MainForm.LogEvent(SearchResponse);
 
     Data := ((TJSONObject.ParseJSONValue(SearchResponse) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-//    MainForm.mmInfo.Lines.Add('Searching for '+IntToStr(Data.Count)+' Relatives');
+//    MainForm.LogEvent('Searching for '+IntToStr(Data.Count)+' Relatives');
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Search Results: '+IntToStr(Data.Count)+' hits","TP":'+FloatToStr(Now)+'}';
 
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('EXCEPTION in WikiData Relatives Results Processing');
-      MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+      MainForm.LogEvent('EXCEPTION in WikiData Relatives Results Processing');
+      MainForm.LogEvent(E.Classname+': '+E.Message);
     end;
   end;
 
@@ -3426,7 +3426,7 @@ begin
   begin
     Response.Text := '';
     ActorNum := RightStr('0000000'+(((data.items[i] as TJSONObject).getValue('TMDB') as TJSONObject).getValue('value') as TJSONString).value,8);
-//      MainForm.mmInfo.Lines.Add('Searching for #'+IntToStr(i)+' Relative: '+ActorNum);
+//      MainForm.LogEvent('Searching for #'+IntToStr(i)+' Relative: '+ActorNum);
     CacheFile := 'cache/people/actorious/'+
       RightStr(ActorNum,3)+
       '/person-'+
@@ -3550,7 +3550,7 @@ begin
     CacheBRResponse.LoadFromFile(CacheFile+'.br');
   except on E: Exception do
     begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
 //      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData Data Not Cached","TP":'+FloatToStr(Now)+'}';
     end;
   end;
@@ -3604,7 +3604,7 @@ begin
       Brotli.Free;
     except on E: Exception do
       begin
-//        MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//        MainForm.LogEvent(E.ClassName+': '+E.Message);
       end;
     end;
 
@@ -3614,7 +3614,7 @@ begin
       CacheBRResponse.LoadFromFile(CacheFile+'.br');
     except on E: Exception do
       begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
       end;
     end;
 
@@ -3641,7 +3641,7 @@ begin
     ClientReq.Free;
   end;
 
-//  MainForm.mmInfo.Lines.Add(MainForm.Progress[ProgressKey]);
+//  MainForm.LogEvent(MainForm.Progress[ProgressKey]);
 end;
 
 
@@ -3712,8 +3712,8 @@ begin
       SearchResponse := ClientReq.Get(URL).ContentAsString(tencoding.UTF8);
     except on E:Exception do
       begin
-        MainForm.mmInfo.Lines.Add('EXCEPTION in SearchPerson TMDb ClientReq.Get');
-        MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+        MainForm.LogEvent('EXCEPTION in SearchPerson TMDb ClientReq.Get');
+        MainForm.LogEvent(E.Classname+': '+E.Message);
       end;
     end;
 
@@ -3722,8 +3722,8 @@ begin
 
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('EXCEPTION in SearchPerson Results Processing');
-      MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+      MainForm.LogEvent('EXCEPTION in SearchPerson Results Processing');
+      MainForm.LogEvent(E.Classname+': '+E.Message);
     end;
   end;
 
@@ -3876,7 +3876,7 @@ begin
     qry := qry+'&include_adult=true';
     qry := qry+'&query='+trim(SearchTerm);
 
-//    MainForm.mmInfo.lines.Add('Searching Page '+IntToStr(Page)+' of '+IntToStr(PagesAvail));
+//    MainForm.LogEvent('Searching Page '+IntToStr(Page)+' of '+IntToStr(PagesAvail));
 
     // Setup the URL and encode the query in it
     URL := TidURI.URLEncode('https://api.themoviedb.org/3/'+qry);
@@ -3888,8 +3888,8 @@ begin
         SearchResponse := ClientReq.Get(URL).ContentAsString(tencoding.UTF8);
       except on E:Exception do
         begin
-          MainForm.mmInfo.Lines.Add('EXCEPTION in SearchPerson TMDb ClientReq.Get');
-          MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+          MainForm.LogEvent('EXCEPTION in SearchPerson TMDb ClientReq.Get');
+          MainForm.LogEvent(E.Classname+': '+E.Message);
         end;
       end;
 
@@ -3906,8 +3906,8 @@ begin
 
     except on E: Exception do
       begin
-        MainForm.mmInfo.Lines.Add('EXCEPTION in SearchPerson Results Processing');
-        MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+        MainForm.LogEvent('EXCEPTION in SearchPerson Results Processing');
+        MainForm.LogEvent(E.Classname+': '+E.Message);
       end;
     end;
 
@@ -4236,10 +4236,10 @@ begin
 
         except on E: Exception do
           begin
-            MainForm.mmInfo.Lines.Add('EXCEPTION in Creating First Entry:');
-            MainForm.mmInfo.Lines.Add('[ '+E.ClassName+' ] '+E.Message);
-            MainForm.mmInfo.Lines.Add('[ File ] '+'cache/days/first/'+FormatDateTime('mmdd',encodedate(2020,aMonth,aDay))+'.json');
-            MainForm.mmInfo.Lines.Add('[ Data ] '+FirstCache.Text);
+            MainForm.LogEvent('EXCEPTION in Creating First Entry:');
+            MainForm.LogEvent('[ '+E.ClassName+' ] '+E.Message);
+            MainForm.LogEvent('[ File ] '+'cache/days/first/'+FormatDateTime('mmdd',encodedate(2020,aMonth,aDay))+'.json');
+            MainForm.LogEvent('[ Data ] '+FirstCache.Text);
           end;
         end;
         FirstCache.Free;
@@ -4332,9 +4332,9 @@ begin
 
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('EXCEPTION in Compressing Results:');
-      MainForm.mmInfo.Lines.Add('[ '+E.ClassName+' ] '+E.Message);
-      MainForm.mmInfo.Lines.Add('[ File ] '+CacheFileDay);
+      MainForm.LogEvent('EXCEPTION in Compressing Results:');
+      MainForm.LogEvent('[ '+E.ClassName+' ] '+E.Message);
+      MainForm.LogEvent('[ File ] '+CacheFileDay);
     end;
   end;
 
@@ -4344,9 +4344,9 @@ begin
     Actors.Free;
   except on E: Exception do
     begin
-      MainForm.mmInfo.Lines.Add('EXCEPTION in Compression Cleanup:');
-      MainForm.mmInfo.Lines.Add('[ '+E.ClassName+' ] '+E.Message);
-      MainForm.mmInfo.Lines.Add('[ File ] '+CacheFileDay);
+      MainForm.LogEvent('EXCEPTION in Compression Cleanup:');
+      MainForm.LogEvent('[ '+E.ClassName+' ] '+E.Message);
+      MainForm.LogEvent('[ File ] '+CacheFileDay);
     end;
   end;
 
@@ -4366,9 +4366,9 @@ begin
 
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Failed","TP":'+FloatToStr(Now)+'}';
 
-      MainForm.mmInfo.Lines.Add('EXCEPTION in Loading Results:');
-      MainForm.mmInfo.Lines.Add('[ '+E.ClassName+' ] '+E.Message);
-      MainForm.mmInfo.Lines.Add('[ File ] '+CacheFileDayBR);
+      MainForm.LogEvent('EXCEPTION in Loading Results:');
+      MainForm.LogEvent('[ '+E.ClassName+' ] '+E.Message);
+      MainForm.LogEvent('[ File ] '+CacheFileDayBR);
 
       exit;
     end;
@@ -4636,7 +4636,7 @@ begin
             except on E: Exception do
               begin
                 // Got a response that isn't valid JSON?!
-                MainForm.mmInfo.Lines.Add('Invalid TMDb Response received');
+                MainForm.LogEvent('Invalid TMDb Response received');
               end;
             end;
 
@@ -4763,7 +4763,7 @@ begin
 
       except on E: Exception do
          begin
-//          MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
+//          MainForm.LogEvent(E.ClassName+': '+E.Message);
          end;
       end;
     end;
@@ -5028,7 +5028,7 @@ begin
             except on E: Exception do
               begin
                 // Got a response that isn't valid JSON?!
-                MainForm.mmInfo.Lines.Add('Invalid TMDb Response received');
+                MainForm.LogEvent('Invalid TMDb Response received');
               end;
             end;
 
@@ -5149,7 +5149,7 @@ begin
 
       except on E: Exception do
          begin
-//          MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
+//          MainForm.LogEvent(E.ClassName+': '+E.Message);
          end;
       end;
     end;
@@ -5412,7 +5412,7 @@ begin
             except on E: Exception do
               begin
                 // Got a response that isn't valid JSON?!
-                MainForm.mmInfo.Lines.Add('Invalid TMDb Response received');
+                MainForm.LogEvent('Invalid TMDb Response received');
               end;
             end;
 
@@ -5533,7 +5533,7 @@ begin
 
       except on E: Exception do
          begin
-//          MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
+//          MainForm.LogEvent(E.ClassName+': '+E.Message);
          end;
       end;
     end;
@@ -5708,8 +5708,8 @@ begin
             Response := ClientReq.Get(URL).ContentStream;
           except on E:Exception do
             begin
-              MainForm.mmInfo.Lines.Add('EXCEPTION in TopOneThousand TMDb ClientReq.Get');
-              MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+              MainForm.LogEvent('EXCEPTION in TopOneThousand TMDb ClientReq.Get');
+              MainForm.LogEvent(E.Classname+': '+E.Message);
             end;
           end;
 
@@ -5728,8 +5728,8 @@ begin
 
         except on E: Exception do
           begin
-            MainForm.mmInfo.Lines.Add('EXCEPTION in TopOneThousand TMDb File Processing');
-            MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
+            MainForm.LogEvent('EXCEPTION in TopOneThousand TMDb File Processing');
+            MainForm.LogEvent(E.ClassName+': '+E.Message);
           end;
         end;
       end;
@@ -5741,8 +5741,8 @@ begin
         Data := (TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONArray;
       except on E:Exception do
         begin
-          MainForm.mmInfo.Lines.Add('EXCEPTION in TopOneThousand TMDb Data Conversion');
-          MainFOrm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+          MainForm.LogEvent('EXCEPTION in TopOneThousand TMDb Data Conversion');
+          MainForm.LogEvent(E.Classname+': '+E.Message);
         end;
       end;
 
@@ -5771,7 +5771,7 @@ begin
 //              begin
 //                // missing file - try and get it?
 //                try
-//                  MainForm.mmInfo.Lines.Add('- Generating Top1000 Person #'+IntToStr((Page*20)+Popular)+' Without Birthday: '+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt));
+//                  MainForm.LogEvent('- Generating Top1000 Person #'+IntToStr((Page*20)+Popular)+' Without Birthday: '+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt));
 //                  CacheResponse.Text := GetPersonfromTMDb(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt, False);
 //                  ActorData := TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject;
 //                  ProcessActor(Popular, IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt), ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, Regenerate);
@@ -5826,7 +5826,7 @@ begin
             end;
           except on E: Exception do
             begin
-               MainForm.mmInfo.Lines.Add('EXCEPTION in TopOneThousand Adding Actors');
+               MainForm.LogEvent('EXCEPTION in TopOneThousand Adding Actors');
             end;
           end;
         end;
@@ -5844,7 +5844,7 @@ begin
       TFile.WriteAllText(CacheFile+'.json', Actors, TEncoding.UTF8);
     except on E: exception do
       begin
-        MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
       end
     end;
     Actors := '';
@@ -5854,7 +5854,7 @@ begin
       TFile.WriteAllText(CacheFile+'-adult.json', AdActors);
     except on E: exception do
       begin
-        MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
       end
     end;
     AdActors := '';
@@ -5897,7 +5897,7 @@ begin
       CacheBRResponse.LoadFromFile(CacheFile+'.json.br');
     except on E: Exception do
       begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Data Not Cached","TP":'+FloatToStr(Now)+'}';
       end;
     end;
@@ -6169,8 +6169,8 @@ begin
             Response := ClientReq.Get(URL).ContentStream;
           except on E:Exception do
             begin
-              MainForm.mmInfo.Lines.Add('EXCEPTION in TopFiveThousand TMDb ClientReq.Get');
-              MainForm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+              MainForm.LogEvent('EXCEPTION in TopFiveThousand TMDb ClientReq.Get');
+              MainForm.LogEvent(E.Classname+': '+E.Message);
             end;
           end;
 
@@ -6189,8 +6189,8 @@ begin
 
         except on E: Exception do
           begin
-            MainForm.mmInfo.Lines.Add('EXCEPTION in TopFiveThousand TMDb File Processing');
-            MainForm.mmInfo.Lines.Add(E.ClassName+': '+E.Message);
+            MainForm.LogEvent('EXCEPTION in TopFiveThousand TMDb File Processing');
+            MainForm.LogEvent(E.ClassName+': '+E.Message);
           end;
         end;
       end;
@@ -6202,8 +6202,8 @@ begin
         Data := (TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONArray;
       except on E:Exception do
         begin
-          MainForm.mmInfo.Lines.Add('EXCEPTION in TopFiveThousand TMDb Data Conversion');
-          MainFOrm.mmInfo.Lines.Add(E.Classname+': '+E.Message);
+          MainForm.LogEvent('EXCEPTION in TopFiveThousand TMDb Data Conversion');
+          MainForm.LogEvent(E.Classname+': '+E.Message);
         end;
       end;
 
@@ -6313,7 +6313,7 @@ begin
       TFile.WriteAllText(CacheFile+'.json', Actors, TEncoding.UTF8);
     except on E: exception do
       begin
-        MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
       end
     end;
     Actors := '';
@@ -6323,7 +6323,7 @@ begin
       TFile.WriteAllText(CacheFile+'-adult.json', AdActors);
     except on E: exception do
       begin
-        MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
       end
     end;
     AdActors := '';
@@ -6367,7 +6367,7 @@ begin
       CacheBRResponse.LoadFromFile(CacheFile+'.json.br');
     except on E: Exception do
       begin
-//      MainForm.mmInfo.LInes.Add(E.ClassName+': '+E.Message);
+//      MainForm.LogEvent(E.ClassName+': '+E.Message);
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Data Not Cached","TP":'+FloatToStr(Now)+'}';
       end;
     end;
