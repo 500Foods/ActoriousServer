@@ -578,7 +578,7 @@ object MainForm: TMainForm
       Alignment = taCenter
       AutoSize = False
       TabOrder = 17
-      Text = '1.0.0.0'
+      Text = '1.0.3000'
       OnChange = edtClientVersionChange
     end
     object btUpdateVersion: TButton
