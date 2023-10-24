@@ -203,11 +203,15 @@ begin
   begin
     btTimer.Tag := 1;
     btTimer.Caption := 'Disable Timer';
+    tmrTopUpdate.Enabled := True;
+    tmrVersionCheck.Enabled := True;
   end
   else
   begin
     btTimer.Tag := 0;
     btTimer.Caption := 'Enable Timer';
+    tmrTopUpdate.Enabled := False;
+    tmrVersionCheck.Enabled := False;
   end;
 end;
 
@@ -1909,12 +1913,25 @@ const
 begin
   btStart.Enabled := not ServerContainer.SparkleHttpSysDispatcher.Active;
   btStop.Enabled := not btStart.Enabled;
+
   if ServerContainer.SparkleHttpSysDispatcher.Active then
-    LogEvent(SServerStartedAt + StringReplace(
-      ServerContainer.XDataServer.BaseUrl,
-      cHttp, cHttpLocalhost, [rfIgnoreCase]))
+  begin
+    LogEvent(SServerStartedAt + StringReplace(ServerContainer.XDataServer.BaseUrl, cHttp, cHttpLocalhost, [rfIgnoreCase]));
+    tmrVersionCheck.Enabled := True;
+    tmrTopUpdate.Enabled := True;
+    btTimer.Enabled := True;
+    btTimer.Tag := 1;
+    btTimer.Caption := 'Disable Timer';
+  end
   else
-  LogEvent(SServerStopped);
+  begin
+    LogEvent(SServerStopped);
+    tmrVersionCheck.Enabled := False;
+    tmrTopUpdate.Enabled := False;
+    btTimer.Enabled := False;
+    btTimer.Tag := 0;
+    btTimer.Caption := 'Enable Timer';
+  end;
   LogEvent('');
 end;
 
