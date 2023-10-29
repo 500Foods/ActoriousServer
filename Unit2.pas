@@ -172,7 +172,6 @@ type
     CleanSize: Int64;
     CleanFiles: Integer;
 
-    AppName: String;
     AppStartup: TDateTime;
     AppConfiguration: TJSONObject;
     AppBaseURL: String;
@@ -272,11 +271,11 @@ begin
   then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
   try
     Client.Get(Client.URL);
-   except on E: Exception do
-     begin
-       LogException('Regen Top1000', E.ClassName, E.Message, Client.URL);
-     end;
-   end;
+  except on E: Exception do
+    begin
+      LogException('Regen Top1000', E.ClassName, E.Message, Client.URL);
+    end;
+  end;
 end;
 
 procedure TMainForm.btTop5000Click(Sender: TObject);
@@ -332,7 +331,7 @@ begin
     Response := Client.Get(TidURI.URLEncode(URL)).ContentAsString;
   except on E: Exception do
     begin
-      LogEvent(E.ClassName+': '+E.Message);
+      LogException('Version Check', E.ClassName, E.Message, URL);
     end;
   end;
 
@@ -431,7 +430,7 @@ begin
 
     except on E: Exception do
       begin
-        LogEvent(E.ClassName+': '+E.Message);
+        LogException('Update Home Assistant', E.ClassName, E.Message, URL+Endpoint);
       end;
     end;
 
@@ -485,7 +484,7 @@ begin
         d.Free;
       except on E: Exception do
         begin
-          LogEvent(Progress[i]);
+          LogException('External Progress', E.ClassName, E.Message, Progress[i]);
         end;
       end;
     end;
@@ -838,7 +837,7 @@ begin
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
       begin
-        LogEvent('Exception?');
+        LogException('Cleaning People/Actorious', E.ClassName, E.Message, CacheDir);
       end;
     end;
     Application.ProcessMessages;
@@ -853,7 +852,7 @@ begin
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
       begin
-        LogEvent('Exception?');
+        LogException('Cleaning People/TMDb', E.ClassName, E.Message, CacheDir);
       end;
     end;
     Application.ProcessMessages;
@@ -877,7 +876,7 @@ begin
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
       begin
-        LogEvent('Exception?');
+        LogException('Cleaning Movies/Actorious', E.ClassName, E.Message, CacheDir);
       end;
     end;
     Application.ProcessMessages;
@@ -892,7 +891,7 @@ begin
       CleanMovies := CleanMovies + CleanDir;
     except on E: Exception do
       begin
-        LogEvent('Exception?');
+        LogException('Cleaning Movies/TMDb', E.ClassName, E.Message, CacheDir);
       end;
     end;
     Application.ProcessMessages;
@@ -916,7 +915,7 @@ begin
       CleanTVShows := CleanTVShows + CleanDir;
     except on E: Exception do
       begin
-        LogEvent('Exception?');
+        LogException('Cleaning TVShows/Actorious', E.ClassName, E.Message, CacheDir);
       end;
     end;
     Application.ProcessMessages;
@@ -931,7 +930,7 @@ begin
       Cleantvshows := Cleantvshows + CleanDir;
     except on E: Exception do
       begin
-        LogEvent('Exception?');
+        LogException('Cleaning TVShows/TMDb', E.ClassName, E.Message, CacheDir);
       end;
     end;
     Application.ProcessMessages;
@@ -992,7 +991,7 @@ begin
         d.Free;
       except on E: Exception do
         begin
-          LogEvent(Progress[i]);
+          LogException('Internal Progress', E.ClassName, E.Message, Progress[i]);
         end;
       end;
     end;
@@ -1525,7 +1524,7 @@ begin
         Html1.HtmlCharSet := 'utf-8';
 
         Msg1 := Html1.NewMessage(nil);
-        Msg1.Subject := 'Startup notification: '+AppName+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)';
+        Msg1.Subject := 'Startup notification: '+MainForm.Caption+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)';
         Msg1.From.Text := MainForm.MailServerFrom;
         Msg1.From.Name := MainForm.MailServerName;
 
@@ -1714,8 +1713,6 @@ begin
   end;
   ProgressStep.Caption := '9 of 16';
 
-  LogEvent('Configuration Loaded.');
-  LogEvent('');
 
   // Get Mail Configuration
   MailServerAvailable := False;
@@ -1734,6 +1731,9 @@ begin
   begin
     LogEvent('- SMTP Mail Server: Unavailable');
   end;
+
+  LogEvent('Configuration Loaded.');
+  LogEvent('');
 
   Application.ProcessMessages;
 

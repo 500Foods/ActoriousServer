@@ -1035,8 +1035,7 @@ begin
     TMDB_Data := TJSONObject.ParseJSONValue(TMDB_Data_String) as TJSONObject;
   except on E: Exception do
     begin
-      MainForm.LogEvent('TMDB JSON Error: ');
-      MainForm.LogEvent(Copy(TMDB_Data_String,1,150));
+      MainForm.LogException('TMDb JSON Error', E.ClassName, E.Message, Copy(TMDB_Data_String,1,150));
     end;
   end;
 
@@ -1045,8 +1044,7 @@ begin
     WikiData := TJSONObject.ParseJSONValue(WikiData_String) as TJSONArray;
   except on E: Exception do
     begin
-      MainForm.LogEvent('WIKI JSON Error: ');
-      MainForm.LogEvent(Copy(WikiData_String,1,150));
+      MainForm.LogException('WikiData JSON Error', E.ClassName, E.Message, Copy(WikiData_String,1,150));
     end;
   end;
 
@@ -2327,8 +2325,7 @@ begin
     end;
   except on E: Exception do
     begin
-      MainForm.LogEvent('EXCEPTION Processing Movie Validation Check '+MovieRef);
-      MainForm.LogEvent(E.ClassName+': '+E.Message);
+      MainForm.LogException('Processing Movie Validation Check', E.ClassName, E.Message, MovieRef);
       MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
@@ -2398,8 +2395,7 @@ begin
 
   except on E: Exception do
     begin
-      MainForm.LogEvent('EXCEPTION Processing Movie Data '+MovieRef);
-      MainForm.LogEvent(E.ClassName+': '+E.Message);
+      MainForm.LogException('Processing Movie Data', E.ClassName, E.Message, MovieRef);
       MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
@@ -3195,7 +3191,7 @@ begin
             except on E: Exception do
               begin
                 // Got a response that isn't valid JSON?!
-                MainForm.LogEvent('Invalid TMDb Response received');
+                MainForm.LogException('Invalid TMDb Response Received', E.ClassName, E.Message, Copy(req,1,150));
               end;
             end;
 
@@ -3400,8 +3396,7 @@ begin
       SearchResponse := ClientReq.Get(URL).ContentAsString(TEncoding.UTF8);
     except on E:Exception do
       begin
-        MainForm.LogEvent('EXCEPTION in WikiData Relatives ClientReq.Get');
-        MainForm.LogEvent(E.Classname+': '+E.Message);
+        MainForm.LogException('WikiData Relatives ClientREq.Get', E.Classname, E.Message, URL);
       end;
     end;
 //    MainForm.LogEvent(qry);
@@ -3413,8 +3408,7 @@ begin
 
   except on E: Exception do
     begin
-      MainForm.LogEvent('EXCEPTION in WikiData Relatives Results Processing');
-      MainForm.LogEvent(E.Classname+': '+E.Message);
+      MainForm.LogException('WikiData Relatives Results Processing', E.Classname, E.Message, URL);
     end;
   end;
 
