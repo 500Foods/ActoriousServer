@@ -30,6 +30,23 @@ uses
 
   idURI,
   IdGlobalProtocols,
+  IdStack,
+  IdGlobal,
+  IdBaseComponent,
+  IdComponent,
+  IdTCPConnection,
+  IdTCPClient,
+  IdHTTP,
+  IdMessageClient,
+  IdMessage,
+  IdMessageBuilder,
+  IdAttachment,
+  IdMessageParts,
+  IdEMailAddress,
+  IdAttachmentFile,
+  IdSMTPBase,
+  IdSMTP,
+  IdAttachmentMemory,
 
   System.Net.URLClient,
   System.Net.HttpClientComponent,
@@ -123,6 +140,7 @@ type
     procedure btRedocClick(Sender: TObject);
     procedure LogEvent(Details: String);
     procedure LogException(Source: String; EClass: String; EMessage: String; Data: String);
+    procedure SendStartupConfirmation;
 
   public
     Progress: TStringList;
@@ -154,6 +172,8 @@ type
     CleanSize: Int64;
     CleanFiles: Integer;
 
+    AppName: String;
+    AppStartup: TDateTime;
     AppConfiguration: TJSONObject;
     AppBaseURL: String;
     AppURL: String;
@@ -161,6 +181,14 @@ type
     AppRedoc: String;
     AppHAURL: String;
     AppHAToken: String;
+
+    MailServerAvailable: Boolean;
+    MailServerHost: String;
+    MailServerPort: Integer;
+    MailServerUser: String;
+    MailServerPass: String;
+    MailServerFrom: String;
+    MailServerName: String;
 
   strict private
     procedure UpdateGUI;
@@ -185,7 +213,6 @@ var
   AppRelease: String;
   MemoryUsage: String;
   MemoryUsageNice: String;
-  ElapsedTime: TDateTime;
 
 implementation
 
@@ -339,7 +366,7 @@ var
 
 begin
 
-  // NOTE: ElapsedTime, MemoryUsage, AppVersion and AppRelease are Form Variables defined elsewhere
+  // NOTE: AppStartup, MemoryUsage, AppVersion and AppRelease are Form Variables defined elsewhere
 
   // Decide if you're going to use a Home Assistant Internal vs. External URL
   // And that they might differ in whether SSL is used
@@ -359,13 +386,13 @@ begin
     try
 
       Endpoint := '/api/states/sensor.actorious_server_start';
-      Data := TStringStream.Create('{"state": "'+FormatDateTime('mmm dd (ddd) hh:nn', ElapsedTime)+'" }');
+      Data := TStringStream.Create('{"state": "'+FormatDateTime('mmm dd (ddd) hh:nn', AppStartup)+'" }');
       Response := Client.Post(URL+Endpoint, Data).ContentAsString;
       if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
       Data.Free();
 
       Endpoint := '/api/states/sensor.actorious_server_runtime';
-      Data := TStringStream.Create('{"state": "'+IntToStr(DaysBetween(Now, ElapsedTime))+'d '+FormatDateTime('h"h "n"m"', Now-ElapsedTime)+'" }');
+      Data := TStringStream.Create('{"state": "'+IntToStr(DaysBetween(Now, AppStartup))+'d '+FormatDateTime('h"h "n"m"', Now-AppStartup)+'" }');
       Response := Client.Post(URL+Endpoint, Data).ContentAsString;
       if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
       Data.Free();
@@ -498,8 +525,8 @@ begin
   mmStats.Lines.Add('  '+AppVersionString);
   mmStats.Lines.Add('  Running on '+GetEnvironmentVariable('COMPUTERNAME'));
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('  Started: '+FormatDateTime('yyyy-mm-dd HH:nn:ss', ElapsedTime));
-  mmStats.Lines.Add('  RunTime: '+IntToStr(DaysBetween(Now, ElapsedTime))+'d '+FormatDateTime('HH:nn:ss', Now-ElapsedTime));
+  mmStats.Lines.Add('  Started: '+FormatDateTime('yyyy-mm-dd HH:nn:ss', AppStartup));
+  mmStats.Lines.Add('  RunTime: '+IntToStr(DaysBetween(Now, AppStartup))+'d '+FormatDateTime('HH:nn:ss', Now-AppStartup));
   mmStats.Lines.Add('');
 
 {$WARN SYMBOL_PLATFORM OFF}
@@ -1461,6 +1488,84 @@ begin
   tmrWaiting.Enabled := True;
 end;
 
+procedure TMainForm.SendStartupConfirmation;
+var
+  SMTP1: TIdSMTP;
+  Msg1: TIdMessage;
+  Addr1: TIdEmailAddressItem;
+  Html1: TIdMessageBuilderHtml;
+  SMTPResult: WideString;
+begin
+  if not(MailServerAvailable) then
+  begin
+    LogEvent('WARNING: Startup notification e-mail not sent (Mail services not configured)');
+  end
+  else
+  begin
+
+    // Send warning email
+    Msg1  := nil;
+    Addr1 := nil;
+    SMTP1 := TIdSMTP.Create(nil);
+    SMTP1.Host     := MainForm.MailServerHost;
+    SMTP1.Port     := MainForm.MailServerPort;
+    SMTP1.Username := MainForm.MailServerUser;
+    SMTP1.Password := MainForm.MailServerPass;
+
+    try
+      Html1 := TIdMessageBuilderHtml.Create;
+      try
+        Html1.Html.Add('<html>');
+        Html1.Html.Add('<head>');
+        Html1.Html.Add('</head>');
+        Html1.Html.Add('<body><pre>');
+        Html1.Html.Add(mmInfo.Lines.Text);
+        Html1.Html.Add('</pre></body>');
+        Html1.Html.Add('</html>');
+        Html1.HtmlCharSet := 'utf-8';
+
+        Msg1 := Html1.NewMessage(nil);
+        Msg1.Subject := 'Startup notification: '+AppName+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)';
+        Msg1.From.Text := MainForm.MailServerFrom;
+        Msg1.From.Name := MainForm.MailServerName;
+
+        Addr1 := Msg1.Recipients.Add;
+        Addr1.Address := MainForm.MailserverFrom;
+
+        SMTP1.Connect;
+        try
+          try
+            SMTP1.Send(Msg1);
+          except on E: Exception do
+            begin
+              SMTPResult := SMTPResult+'[ '+E.ClassName+' ] '+E.Message+Chr(10);
+            end;
+          end;
+        finally
+          SMTP1.Disconnect();
+        end;
+      finally
+        Addr1.Free;
+        Msg1.Free;
+        Html1.Free;
+      end;
+    except on E: Exception do
+      begin
+        SMTPResult := SMTPResult+'[ '+E.ClassName+' ] '+E.Message+Chr(10);
+      end;
+    end;
+    SMTP1.Free;
+
+    if SMTPResult = ''
+    then LogEvent('NOTICE: Startup notification e-mail sent to '+MailServerName+' <'+MailServerFrom+'>')
+    else
+    begin
+      LogEvent('WARNING: Startup notification e-mail to '+MailServerName+' <'+MailServerFrom+'> FAILED.');
+      LogEvent('WARNING: SMTP Error: '+SMTPResult);
+    end;
+  end;
+end;
+
 procedure TMainForm.StartTimerTimer(Sender: TObject);
 var
   AppConfigFile: String;
@@ -1612,6 +1717,24 @@ begin
   LogEvent('Configuration Loaded.');
   LogEvent('');
 
+  // Get Mail Configuration
+  MailServerAvailable := False;
+  if AppConfiguration.GetValue('Mail Services') <> nil then
+  begin
+    MailServerAvailable := True;
+    MailServerHost := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP Host') as TJSONString).Value;
+    MailServerPort := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP Port') as TJSONNumber).AsInt;
+    MailServerUser := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP User') as TJSONString).Value;
+    MailServerPass := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP Pass') as TJSONString).Value;
+    MailServerFrom := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP From') as TJSONString).Value;
+    MailServerName := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP Name') as TJSONString).Value;
+    LogEvent('- SMTP Mail Server: '+MailServerHost+' / '+IntToStr(MailServerPort));
+  end
+  else
+  begin
+    LogEvent('- SMTP Mail Server: Unavailable');
+  end;
+
   Application.ProcessMessages;
 
   // Kick off Cache Populator
@@ -1683,9 +1806,12 @@ begin
   ProgressStep.Caption := '16 of 16';
 
   LogEvent('');
-  LogEvent('SERVER STARTUP COMPLETE.');
+  LogEvent('SERVER STARTUP COMPLETE ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms).');
   LogEvent('______________________________________________________');
   LogEvent('');
+
+  // Send an email if so configured
+  SendStartupConfirmation;
 
   ProgressDetail.Caption := 'Startup Complete';
 
@@ -1858,7 +1984,7 @@ procedure TMainForm.FormCreate(ASender: TObject);
 begin
 
   // How long has server been running?
-  ElapsedTime := Now;
+  AppStartup := Now;
   MemoryUsage := '0.0';
   MemoryUsageNice := '0.0';
 
