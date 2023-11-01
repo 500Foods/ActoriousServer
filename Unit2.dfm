@@ -447,9 +447,9 @@ object MainForm: TMainForm
     object btClear: TButton
       Left = 428
       Top = 58
-      Width = 94
+      Width = 42
       Height = 25
-      Caption = 'Clear View'
+      Caption = 'Clear'
       TabOrder = 8
       OnClick = btClearClick
     end
@@ -628,6 +628,15 @@ object MainForm: TMainForm
       TabOrder = 22
       WordWrap = True
       OnClick = btRedocClick
+    end
+    object btEmail: TButton
+      Left = 470
+      Top = 58
+      Width = 52
+      Height = 25
+      Caption = 'E-Mail'
+      TabOrder = 23
+      OnClick = btEmailClick
     end
   end
   object sparqlRelatives: TMemo

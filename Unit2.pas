@@ -103,6 +103,7 @@ type
     btRedoc: TButton;
     Shape1: TShape;
     mmInfo: TMemo;
+    btEmail: TButton;
     procedure GetAppVersionString;
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
@@ -140,7 +141,8 @@ type
     procedure btRedocClick(Sender: TObject);
     procedure LogEvent(Details: String);
     procedure LogException(Source: String; EClass: String; EMessage: String; Data: String);
-    procedure SendStartupConfirmation;
+    procedure SendActivityLog(Subject: String);
+    procedure btEmailClick(Sender: TObject);
 
   public
     Progress: TStringList;
@@ -180,6 +182,7 @@ type
     AppRedoc: String;
     AppHAURL: String;
     AppHAToken: String;
+    LastException: TDateTime;
 
     MailServerAvailable: Boolean;
     MailServerHost: String;
@@ -748,6 +751,13 @@ begin
   LogEvent('[ EXCEPTION ] '+Source);
   LogEvent('[ '+EClass+' ] '+EMessage);
   LogEvent('[ Data ] '+Data);
+
+  if SecondsBetween(now, LastException) > 300 then
+  begin
+    LastException := Now;
+    SendActivityLog('Exception Detected');
+  end;
+
 end;
 
 procedure TMainForm.btCleanClick(Sender: TObject);
@@ -944,6 +954,11 @@ end;
 procedure TMainForm.btClearClick(Sender: TObject);
 begin
   mmInfo.Clear;
+end;
+
+procedure TMainForm.btEmailClick(Sender: TObject);
+begin
+  SendActivityLog('Activity Log');
 end;
 
 procedure TMainForm.btInternalClick(Sender: TObject);
@@ -1487,7 +1502,7 @@ begin
   tmrWaiting.Enabled := True;
 end;
 
-procedure TMainForm.SendStartupConfirmation;
+procedure TMainForm.SendActivityLog(Subject: String);
 var
   SMTP1: TIdSMTP;
   Msg1: TIdMessage;
@@ -1497,7 +1512,7 @@ var
 begin
   if not(MailServerAvailable) then
   begin
-    LogEvent('WARNING: Startup notification e-mail not sent (Mail services not configured)');
+    LogEvent('WARNING: '+Subject+' e-mail not sent (Mail services not configured)');
   end
   else
   begin
@@ -1524,7 +1539,7 @@ begin
         Html1.HtmlCharSet := 'utf-8';
 
         Msg1 := Html1.NewMessage(nil);
-        Msg1.Subject := 'Startup notification: '+MainForm.Caption+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)';
+        Msg1.Subject := Subject+': '+MainForm.Caption+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)';
         Msg1.From.Text := MainForm.MailServerFrom;
         Msg1.From.Name := MainForm.MailServerName;
 
@@ -1556,10 +1571,10 @@ begin
     SMTP1.Free;
 
     if SMTPResult = ''
-    then LogEvent('NOTICE: Startup notification e-mail sent to '+MailServerName+' <'+MailServerFrom+'>')
+    then LogEvent('NOTICE: '+Subject+' e-mail sent to '+MailServerName+' <'+MailServerFrom+'>')
     else
     begin
-      LogEvent('WARNING: Startup notification e-mail to '+MailServerName+' <'+MailServerFrom+'> FAILED.');
+      LogEvent('WARNING: '+Subject+' e-mail to '+MailServerName+' <'+MailServerFrom+'> FAILED.');
       LogEvent('WARNING: SMTP Error: '+SMTPResult);
     end;
   end;
@@ -1811,7 +1826,7 @@ begin
   LogEvent('');
 
   // Send an email if so configured
-  SendStartupConfirmation;
+  SendActivityLog('Startup Confirmation');
 
   ProgressDetail.Caption := 'Startup Complete';
 
@@ -1987,6 +2002,9 @@ begin
   AppStartup := Now;
   MemoryUsage := '0.0';
   MemoryUsageNice := '0.0';
+
+  // Help with flooding exception emails
+  LastException := Now - 1;
 
   // Sort out the Server Version
   GetAppVersionString;

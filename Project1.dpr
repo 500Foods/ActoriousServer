@@ -1,18 +1,6 @@
 program Project1;
 
 uses
-  {$IFDEF EurekaLog}
-  EMemLeaks,
-  EResLeaks,
-  ESendMailSMTP,
-  EDebugExports,
-  EDebugJCL,
-  EFixSafeCallException,
-  EMapWin32,
-  EAppVCL,
-  EAppNonVisual,
-  ExceptionLog7,
-  {$ENDIF EurekaLog}
   Vcl.Forms,
   Unit1 in 'Unit1.pas' {ServerContainer: TDataModule},
   Unit2 in 'Unit2.pas' {MainForm},
@@ -29,6 +17,7 @@ begin
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.
+
 
 
 

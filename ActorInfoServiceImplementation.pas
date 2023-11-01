@@ -95,6 +95,7 @@ begin
   Result := StringReplace(Result, chr(13),  '',    [rfReplaceAll]);   // CR
   Result := StringReplace(Result, '\u0013', '',    [rfReplaceAll]);
   Result := StringReplace(Result, '\S',     '/S',  [rfReplaceAll]);
+  Result := StringReplace(Result, '\\',     ' ',   [rfReplaceAll]);
   Result := StringReplace(Result, ' \ ',    ' / ', [rfReplaceAll]);
 end;
 
@@ -258,7 +259,7 @@ end;
 // roles so we'll have to augment that data later on.                                            //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function GetPersonfromTMDb(TMDb_ID: Integer; ForceUpdate: Boolean):String;
+function GetPersonfromTMDb(TMDb_ID: Integer; ForceUpdate: Boolean; ProgCount, TotCount:Integer):String;
 var
   Client: TNetHTTPClient;  // The client connection
   Query: String;           // The query we're building
@@ -290,7 +291,7 @@ begin
     begin
       Update := True;
       Reason := 'Miss';
-      MainForm.LogEvent('- GetPerson Cache Miss: '+IntToStr(TMDb_ID));
+      MainForm.LogEvent('- GetPersonFromTMDb Cache Miss [ '+RightStr('0000'+IntToStr(ProgCount),4)+' of '+RightStr('0000'+IntToStr(TotCount),4)+' ]: '+IntToStr(TMDb_ID));
     end;
   end
   else
@@ -2282,6 +2283,7 @@ begin
     begin
       MainForm.LogException('ProcessPerson/Validation', E.ClassName, E.Message, ActorRef);
       MainForm.LogEvent(Copy(Actor,1,150));
+      Mainform.LogEvent(Actor);
       Result := '';
     end;
   end;
@@ -2445,7 +2447,7 @@ begin
     begin
       Update := True;
       Reason := 'Miss';
-      MainForm.LogEvent('- GetPerson Cache Miss: '+ActorRef);
+      MainForm.LogEvent('- GetPerson Cache Miss [ '+RightStr('0000'+IntToStr(ActorID),4)+' of '+RightStr('0000'+IntToStr(ActorCount),4)+' ]: '+ActorRef);
     end;
   end
   else
@@ -2456,7 +2458,7 @@ begin
   if Update then
   begin
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting TMDb# '+ActorRef+' ( '+IntToStr(ActorID)+' of '+IntToStr(ActorCount)+' )","TP":'+FloatToStr(Now)+'}';
-    TMDB := GetPersonFromTMDB(StrToInt(ActorRef),ForceUpdate);
+    TMDB := GetPersonFromTMDB(StrToInt(ActorRef),ForceUpdate, ActorID, ActorCount);
     if Pos('"success":false,"status_code"', TMDB) > 0 then
     begin
       Result := '';
@@ -2905,7 +2907,7 @@ begin
       Response.LoadFromFile(CacheFile, TEncoding.UTF8)
     except on E: Exception do
       begin
-        Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False);
+        Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
         ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
         ActorData.Free;
@@ -3431,7 +3433,7 @@ begin
       Response.LoadFromFile(CacheFile, TEncoding.UTF8)
     except on E: Exception do
       begin
-        Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False);
+        Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
         ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
         ActorData.Free;
@@ -3918,7 +3920,7 @@ begin
         Response.LoadFromFile(CacheFile, TEncoding.UTF8)
       except on E: Exception do
         begin
-          Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False);
+          Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
           try
             ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
             ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
@@ -4605,8 +4607,8 @@ begin
           CacheFilePerson := 'cache/people/tmdb/'+RightStr('00000000'+ActorRef,3)+'/person-'+RightStr('00000000'+ActorRef,8)+'.json';
 
           // We don't have data
-        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Retrieving Person TMDb #'+ActorRef+' ( '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+' )","TP":'+FloatToStr(Now)+'}';
-          CacheResponse.Text := GetPersonfromTMDb(StrToInt(ActorRef), False);
+          MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Retrieving Person TMDb #'+ActorRef+' ( '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+' )","TP":'+FloatToStr(Now)+'}';
+          CacheResponse.Text := GetPersonfromTMDb(StrToInt(ActorRef), False, j, Actors.Count - 1);
 
           if CacheResponse.Text = '' then
           begin
@@ -4997,7 +4999,7 @@ begin
 
           // We don't have data
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+': TMDb #'+ActorRef+' Retrieving","TP":'+FloatToStr(Now)+'}';
-          CacheResponse.Text := GetPersonfromTMDb(StrToInt(ActorRef), False);
+          CacheResponse.Text := GetPersonfromTMDb(StrToInt(ActorRef), False, j, Actors.Count - 1);
 
           // It has just (hopefully) been generated.  So let's try and access it again
           if CacheResponse.Text = '' then
@@ -5382,7 +5384,7 @@ begin
 
           // We don't have data
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+': TMDb #'+ActorRef+' Retrieving","TP":'+FloatToStr(Now)+'}';
-          CacheResponse.Text := GetPersonfromTMDb(StrToInt(ActorRef), False);
+          CacheResponse.Text := GetPersonfromTMDb(StrToInt(ActorRef), False, j, Actors.Count - 1);
 
           if CacheResponse.Text = '' then
           begin
@@ -5653,7 +5655,7 @@ begin
   begin
     // We've got data, so just return it and be done
     if Pos('[ADULT]',Progress) > 0
-   then CacheFile := CacheFile+'-adult';
+    then CacheFile := CacheFile+'-adult';
     Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
     TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'.json.br')));
     TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'.json')));
@@ -5673,7 +5675,7 @@ begin
     AdultActors := 0;
     Unique := '';
 
-    for Page := 0 to 74 do
+    for Page := 0 to 75 do
     begin
 
       // Time to Regenerate this data
@@ -6256,28 +6258,35 @@ begin
               end;
 
               // One last time - exclude anyone without any roles
-              
-              if (ActorData.getValue('NUM') <> nil) and (ActorData.getValue('NUM') is TJSONNumber) and  ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
-              begin
-                if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true) then
+
+              try
+                if (ActorData.getValue('NUM') <> nil) and (ActorData.getValue('NUM') is TJSONNumber) and  ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
                 begin
-                  if (AdultActors < 5000) then
+                  if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true) then
                   begin
-                    if AdultActors = 0
-                    then AdActors := AdActors+ActorData.ToString
-                    else AdActors := AdActors+','+ActorData.ToString;
-                    AdultActors := AdultActors + 1;
+                    if (AdultActors < Min(5000, Data.Count)) then
+                    begin
+                      if AdultActors = 0
+                      then AdActors := AdActors+ActorData.ToString
+                      else AdActors := AdActors+','+ActorData.ToString;
+                      AdultActors := AdultActors + 1;
+                    end;
+                  end
+                  else
+                  begin
+                    if (TotalActors < Min(5000, Data.Count)) then
+                   begin
+                     if TotalActors = 0
+                      then Actors := Actors+ActorData.ToString
+                      else Actors := Actors+','+ActorData.ToString;
+                      TotalActors := TotalActors + 1;
+                    end;
                   end;
-                end
-                else
+                end;
+              except on E: Exception do
                 begin
-                  if (TotalActors < 5000) then
-                  begin
-                    if TotalActors = 0
-                    then Actors := Actors+ActorData.ToString
-                    else Actors := Actors+','+ActorData.ToString;
-                    TotalActors := TotalActors + 1;
-                  end;
+                  MainForm.LogException('Top5000/Exclude', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                  ActorData.Free;
                 end;
               end;
 
