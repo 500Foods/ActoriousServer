@@ -1539,7 +1539,12 @@ begin
         Html1.HtmlCharSet := 'utf-8';
 
         Msg1 := Html1.NewMessage(nil);
-        Msg1.Subject := Subject+': '+MainForm.Caption+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)';
+
+        // Startup should be < 10s but otherwise send the running time
+        if MillisecondsBetween(Now, AppStartup) < 10000
+        then Msg1.Subject := '['+GetEnvironmentVariable('COMPUTERNAME')+'] '+Subject+': '+MainForm.Caption+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)'
+        else Msg1.Subject := '['+GetEnvironmentVariable('COMPUTERNAME')+'] '+Subject+': '+MainForm.Caption+' ('+FormatDateTime('hh:nn:ss', Now - AppStartup)+'}';
+
         Msg1.From.Text := MainForm.MailServerFrom;
         Msg1.From.Name := MainForm.MailServerName;
 

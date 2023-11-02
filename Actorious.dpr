@@ -1,4 +1,4 @@
-program Project1;
+program Actorious;
 
 uses
   Vcl.Forms,
@@ -13,6 +13,7 @@ begin
 //  ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  Application.Title := 'ActoriousServer';
   Application.CreateForm(TServerContainer, ServerContainer);
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
