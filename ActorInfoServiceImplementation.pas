@@ -77,6 +77,32 @@ uses Unit2;
 
 { TActorInfoService }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// LoadJSON                                                                                      //
+//                                                                                               //
+// This is intended as an alternative to TStringList.LoadFromFile.  Why?  Well, that seems to do //
+// a lot of file locking that blocks other processes reading the same files.                     //
+// https://stackoverflow.com/questions/4845380/how-can-i-efficiently-read-the-first-few-lines-of-many-files-in-delphi //                                                                                           //
+// Will see if this helps.                                                                       //
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+procedure SLLoadJSON(var StrList: TStringList; Filename: String);
+var
+  FS: TFileStream;
+  TR: TTextReader;
+begin
+  StrList.Clear;
+  FS := TFileStream.Create(FileName, fmOpenRead);
+  TR := TStreamReader.Create(FS);
+  try
+    while not((TR as TStreamReader).EndOfStream) do
+      StrList.Add( TR.ReadLine );
+  finally
+    TR.Free;
+    FS.Free;
+  end;
+end;
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // FilterResponse                                                                                //
@@ -233,7 +259,8 @@ begin
   begin
     try
       if FileExists(CacheFile)
-      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
+      then SLLoadJSON(Response, CacheFile);
+//      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.LogException('GetDataFromWikiData/Load', E.ClassName, E.Message, CacheFile);
@@ -342,7 +369,8 @@ begin
   begin
     try
       if FileExists(CacheFile)
-      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
+      then SLLoadJSON(Response, CacheFile);
+//      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.LogException('GetPersonFromTMDb/Load', E.ClassName, E.Message, CacheFile);
@@ -476,7 +504,8 @@ begin
   begin
     try
       if FileExists(CacheFile)
-      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
+      then SLLoadJSON(Response, CacheFile);
+//      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.LogException('GetMovieFromTMDb/Load', E.ClassName, E.Message, CacheFile);
@@ -594,7 +623,8 @@ begin
   begin
     try
       if FIleExists(CacheFile)
-      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
+      then SLLoadJSON(Response, CacheFile);
+//      then Response.LoadFromFile(CacheFile, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.LogException('GetTVShowFromTMDb/Load', E.ClassName, E.Message, CacheFile);
@@ -695,7 +725,8 @@ begin
       AdultList := TJSONObject.Create;
       try
         if FileExists('cache/people/top1000/top1000-0.json')
-        then PersonData.LoadFromFile('cache/people/top1000/top1000-0.json', TEncoding.UTF8);
+        then SLLoadJSON(PersonData, 'cache/people/top1000/top1000-0.json');
+//        then PersonData.LoadFromFile('cache/people/top1000/top1000-0.json', TEncoding.UTF8);
 
         // Create an empty list if one doesn't exist already
         if (PersonData.Text = '')
@@ -804,7 +835,8 @@ begin
         MovieData.Text := '';
 
         if FileExists('cache/movies/top1000/top1000-0.json')
-        then MovieData.LoadFromFile('cache/movies/top1000/top1000-0.json', TEncoding.UTF8);
+        then SLLoadJSON(MovieData, 'cache/movies/top1000/top1000-0.json');
+//        then MovieData.LoadFromFile('cache/movies/top1000/top1000-0.json', TEncoding.UTF8);
 
         // Create an empty list if one doesn't exist already
         if (MovieData.Text = '')
@@ -912,7 +944,8 @@ begin
         TVShowData.Text := '';
 
         if FileExists('cache/tvshows/top1000/top1000-0.json')
-        then TVShowData.LoadFromFile('cache/tvshows/top1000/top1000-0.json', TEncoding.UTF8);
+        then SLLoadJSON(TVShowData,'cache/tvshows/top1000/top1000-0.json');
+//        then TVShowData.LoadFromFile('cache/tvshows/top1000/top1000-0.json', TEncoding.UTF8);
 
         // Create an empty list if one doesn't exist already
         if (TVShowData.Text = '')
@@ -2478,7 +2511,8 @@ begin
     if Reason = 'Cache' then inc(MainForm.PersonCacheHit);
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Loading TMDb# '+ActorRef+' ( '+IntToStr(ActorID)+' of '+IntToStr(ActorCount)+' )","TP":'+FloatToStr(Now)+'}';
     PersonData := TStringList.Create;
-    PersonData.LoadFromFile(CacheFile, TEncoding.UTF8);
+    SLLoadJSON(PersonData, CacheFile);
+//    PersonData.LoadFromFile(CacheFile, TEncoding.UTF8);
     if Pos('"success":false', PersonData.Text) > 0 then
     begin
       Result := '';
@@ -2823,7 +2857,8 @@ begin
   FirstPhoto := TStringList.Create;
   FirstPhoto.Text := '';
   try
-    FirstPhoto.LoadFromFile('cache/days/first/'+Day+'.json', TEncoding.UTF8);
+    SLLoadJSON(FirstPhoto, 'cache/days/first/'+Day+'.json');
+//    FirstPhoto.LoadFromFile('cache/days/first/'+Day+'.json', TEncoding.UTF8);
   except on E: Exception do
     begin
     end;
@@ -2885,7 +2920,7 @@ begin
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
                     ',"RQ":"Lookup"'+
-                    ',"TM":"'+QuotedStr(Lookup)+'"';
+                    ',"TM":"'+QuotedStr(StringReplace(Lookup,'"','',[rfReplaceAll]))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
 
   Response := TStringList.Create;
@@ -2903,19 +2938,19 @@ begin
       ActorNum+
       '.json';
     try
-      Response.Text := '';
-      Response.LoadFromFile(CacheFile, TEncoding.UTF8)
+      SLLoadJSON(Response, CacheFile)
+//      Response.LoadFromFile(CacheFile, TEncoding.UTF8)
     except on E: Exception do
       begin
         Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
         ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
         ActorData.Free;
-        Response.LoadFromFile('cache/people/actorious/'+
+        SLLoadJSON(Response, 'cache/people/actorious/'+
           RightStr(ActorNum,3)+
           '/person-'+
           ActorNum+
-          '.json', TEncoding.UTF8);
+          '.json');
       end;
     end;
 
@@ -2939,7 +2974,7 @@ begin
   Response.Text := Actors;
 //  MainForm.LogEvent(Response.Text);
 
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+QuotedStr(Lookup)+' ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+QuotedStr(StringReplace(Lookup,'"','',[rfReplaceAll]))+' ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
@@ -3080,8 +3115,8 @@ begin
     // If the Releaseday cache doesn't exist, then get the ReleaseDays.
     // We need a list of TMDb IDs that comes from that last to generate a new extended list.
     try
-      CacheResponse.Text := '';
-      CacheResponse.LoadFromFile(CacheFileReleases, TEncoding.UTF8);
+      SLLoadjSON(CacheResponse, CacheFileReleases);
+//      CacheResponse.LoadFromFile(CacheFileReleases, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"ReleaseDay Data Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -3095,8 +3130,8 @@ begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
       ReleaseDay(Secret, aMonth, aDay, Progress);
       try
-        CacheResponse.Text := '';
-        CacheResponse.LoadFromFile(CacheFileReleases);
+        SLLoadJSON(CacheResponse, CacheFileReleases);
+//        CacheResponse.LoadFromFile(CacheFileReleases);
         Movies := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Movies.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
@@ -3154,8 +3189,8 @@ begin
 
         // Do we have the processed data for this person already?
         try
-          CacheResponse.Text := '';
-          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
+          SLLoadJSON(CacheResponse, CacheFilePerson);
+//          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
         except on E: Exception do
           begin
             MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Movie # '+MovieRef+' ( '+IntToStr(j+1)+' of '+IntToStr(Movies.Count)+' )","TP":'+FloatToStr(Now)+'}';
@@ -3429,19 +3464,19 @@ begin
       ActorNum+
       '.json';
     try
-      Response.Text := '';
-      Response.LoadFromFile(CacheFile, TEncoding.UTF8)
+      SLLoadJSON(Response, CacheFile);
+//      Response.LoadFromFile(CacheFile, TEncoding.UTF8)
     except on E: Exception do
       begin
         Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
         ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
         ActorData.Free;
-        Response.LoadFromFile('cache/people/actorious/'+
+        SLLoadJSON(Response, 'cache/people/actorious/'+
           RightStr(ActorNum,3)+
           '/person-'+
           ActorNum+
-          '.json', TEncoding.UTF8);
+          '.json');
       end;
     end;
 
@@ -3736,8 +3771,8 @@ begin
       ActorNum+
       '.json';
     try
-      Response.Text := '';
-      Response.LoadFromFile(CacheFile, TEncoding.UTF8)
+      SLLoadJSON(Response, CacheFile);
+//      Response.LoadFromFile(CacheFile, TEncoding.UTF8)
     except on E: Exception do
       begin
         // In QuickSearch, we're just returning cached values so we won't do this step.
@@ -3916,8 +3951,8 @@ begin
         ActorNum+
         '.json';
       try
-        Response.Text := '';
-        Response.LoadFromFile(CacheFile, TEncoding.UTF8)
+        SLLoadJSON(Response, CacheFile);
+//        Response.LoadFromFile(CacheFile, TEncoding.UTF8)
       except on E: Exception do
         begin
           Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
@@ -3925,12 +3960,11 @@ begin
             ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
             ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
             ActorData.Free;
-            Response.Text := '';
-            Response.LoadFromFile('cache/people/actorious/'+
+            SLLoadJSON(Response, 'cache/people/actorious/'+
               RightStr(ActorNum,3)+
               '/person-'+
               ActorNum+
-              '.json', TEncoding.UTF8);
+              '.json');
           except on E: Exception do
             begin
               // We didn't get a result?
@@ -4520,8 +4554,8 @@ begin
     // If the Deathday cache doesn't exist, then get the Deathdays.
     // We need a list of TMDb IDs that comes from that last to generate a new extended list.
     try
-      CacheResponse.Text := '';
-      CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
+      SLLoadJSON(CacheResponse, CacheFileDeaths);
+//      CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"DeathDay Data Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -4534,8 +4568,8 @@ begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
       DeathDay(Secret, aMonth, aDay, Progress);
       try
-        CacheResponse.Text := '';
-        CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
+        SLLoadJSON(CacheResponse, CacheFileDeaths);
+//        CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
         Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
@@ -4593,8 +4627,8 @@ begin
 
         // Do we have the processed data for this person already?
         try
-          CacheResponse.Text := '';
-          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
+          SLLoadJSON(CacheResponse, CacheFilePerson);
+//          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
         except on E: Exception do
           begin
             MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person TMDb #'+ActorRef+' ( '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+' )","TP":'+FloatToStr(Now)+'}';
@@ -4910,8 +4944,8 @@ begin
     // If the Birthday cache doesn't exist, then get the birthdays.
     // We need a list of TMDb IDs that comes from that last to generate a new extended list.
     try
-      CacheResponse.Text := '';
-      CacheResponse.LoadFromFile(CacheFileBirths, TEncoding.UTF8);
+      SLLoadJSON(CacheResponse, CacheFileBirths);
+//      CacheResponse.LoadFromFile(CacheFileBirths, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"BirthDay Data Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -4924,8 +4958,8 @@ begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
       BirthDay(Secret, aMonth, aDay, Progress);
       try
-        CacheResponse.Text := '';
-        CacheResponse.LoadFromFile(CacheFileBirths, TEncoding.UTF8);
+        SLLoadJSON(CacheResponse, CacheFileBirths);
+//        CacheResponse.LoadFromFile(CacheFileBirths, TEncoding.UTF8);
         Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
@@ -4984,8 +5018,8 @@ begin
 
         // Do we have the processed data for this person already?
         try
-          CacheResponse.Text := '';
-          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
+          SLLoadJSON(CacheResponse, CacheFilePerson);
+//          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
         except on E: Exception do
           begin
             MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+': TMDb #'+ActorRef+' not cached","TP":'+FloatToStr(Now)+'}';
@@ -5295,8 +5329,8 @@ begin
     // If the Deathday cache doesn't exist, then get the Deathdays.
     // We need a list of TMDb IDs that comes from that last to generate a new extended list.
     try
-      CacheResponse.Text := '';
-      CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
+      SLLoadJSON(CacheResponse, CacheFileDeaths);
+//      CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
     except on E: Exception do
       begin
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"DeathDay Data Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -5309,8 +5343,8 @@ begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
       DeathDay(Secret, aMonth, aDay, Progress);
       try
-        CacheResponse.Text := '';
-        CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
+        SLLoadJSON(CacheResponse, CacheFileDeaths);
+//        CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
         Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
@@ -5369,8 +5403,8 @@ begin
 
         // Do we have the processed data for this person already?
         try
-          CacheResponse.Text := '';
-          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
+          SLLoadJSON(CacheResponse, CacheFilePerson);
+//          CacheResponse.LoadFromFile(CacheFilePerson, TEncoding.UTF8);
         except on E: Exception do
           begin
             MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+': TMDb #'+ActorRef+' not cached","TP":'+FloatToStr(Now)+'}';
@@ -5733,7 +5767,8 @@ begin
 
 //      Data := TJSONArray.Create;
       try
-        CacheResponse.LoadFromFile(CacheFile+'-'+IntToStr(Page)+'.json', TEncoding.UTF8);
+        SLLoadJSON(CacheResponse, CacheFile+'-'+IntToStr(Page)+'.json');
+//        CacheResponse.LoadFromFile(CacheFile+'-'+IntToStr(Page)+'.json', TEncoding.UTF8);
         Data := (TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONArray;
       except on E:Exception do
         begin
@@ -5995,7 +6030,8 @@ begin
 
   // Is there a Cached Response on disk?
   if FileExists(CacheFileDay)
-  then CacheResponse.LoadFromFile(CacheFileDay);
+  then SLLoadJSON(CacheResponse, CacheFileDay);
+//  then CacheResponse.LoadFromFile(CacheFileDay);
 
 
   // If we've got data and it isn't empty then send it and be done
@@ -6140,7 +6176,7 @@ begin
     begin
 
       // Time to Regenerate this data
-//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 5,000 Actors ( Page '+InttoStr(Page)+' of 500 )","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 5,000 Actors ( Page '+InttoStr(Page)+' of 500 )","TP":'+FloatToStr(Now)+'}';
       Data := TJSONArray.Create;
 
       if (Page > 0) then
@@ -6194,7 +6230,8 @@ begin
 
 //      Data := TJSONArray.Create;
       try
-        CacheResponse.LoadFromFile(CacheFile+'-'+IntToStr(Page)+'.json', TEncoding.UTF8);
+        SLLoadJSON(CacheResponse, CacheFile+'-'+IntToStr(Page)+'.json');
+//        CacheResponse.LoadFromFile(CacheFile+'-'+IntToStr(Page)+'.json', TEncoding.UTF8);
         Data := (TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONArray;
       except on E:Exception do
         begin
@@ -6260,27 +6297,36 @@ begin
               // One last time - exclude anyone without any roles
 
               try
-                if (ActorData.getValue('NUM') <> nil) and (ActorData.getValue('NUM') is TJSONNumber) and  ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
+                if (ActorData <> nil) and (ActorData.getValue('NUM') <> nil) and (ActorData.getValue('NUM') is TJSONNumber) and  ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
                 begin
                   if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true) then
                   begin
-                    if (AdultActors < Min(5000, Data.Count)) then
-                    begin
+                    try
                       if AdultActors = 0
                       then AdActors := AdActors+ActorData.ToString
                       else AdActors := AdActors+','+ActorData.ToString;
-                      AdultActors := AdultActors + 1;
+                    except on E: Exception do
+                      begin
+                        MainForm.LogException('Top5000/AddAnXActor', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                        ActorData.Free;
+                      end;
                     end;
+                    AdultActors := AdultActors + 1;
                   end
                   else
                   begin
-                    if (TotalActors < Min(5000, Data.Count)) then
-                   begin
-                     if TotalActors = 0
+                    try
+                      if TotalActors = 0
                       then Actors := Actors+ActorData.ToString
-                      else Actors := Actors+','+ActorData.ToString;
-                      TotalActors := TotalActors + 1;
+                      else if TotalActors < 5000
+                      then Actors := Actors+','+ActorData.ToString;
+                    except on E: Exception do
+                      begin
+                        MainForm.LogException('Top5000/AddAnActor', E.ClassName, E.Message, '[Actors: '+IntToStr(TotalActors)+' Length: '+IntToStr(Length(Actors))+'] '+RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                        ActorData.Free;
+                      end;
                     end;
+                    TotalActors := TotalActors + 1;
                   end;
                 end;
               except on E: Exception do

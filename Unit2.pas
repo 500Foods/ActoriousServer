@@ -968,6 +968,7 @@ var
   d1,
   d2,
   d3: String;
+  PR: String;
 begin
   // What are the last 20 progress items recorded?
 //  if Progress.Count > 0 then
@@ -995,12 +996,16 @@ begin
           if (d.getValue('DT') <> nil)
           then d3 := D3 +'DT:'+(d.getValue('DT') as TJSONString).Value.PadLeft(6)+'  ';
 
+          PR := '[No Report]';
+          if d.getValue('PR') <> nil
+          then PR := '['+(d.getValue('PR') as TJSONString).Value+']';
+
           LogEvent(
             d1+'  '+
             d2+'  '+
             (d.getValue('RQ') as TJSONString).Value.PadRight(16)+'  '+
             d3.PadRight(20)+
-            (d.getValue('PR') as TJSONString).Value
+            PR
           );
         end;
         d.Free;
