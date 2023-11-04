@@ -56,8 +56,8 @@ type
       function MovieReleaseDay(Secret: String; aMonth: Integer; aDay: Integer; Progress: String):TStream;
 
       // Get Actor information based on TMDb top 10,000 list
-      function TopOneThousand(Secret: String; Progress: String):TStream;
-      function TopFiveThousand(Secret: String; Progress: String):TStream;
+      function TopOneThousand(Secret: String; Segment: String; Progress: String):TStream;
+      function TopFiveThousand(Secret: String; Segment: String; Progress: String):TStream;
 
       // Get the top actors for today (or another day) - used by ActoriousToday, for example
       function TopToday(Secret: String; aMonth: Integer; aDay: Integer):TStream;
@@ -318,7 +318,7 @@ begin
     begin
       Update := True;
       Reason := 'Miss';
-      MainForm.LogEvent('- GetPersonFromTMDb Cache Miss [ '+RightStr('0000'+IntToStr(ProgCount),4)+' of '+RightStr('0000'+IntToStr(TotCount),4)+' ]: '+IntToStr(TMDb_ID));
+//      MainForm.LogEvent('- GetPersonFromTMDb Cache Miss [ '+RightStr('00000'+IntToStr(ProgCount),5)+' of '+RightStr('00000'+IntToStr(TotCount),5)+' ]: '+IntToStr(TMDb_ID));
     end;
   end
   else
@@ -2480,7 +2480,7 @@ begin
     begin
       Update := True;
       Reason := 'Miss';
-      MainForm.LogEvent('- GetPerson Cache Miss [ '+RightStr('0000'+IntToStr(ActorID),4)+' of '+RightStr('0000'+IntToStr(ActorCount),4)+' ]: '+ActorRef);
+      MainForm.LogEvent('- GetPerson Cache Miss [ '+RightStr('00000'+IntToStr(ActorID),5)+' of '+RightStr('00000'+IntToStr(ActorCount),5)+' ]: '+ActorRef);
     end;
   end
   else
@@ -5604,7 +5604,7 @@ begin
   CacheResponse.Free;
 end;
 
-function TActorInfoService.TopOneThousand(Secret, Progress: String): TStream;
+function TActorInfoService.TopOneThousand(Secret, Segment, Progress: String): TStream;
 var
   Page: Integer;
   Popular: Integer;
@@ -6065,7 +6065,7 @@ begin
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Complete","TP":'+FloatToStr(Now)+'}';
 end;
 
-function TActorInfoService.TopFiveThousand(Secret, Progress: String): TStream;
+function TActorInfoService.TopFiveThousand(Secret, Segment, Progress: String): TStream;
 var
   Page: Integer;
   Popular: Integer;
@@ -6089,7 +6089,11 @@ var
   ActorData: TJSONObject;
 
   Actor: String;
-  Actors: string;
+  ActorsA: string;
+  ActorsB: string;
+  ActorsC: string;
+  ActorsD: string;
+  ActorsE: string;
   AdActors: String;
   TotalActors: Integer;
   AdultActors: Integer;
@@ -6139,7 +6143,7 @@ begin
   try
     if Pos('[ADULT]',Progress) > 0
     then CacheBRResponse.LoadFromFile(CacheFile+'-adult.json.br')
-    else CacheBRResponse.LoadFromFile(CacheFile+'.json.br');
+    else CacheBRResponse.LoadFromFile(CacheFile+'-'+Segment+'.json.br');
   except on E: Exception do
     begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Data Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -6149,12 +6153,22 @@ begin
   if ((CacheBRResponse.Size > 0) and not(Regenerate)) then
   begin
     // We've got data, so just return it and be done
-    if Pos('[ADULT]',Progress) > 0
-    then CacheFile := CacheFile+'-adult';
-    Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
-    TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'.json.br')));
-    TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'.json')));
-    TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+    if Pos('[ADULT]',Progress) > 0 then
+    begin
+      CacheFile := CacheFile+'-adult';
+      Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
+      TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'.json.br')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'.json')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+    end
+    else
+    begin
+      Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
+      TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'-'+Segment+'.json.br')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'-'+Segment+'.json')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+    end;
+
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Complete","TP":'+FloatToStr(Now)+'}';
     CacheBRResponse.Free;
     CacheResponse.Free;
@@ -6166,7 +6180,11 @@ begin
     // Time to Regenerate this data
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Regenerating Top 5,000 Actors","TP":'+FloatToStr(Now)+'}';
 
-    Actors := '[';
+    ActorsA := '[';
+    ActorsB := '[';
+    ActorsC := '[';
+    ActorsD := '[';
+    ActorsE := '[';
     AdActors := '[';
     TotalActors := 0;
     AdultActors := 0;
@@ -6253,7 +6271,7 @@ begin
           try
 
             // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
-            Actor := GetPerson(TotalActors+AdultActors, 10000, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
+            Actor := GetPerson(Popular + (Page*20), 10000, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
 
           except on E: Exception do
             begin
@@ -6295,77 +6313,151 @@ begin
               end;
 
               // One last time - exclude anyone without any roles
+              if Assigned(ActorData) then
+              begin
+                try
 
-              try
-                if (ActorData <> nil) and (ActorData.getValue('NUM') <> nil) and (ActorData.getValue('NUM') is TJSONNumber) and  ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
-                begin
-                  if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true) then
+                  if (ActorData.getValue('NUM') <> nil) and (ActorData.getValue('NUM') is TJSONNumber) and  ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
                   begin
-                    try
-                      if AdultActors = 0
-                      then AdActors := AdActors+ActorData.ToString
-                      else AdActors := AdActors+','+ActorData.ToString;
-                    except on E: Exception do
-                      begin
-                        MainForm.LogException('Top5000/AddAnXActor', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
-                        ActorData.Free;
+                    if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true) then
+                    begin
+
+                      try
+                        if AdultActors = 0
+                        then AdActors := AdActors+ActorData.ToString
+                        else AdActors := AdActors+','+ActorData.ToString;
+                      except on E: Exception do
+                        begin
+                          MainForm.LogException('Top5000/AddAnXActor', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                          ActorData.Free;
+                        end;
                       end;
+
+                      AdultActors := AdultActors + 1;
+                    end
+                    else
+                    begin
+
+                      try
+                        if TotalActors = 0
+                        then ActorsA := ActorsA+ActorData.ToString
+                        else if TotalActors < 1000
+                        then ActorsA := ActorsA+','+ActorData.ToString
+
+                        else if TotalActors = 1000
+                        then ActorsB := ActorsB+ActorData.ToString
+                        else if TotalActors < 2000
+                        then ActorsB := ActorsB+','+ActorData.ToString
+
+                        else if TotalActors = 2000
+                        then ActorsC := ActorsC+ActorData.ToString
+                        else if TotalActors < 3000
+                        then ActorsC := ActorsC+','+ActorData.ToString
+
+                        else if TotalActors = 3000
+                        then ActorsD := ActorsD+ActorData.ToString
+                        else if TotalActors < 4000
+                        then ActorsD := ActorsD+','+ActorData.ToString
+
+                        else if TotalActors = 4000
+                        then ActorsE := ActorsE+ActorData.ToString
+                        else if TotalActors < 5000
+                        then ActorsE := ActorsE+','+ActorData.ToString;
+
+                        if TotalActors = 5000 then MainForm.LogEvent('Top5000: Reached at Page '+IntToStr(Page));
+
+                      except on E: Exception do
+                        begin
+                          MainForm.LogException('Top5000/AddAnActor', E.ClassName, E.Message, '[Actors: '+IntToStr(TotalActors)+'] '+RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                          ActorData.Free;
+                        end;
+                      end;
+
+                      TotalActors := TotalActors + 1;
                     end;
-                    AdultActors := AdultActors + 1;
-                  end
-                  else
+                  end;
+
+                except on E: Exception do
                   begin
-                    try
-                      if TotalActors = 0
-                      then Actors := Actors+ActorData.ToString
-                      else if TotalActors < 5000
-                      then Actors := Actors+','+ActorData.ToString;
-                    except on E: Exception do
-                      begin
-                        MainForm.LogException('Top5000/AddAnActor', E.ClassName, E.Message, '[Actors: '+IntToStr(TotalActors)+' Length: '+IntToStr(Length(Actors))+'] '+RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
-                        ActorData.Free;
-                      end;
-                    end;
-                    TotalActors := TotalActors + 1;
+                    MainForm.LogException('Top5000/Exclude', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                    MainForm.LogEvent('[ NUM ] '+INtToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt));
+                    MainForm.LogEvent('[ XXX ] '+BoolToStr((ActorData.getValue('XXX') as TJSONBool).AsBoolean));
                   end;
                 end;
-              except on E: Exception do
-                begin
-                  MainForm.LogException('Top5000/Exclude', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
-                  ActorData.Free;
-                end;
+
+//                ActorData.Free;
               end;
-
-              
-              ActorData.Free;
             end;
-
-
           except on E: Exception do
             begin
               MainForm.LogException('Top5000/AddActors', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
-              ActorData.Free;
+              //ActorData.Free;
             end;
           end;
         end;
+        if Assigned(ActorData) then ActorData.Free;
       end;
       Data.Free;
     end;
 
-    Actors := Actors + ']';
+    ActorsA := ActorsA + ']';
+    ActorsB := ActorsB + ']';
+    ActorsC := ActorsC + ']';
+    ActorsD := ActorsD + ']';
+    ActorsE := ActorsE + ']';
     AdActors := AdActors + ']';
     CacheResponse.Text := '';
 
 
-    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actors 1/2","TP":'+FloatToStr(Now)+'}';
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actors A 1/2","TP":'+FloatToStr(Now)+'}';
     try
-      TFile.WriteAllText(CacheFile+'.json', Actors, TEncoding.UTF8);
+      TFile.WriteAllText(CacheFile+'-A.json', ActorsA, TEncoding.UTF8);
     except on E: exception do
       begin
         MainForm.LogEvent(E.ClassName+': '+E.Message);
       end
     end;
-    Actors := '';
+    ActorsA := '';
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actors B 1/2","TP":'+FloatToStr(Now)+'}';
+    try
+      TFile.WriteAllText(CacheFile+'-B.json', ActorsB, TEncoding.UTF8);
+    except on E: exception do
+      begin
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
+      end
+    end;
+    ActorsB := '';
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actors C 1/2","TP":'+FloatToStr(Now)+'}';
+    try
+      TFile.WriteAllText(CacheFile+'-C.json', ActorsC, TEncoding.UTF8);
+    except on E: exception do
+      begin
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
+      end
+    end;
+    ActorsC := '';
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actors D 1/2","TP":'+FloatToStr(Now)+'}';
+    try
+      TFile.WriteAllText(CacheFile+'-D.json', ActorsD, TEncoding.UTF8);
+    except on E: exception do
+      begin
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
+      end
+    end;
+    ActorsD := '';
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actors E 1/2","TP":'+FloatToStr(Now)+'}';
+    try
+      TFile.WriteAllText(CacheFile+'-E.json', ActorsE, TEncoding.UTF8);
+    except on E: exception do
+      begin
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
+      end
+    end;
+    ActorsE := '';
 
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actors 2/2","TP":'+FloatToStr(Now)+'}';
     try
@@ -6378,10 +6470,10 @@ begin
     AdActors := '';
 
 
-    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 5,000 Actors 1/2","TP":'+FloatToStr(Now)+'}';
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 5,000 Actors A 1/2","TP":'+FloatToStr(Now)+'}';
 
     ResponseFile := TMemoryStream.Create;
-    ResponseFile.LoadFromFile(CacheFile+'.json');
+    ResponseFile.LoadFromFile(CacheFile+'-A.json');
     ResponseFile.Seek(0, soFromBeginning);
 
     // Compress the stream with Brotli
@@ -6390,7 +6482,71 @@ begin
     Brotli.Seek(0, soFromBeginning);
 
     // Save the Brotli-compressed response to disk
-    Brotli.SaveToFile(CacheFile+'.json.br');
+    Brotli.SaveToFile(CacheFile+'-A.json.br');
+    ResponseFile.Free;
+    Brotli.Free;
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 5,000 Actors B 1/2","TP":'+FloatToStr(Now)+'}';
+
+    ResponseFile := TMemoryStream.Create;
+    ResponseFile.LoadFromFile(CacheFile+'-B.json');
+    ResponseFile.Seek(0, soFromBeginning);
+
+    // Compress the stream with Brotli
+    Brotli := TMemoryStream.Create;
+    BrotliCompressStream(ResponseFile, Brotli, bcBetter);
+    Brotli.Seek(0, soFromBeginning);
+
+    // Save the Brotli-compressed response to disk
+    Brotli.SaveToFile(CacheFile+'-B.json.br');
+    ResponseFile.Free;
+    Brotli.Free;
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 5,000 Actors C 1/2","TP":'+FloatToStr(Now)+'}';
+
+    ResponseFile := TMemoryStream.Create;
+    ResponseFile.LoadFromFile(CacheFile+'-C.json');
+    ResponseFile.Seek(0, soFromBeginning);
+
+    // Compress the stream with Brotli
+    Brotli := TMemoryStream.Create;
+    BrotliCompressStream(ResponseFile, Brotli, bcBetter);
+    Brotli.Seek(0, soFromBeginning);
+
+    // Save the Brotli-compressed response to disk
+    Brotli.SaveToFile(CacheFile+'-C.json.br');
+    ResponseFile.Free;
+    Brotli.Free;
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 5,000 Actors D 1/2","TP":'+FloatToStr(Now)+'}';
+
+    ResponseFile := TMemoryStream.Create;
+    ResponseFile.LoadFromFile(CacheFile+'-D.json');
+    ResponseFile.Seek(0, soFromBeginning);
+
+    // Compress the stream with Brotli
+    Brotli := TMemoryStream.Create;
+    BrotliCompressStream(ResponseFile, Brotli, bcBetter);
+    Brotli.Seek(0, soFromBeginning);
+
+    // Save the Brotli-compressed response to disk
+    Brotli.SaveToFile(CacheFile+'-D.json.br');
+    ResponseFile.Free;
+    Brotli.Free;
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 5,000 Actors E 1/2","TP":'+FloatToStr(Now)+'}';
+
+    ResponseFile := TMemoryStream.Create;
+    ResponseFile.LoadFromFile(CacheFile+'-E.json');
+    ResponseFile.Seek(0, soFromBeginning);
+
+    // Compress the stream with Brotli
+    Brotli := TMemoryStream.Create;
+    BrotliCompressStream(ResponseFile, Brotli, bcBetter);
+    Brotli.Seek(0, soFromBeginning);
+
+    // Save the Brotli-compressed response to disk
+    Brotli.SaveToFile(CacheFile+'-E.json.br');
     ResponseFile.Free;
     Brotli.Free;
 

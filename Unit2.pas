@@ -258,6 +258,7 @@ begin
 
   // Setup the Request
   URL := URL+'?Secret='+edSecret.Text;
+  URL := URL+'?Segment=A';
   URL := URL+'&Progress='+CurrentProgress.Caption;
 
   // Submit the request (asynchronously)
@@ -295,6 +296,7 @@ begin
 
   // Setup the Request
   URL := URL+'?Secret='+edSecret.Text;
+  URL := URL+'&Segment=A';
   URL := URL+'&Progress='+CurrentProgress.Caption;
 
   // Submit the request (asynchronously)
