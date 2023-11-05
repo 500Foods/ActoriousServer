@@ -665,8 +665,10 @@ var
   ResponseFile: TMemoryStream;
   Brotli: TMemoryStream;
   AdultList: TJSONObject;
+  AdultListFound: Boolean;
   Success: Boolean;
   Attempt: Integer;
+  I: Integer;
 
 begin
 
@@ -723,6 +725,7 @@ begin
       // Get the existing list
       PersonData := TStringList.Create;
       AdultList := TJSONObject.Create;
+
       try
         if FileExists('cache/people/top1000/top1000-0.json')
         then SLLoadJSON(PersonData, 'cache/people/top1000/top1000-0.json');
@@ -739,13 +742,26 @@ begin
         end;
       end;
 
-      // Add the current person to the JSON Array
-      ((AdultList as TJSONObject).getValue('results') as TJSONArray).AddElement(TJSONObject.Create(TJSONPair.Create('id',TJSONNumber.create(PersonID))));
+      // Don't add an entry if it is there already
+      i := 0;
+      AdultListFound := False;
+      while (i < ((AdultList as TJSONObject).getValue('results') as TJSONArray).Count) and (AdultListFound = False) do
+      begin
+        if ((((AdultList as TJSONObject).getValue('results') as TJSONArray).Items[i] as TJSONObject).getValue('id') as TJSONNumber).AsInt = PersonID
+        then AdultListFound := True;
+        i := i + 1;
+      end;
 
-      // Save the updated list
-      PersonData.Text := AdultList.ToString;
-      PersonData.SaveToFile('cache/people/top1000/top1000-0.json', TEncoding.UTF8);
-      PersonData.SaveToFile('cache/people/top5000/top5000-0.json', TEncoding.UTF8);
+      // Add the current person to the JSON Array
+      if AdultListFound = False then
+      begin
+        ((AdultList as TJSONObject).getValue('results') as TJSONArray).AddElement(TJSONObject.Create(TJSONPair.Create('id',TJSONNumber.create(PersonID))));
+
+        // Save the updated list
+        PersonData.Text := AdultList.ToString;
+        PersonData.SaveToFile('cache/people/top1000/top1000-0.json', TEncoding.UTF8);
+        PersonData.SaveToFile('cache/people/top5000/top5000-0.json', TEncoding.UTF8);
+      end;
 
       PersonData.Free;
       AdultList.Free;
@@ -2316,7 +2332,6 @@ begin
     begin
       MainForm.LogException('ProcessPerson/Validation', E.ClassName, E.Message, ActorRef);
       MainForm.LogEvent(Copy(Actor,1,150));
-      Mainform.LogEvent(Actor);
       Result := '';
     end;
   end;
@@ -5713,7 +5728,7 @@ begin
     begin
 
       // Time to Regenerate this data
-//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 1,000 Actors ( Page '+InttoStr(Page)+' of 70 )","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 1,000 Actors ( Page '+InttoStr(Page)+' of 75 )","TP":'+FloatToStr(Now)+'}';
       Data := TJSONArray.Create;
 
       if (Page > 0) then
@@ -5787,8 +5802,10 @@ begin
 
           try
 
-            // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
-            Actor := GetPerson(Popular + (Page*20), 1500, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
+           // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
+            if Page = 0
+            then Actor := GetPerson(Popular, Data.Count, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False)
+            else Actor := GetPerson(Popular + (Page*20), 1500, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
 
 //            try
 //
@@ -6271,7 +6288,9 @@ begin
           try
 
             // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
-            Actor := GetPerson(Popular + (Page*20), 10000, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
+            if Page = 0
+            then Actor := GetPerson(Popular, Data.Count, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False)
+            else Actor := GetPerson(Popular + (Page*20), 10000, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
 
           except on E: Exception do
             begin

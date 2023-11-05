@@ -101,9 +101,10 @@ type
     btClean: TButton;
     ckRegenerate: TCheckBox;
     btRedoc: TButton;
-    Shape1: TShape;
     mmInfo: TMemo;
     btEmail: TButton;
+    shapeProgressBG: TShape;
+    shapeProgressFG: TShape;
     procedure GetAppVersionString;
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
@@ -143,6 +144,7 @@ type
     procedure LogException(Source: String; EClass: String; EMessage: String; Data: String);
     procedure SendActivityLog(Subject: String);
     procedure btEmailClick(Sender: TObject);
+    procedure SetProgressStep(Progress: String);
 
   public
     Progress: TStringList;
@@ -258,7 +260,7 @@ begin
 
   // Setup the Request
   URL := URL+'?Secret='+edSecret.Text;
-  URL := URL+'?Segment=A';
+  URL := URL+'&Segment=A';
   URL := URL+'&Progress='+CurrentProgress.Caption;
 
   // Submit the request (asynchronously)
@@ -754,7 +756,7 @@ begin
   LogEvent('[ '+EClass+' ] '+EMessage);
   LogEvent('[ Data ] '+Data);
 
-  if SecondsBetween(now, LastException) > 300 then
+  if (SecondsBetween(now, LastException) > 300) and (Source <> 'Update Home Assistant') then
   begin
     LastException := Now;
     SendActivityLog('Exception Detected');
@@ -1592,6 +1594,33 @@ begin
   end;
 end;
 
+procedure TMainForm.SetProgressStep(Progress: String);
+var
+  ProgCur: Integer;
+  ProgTot: Integer;
+begin
+  ProgressStep.Caption := Progress;
+  if Pos(' of ', Progress) > 0 then
+  begin
+    ProgCur := StrToIntDef(Trim(Copy(Progress,1, Pos(' of ', Progress) -1)),0);
+    ProgTot := StrToIntDef(Trim(Copy(Progress, Pos(' of ', Progress)+4,Length(Progress))),10001);
+    if (ProgCur = 0) or (ProgTot = 10001) or (ProgTot = 0) then
+    begin
+      ShapeProgressFG.Visible := False;
+    end
+    else
+    begin
+      if ProgCur > ProgTot then ProgCur := ProgTot;
+      shapeProgressFG.Width := Trunc((ProgCur / ProgTot) * 799.0);
+      shapeProgressFG.Visible := True;
+    end;
+  end
+  else
+  begin
+    shapeProgressFG.Visible := False;
+  end;
+end;
+
 procedure TMainForm.StartTimerTimer(Sender: TObject);
 var
   AppConfigFile: String;
@@ -1600,7 +1629,7 @@ begin
   StartTimer.Enabled := False;
 
   ProgressDetail.Caption := 'Startup';
-  ProgressStep.Caption := '0 of 16';
+  SetProgressStep('0 of 16');
 
   LogEvent('');
   LogEvent('______________________________________________________');
@@ -1630,7 +1659,7 @@ begin
   end;
   ConfigFile.Free;
   Application.ProcessMessages;
-  ProgressStep.Caption := '1 of 16';
+  SetProgressStep('1 of 16');
 
   if Appconfiguration = nil then
   begin
@@ -1649,7 +1678,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [Actorious API Secret]');
   end;
-  ProgressStep.Caption := '2 of 16';
+  SetProgressStep('2 of 16');
 
   // Used to access The Movie Database API
   if AppConfiguration.getValue('TMDb API Key') <> nil then
@@ -1661,7 +1690,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [TMDb API Key]');
   end;
-  ProgressStep.Caption := '3 of 16';
+  SetProgressStep('3 of 16');
 
   // BaseURL
   if AppConfiguration.getValue('BaseURL') <> nil then
@@ -1673,7 +1702,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [BaseURL]');
   end;
-  ProgressStep.Caption := '4 of 16';
+  SetProgressStep('4 of 16');
 
   // AppURL
   if AppConfiguration.getValue('AppURL') <> nil then
@@ -1685,7 +1714,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [AppURL]');
   end;
-  ProgressStep.Caption := '5 of 16';
+  SetProgressStep('5 of 16');
 
   // Swagger Support
   if AppConfiguration.getValue('Swagger') <> nil then
@@ -1699,7 +1728,7 @@ begin
     btSwagger.Enabled := False;
     LogEvent('- Swagger not configured');
   end;
-  ProgressStep.Caption := '6 of 16';
+  SetProgressStep('6 of 16');
 
   // Redoc Support
   if AppConfiguration.getValue('Redoc') <> nil then
@@ -1713,7 +1742,7 @@ begin
     btRedoc.Enabled := False;
     LogEvent('- Redoc not configured');
   end;
-  ProgressStep.Caption := '7 of 16';
+  SetProgressStep('7 of 16');
 
   // HomeAssistant Support
   if AppConfiguration.getValue('HA_URL') <> nil then
@@ -1726,7 +1755,7 @@ begin
     AppHAURL := '';
     LogEvent(' - HomeAssistant not configured');
   end;
-  ProgressStep.Caption := '8 of 16';
+  SetProgressStep('8 of 16');
 
   // HomeAssistant Token
   if AppConfiguration.getValue('HA_Token') <> nil then
@@ -1738,7 +1767,7 @@ begin
   begin
     AppHAToken := '';
   end;
-  ProgressStep.Caption := '9 of 16';
+  SetProgressStep('9 of 16');
 
 
   // Get Mail Configuration
@@ -1768,12 +1797,12 @@ begin
   CurrentProgress.Caption := 'Startup Delay (Continue in 15s)';
   CacheTimer.Interval := 15000;
   CacheTimer.Enabled := True;
-  ProgressStep.Caption := '10 of 16';
+  SetProgressStep('10 of 16');
 
   WaitingMessage := 'Startup Delay (Continue in %s)';
   tmrWaiting.Tag := 15;
   tmrWaiting.Enabled := True;
-  ProgressStep.Caption := '11 of 16';
+  SetProgressStep('11 of 16');
 
   // Change URL of server depending on machine it is running on
   if AppBaseURL <> '' then
@@ -1781,7 +1810,7 @@ begin
     ServerContainer.XDataServer.BaseURL := AppBaseURL;
     ServerContainer.SparkleHttpSysDispatcher.Active := True;
   end;
-  ProgressStep.Caption := '12 of 16';
+  SetProgressStep('12 of 16');
 
   // Create Cache directory structure
   LogEvent('Creating Cache Directories');
@@ -1815,22 +1844,22 @@ begin
   CreateDir('cache\tvshows\actorious');
   CreateDir('cache\tvshows\top1000');
   CreateDir('cache\tvshows\top5000');
-  ProgressStep.Caption := '13 of 16';
+  SetProgressStep('13 of 16');
 
   // Show encoded Base64 version of secret
   LogEvent('Encoding Actorious API Secret');
   edSecretChange(nil);
-  ProgressStep.Caption := '14 of 16';
+  SetProgressStep('14 of 16');
 
   // Check for new ActoriousClient Version right away
   LogEvent('Updating Client Version');
   btUpdateVersionClick(nil);
-  ProgressStep.Caption := '15 of 16';
+  SetProgressStep('15 of 16');
 
   // Display the progress at start
   LogEvent('Updating Progress');
   btRecentProgressClick(Sender);
-  ProgressStep.Caption := '16 of 16';
+  SetProgressStep('16 of 16');
 
   LogEvent('');
   LogEvent('SERVER STARTUP COMPLETE ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms).');
@@ -1879,14 +1908,14 @@ begin
         if (Pos('(', PReport) > 0) then
         begin
           ProgressDetail.Caption := Copy(PReport,1,Pos('(',PReport)-2);
-          ProgressStep.Caption := Trim(StringReplace(StringReplace(Copy(PReport,Pos('(',PReport),99),'(','',[rfReplaceAll]),')','',[rfReplaceAll]));
+          SetProgressStep(Trim(StringReplace(StringReplace(Copy(PReport,Pos('(',PReport),99),'(','',[rfReplaceAll]),')','',[rfReplaceAll])));
         end
 
         // Otherwise, just the PR
         else
         begin
           ProgressDetail.Caption := PReport;
-          ProgressStep.Caption := '';
+          SetProgressStep('');
         end;
 
         // And we don't need to do much else
@@ -1896,7 +1925,7 @@ begin
     end;
   end;
   ProgressDetail.Caption := '';
-  ProgressStep.Caption := '';
+  SetProgressStep('');
 end;
 
 procedure TMainForm.tmrTopUpdateTimer(Sender: TObject);
@@ -2028,7 +2057,7 @@ begin
   Progress := TStringList.Create;
   CurrentProgress.Caption := '';
   ProgressDetail.Caption := '';
-  ProgressStep.Caption := '';
+  SetProgressStep('');
 
   // Avoid divide by zero errors
   PersonCacheRequests := 0;
