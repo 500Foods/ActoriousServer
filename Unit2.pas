@@ -756,7 +756,7 @@ begin
   LogEvent('[ '+EClass+' ] '+EMessage);
   LogEvent('[ Data ] '+Data);
 
-  if (SecondsBetween(now, LastException) > 300) and (Source <> 'Update Home Assistant') then
+  if (MinutesBetween(now, LastException) > 60) and (Source <> 'Update Home Assistant') then
   begin
     LastException := Now;
     SendActivityLog('Exception Detected');

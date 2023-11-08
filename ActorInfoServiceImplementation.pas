@@ -1838,17 +1838,17 @@ begin
 
           // Budget
           Step := 'ProcessActor: AllMovieRoles/'+IntToStr(RoleIndex)+'/BUD';
-          if not(ShowData.getValue('budget') = nil)
+          if not(ShowData.getValue('budget') = nil) and (ShowData.getValue('budget') is TJSONNumber)
           then Actor := Actor+',"BUD":'+FloatToStr((ShowData.getValue('budget') as TJSONNumber).AsDouble);
 
           // Revenue
           Step := 'ProcessActor: AllMovieRoles/'+IntToStr(RoleIndex)+'/REV';
-          if not(ShowData.getValue('revenue') = nil)
+          if not(ShowData.getValue('revenue') = nil) and (ShowData.getValue('revenue') is TJSONNumber)
           then Actor := Actor+',"REV":'+FloatToStr((ShowData.getValue('revenue') as TJSONNumber).AsDouble);
 
           // Runtime
           Step := 'ProcessActor: AllMovieRoles/'+IntToStr(RoleIndex)+'/RTM';
-          if not(ShowData.getValue('runtime') = nil)
+          if not(ShowData.getValue('runtime') = nil) and (ShowData.getValue('runtime') is TJSONNumber)
           then Actor := Actor+',"RTM":'+FloatToStr((ShowData.getValue('runtime') as TJSONNumber).AsDouble);
 
           // Status
