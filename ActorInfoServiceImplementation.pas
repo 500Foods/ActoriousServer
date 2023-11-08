@@ -158,6 +158,24 @@ begin
 
 end;
 
+function FilterArrayResponse(Response: String):String;
+begin
+  if Copy(Response,1,1) <> '[' then
+  begin
+    Result := '[]';
+    exit;
+  end;
+
+  Result := Response;
+  Result := StringReplace(Result, chr( 9),  '',    [rfReplaceAll]);   // Tab
+  Result := StringReplace(Result, chr(10),  '',    [rfReplaceAll]);   // NL
+  Result := StringReplace(Result, chr(13),  '',    [rfReplaceAll]);   // CR
+  Result := StringReplace(Result, '\u0013', '',    [rfReplaceAll]);
+  Result := StringReplace(Result, '\S',     '/S',  [rfReplaceAll]);
+  Result := StringReplace(Result, '\\',     ' ',   [rfReplaceAll]);
+  Result := StringReplace(Result, ' \ ',    ' / ', [rfReplaceAll]);
+
+end;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1155,7 +1173,7 @@ begin
   Step := 'ProcessActor: TMDb JSON';
   TMDB_Data := TJSONObject.Create;
   try
-    TMDB_Data := TJSONObject.ParseJSONValue(TMDB_Data_String) as TJSONObject;
+    TMDB_Data := TJSONObject.ParseJSONValue(FilterResponse(TMDB_Data_String)) as TJSONObject;
   except on E: Exception do
     begin
       MainForm.LogException(Step, E.ClassName, E.Message, Copy(TMDB_Data_String,1,150));
@@ -1165,7 +1183,7 @@ begin
   Step := 'ProcessActor: Wikidata JSON';
   WikiData := TJSONArray.Create;
   try
-    WikiData := TJSONObject.ParseJSONValue(WikiData_String) as TJSONArray;
+    WikiData := TJSONObject.ParseJSONValue(FilterArrayResponse(WikiData_String)) as TJSONArray;
   except on E: Exception do
     begin
       MainForm.LogException(Step, E.ClassName, E.Message, Copy(WikiData_String,1,150));
@@ -1191,7 +1209,8 @@ begin
 
     // Name - Assume it is always present?
     Step := 'ProcessActor: Header/NAM';
-    Actor := Actor+'"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('name') as TJSONString)+',';
+    if (TMDB_Data.getValue('name') <> nil)
+    then Actor := Actor+'"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('name') as TJSONString)+',';
 
     // TMDb ID
     Step := 'ProcessActor: Header/WID';
