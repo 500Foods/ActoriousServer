@@ -556,10 +556,9 @@ begin
   // Whoa - something has fallen off the rails, so abort and try again:  Limit set at 5 GB
   if ((mem2/1024/1024) > ( 5 * 1024)) then
   begin
+    SendActivityLog('Resource Limit Restart');
     Halt;
   end;
-
-
 
   // How much memory is our progress data taking up?
   ProgressSize := 0;
@@ -1542,6 +1541,7 @@ begin
         Html1.Html.Add('<head>');
         Html1.Html.Add('</head>');
         Html1.Html.Add('<body><pre>');
+        Html1.Html.Add(mmStats.Lines.Text);
         Html1.Html.Add(mmInfo.Lines.Text);
         Html1.Html.Add('</pre></body>');
         Html1.Html.Add('</html>');

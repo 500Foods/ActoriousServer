@@ -4384,16 +4384,26 @@ begin
 
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Final Prep Started","TP":'+FloatToStr(Now)+'}';
 
-  CacheResponse.Text := '';
-  for i := 0 to Actors.Count-1 do
-  begin
-    CacheResponse.Add(
-      FormatFloat('00000000.0000',1000000.0 - ((Actors.Items[i] as TJSONObject).GetValue('POP') as TJSONNumber).AsDouble)+
-      RightStr('00000000'+((Actors.Items[i] as TJSONObject).GetValue('TID') as TJSONString).Value,8)+
-      RightStr('00000000'+IntToSTr(i),8)
-    );
+  try
+    CacheResponse.Text := '';
+    for i := 0 to Actors.Count-1 do
+    begin
+      if ((Actors.Items[i] as TJSONObject).getValue('POP') <> nil) and
+         ((Actors.Items[i] as TJSONObject).getValue('TID') <> nil) then
+      begin
+        CacheResponse.Add(
+          FormatFloat('00000000.0000',1000000.0 - ((Actors.Items[i] as TJSONObject).GetValue('POP') as TJSONNumber).AsDouble)+
+          RightStr('00000000'+((Actors.Items[i] as TJSONObject).GetValue('TID') as TJSONString).Value,8)+
+          RightStr('00000000'+IntToSTr(i),8)
+        );
+      end;
+    end;
+    CacheResponse.Sort;
+  except on E: Exception do
+    begin
+      MainForm.LogException('ActorBirtyday: Final Prep',E.ClassName, E.Message, 'Prep #'+IntToStr(CacheResponse.Count));
+    end;
   end;
-  CacheResponse.Sort;
 
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Results Indexed","TP":'+FloatToStr(Now)+'}';
 
