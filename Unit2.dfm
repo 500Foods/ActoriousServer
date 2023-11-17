@@ -741,6 +741,7 @@ object MainForm: TMainForm
       Width = 52
       Height = 25
       Caption = 'E-Mail'
+      Enabled = False
       TabOrder = 23
       OnClick = btEmailClick
     end

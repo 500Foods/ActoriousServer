@@ -269,7 +269,7 @@ begin
   Client.Description := 'Top 1000';
   Client.Asynchronous := True;
   Client.ConnectionTimeout := 3600000;  // 1 hour
-  Client.ResponseTimeout :=   3600000;  // 1 hour
+  Client.ResponseTimeout := 3600000;  // 1 hour
   Client.onRequestCompleted := ManualRequestCompleted;
   Client.onRequestError := ManualRequestError;
   Client.URL := TidURI.URLEncode(URL);
@@ -307,7 +307,7 @@ begin
   Client.Description := 'Top 5000';
   client.Asynchronous := True;
   Client.ConnectionTimeout := 3600000; // 1 hour
-  Client.ResponseTimeout :=   3600000; // 1 hour
+  Client.ResponseTimeout := 3600000; // 1 hour
   Client.onRequestCompleted := ManualRequestCompleted;
   Client.onRequestError := ManualRequestError;
   Client.URL := TidURI.URLEncode(URL);
@@ -704,10 +704,9 @@ begin
     m.Free;
   end;
   Application.Title := AppVersionString;
-  MainForm.Caption := AppVersionString;
-
   FileAge(ParamStr(0), ReleaseDate);
   AppRelease := FormatDateTime('yyyy-MMM-dd', ReleaseDate);
+  Caption :=  'Actorious XData Server     Ver '+AppVersion+'     Rel '+AppRelease;
 
 end;
 
@@ -1173,8 +1172,8 @@ begin
       Client.Description := Update+' for '+FormatDateTime('mmmdd',CacheDate)+' / d'+IntToStr(CacheIndex);
       Client.CacheFile := CacheFile;
       Client.Asynchronous := True;
-      Client.ConnectionTimeout := 1800000;  // 30 minutes
-      Client.ResponseTimeout := 1800000;    // 30 minutes
+      Client.ConnectionTimeout := 3600000;  // 60 minutes
+      Client.ResponseTimeout := 3600000;    // 60 minutes
       Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
       Client.onRequestError := NetHTTPClient1RequestError;
       Client.URL := TidURI.URLEncode(URL);
@@ -1550,7 +1549,7 @@ begin
         Msg1 := Html1.NewMessage(nil);
 
         // Startup should be < 10s but otherwise send the running time
-        if MillisecondsBetween(Now, AppStartup) < 10000
+        if MillisecondsBetween(Now, AppStartup) < 30000
         then Msg1.Subject := '['+GetEnvironmentVariable('COMPUTERNAME')+'] '+Subject+': '+MainForm.Caption+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)'
         else Msg1.Subject := '['+GetEnvironmentVariable('COMPUTERNAME')+'] '+Subject+': '+MainForm.Caption+' ('+FormatDateTime('hh:nn:ss', Now - AppStartup)+'}';
 
@@ -1774,6 +1773,7 @@ begin
   MailServerAvailable := False;
   if AppConfiguration.GetValue('Mail Services') <> nil then
   begin
+    btEMail.Enabled := True;
     MailServerAvailable := True;
     MailServerHost := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP Host') as TJSONString).Value;
     MailServerPort := ((AppConfiguration.GetValue('Mail Services') as TJSONObject).GetValue('SMTP Port') as TJSONNumber).AsInt;
@@ -1959,16 +1959,16 @@ begin
     exit;
   end;
 
-  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 05, 30, 0, 0);
-  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 05, 35, 0, 0);
-  if (WindowStart < Now) and (WindowEnd > Now) and (btTop5000.Tag <> Today) then
-  begin
-    btTop5000.Tag := Trunc(Today);
-    btTop1000.Tag := 0;
-    btClean.Tag   := 0;
-    btTop5000Click(Sender);
-    exit;
-  end;
+//  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 05, 30, 0, 0);
+//  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 05, 35, 0, 0);
+//  if (WindowStart < Now) and (WindowEnd > Now) and (btTop5000.Tag <> Today) then
+//  begin
+//    btTop5000.Tag := Trunc(Today);
+//    btTop1000.Tag := 0;
+//    btClean.Tag   := 0;
+//    btTop5000Click(Sender);
+//    exit;
+//  end;
 
 
   // 6PM Run
@@ -1981,19 +1981,19 @@ begin
     btCleanClick(Sender);
     exit;
   end;
+//
+//  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 15, 0, 0);
+//  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 20, 0, 0);
+//  if (WindowStart < Now) and (WindowEnd > Now) and (btTop1000.Tag <> Today) then
+//  begin
+//    btTop1000.Tag := Trunc(Today);
+//    btTop5000.Tag := 0;
+//    btTop1000Click(Sender);
+//    exit;
+//  end;
 
   WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 15, 0, 0);
   WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 20, 0, 0);
-  if (WindowStart < Now) and (WindowEnd > Now) and (btTop1000.Tag <> Today) then
-  begin
-    btTop1000.Tag := Trunc(Today);
-    btTop5000.Tag := 0;
-    btTop1000Click(Sender);
-    exit;
-  end;
-
-  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 30, 0, 0);
-  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 35, 0, 0);
   if (WindowStart < Now) and (WindowEnd > Now) and (btTop5000.Tag <> Today) then
   begin
     btTop5000.Tag := Trunc(Today);
@@ -2107,6 +2107,8 @@ begin
     btTimer.Enabled := True;
     btTimer.Tag := 1;
     btTimer.Caption := 'Disable Timer';
+    btSwagger.Enabled := True;
+    btRedoc.Enabled := True;
   end
   else
   begin
@@ -2116,6 +2118,8 @@ begin
     btTimer.Enabled := False;
     btTimer.Tag := 0;
     btTimer.Caption := 'Enable Timer';
+    btSwagger.Enabled := False;
+    btRedoc.Enabled := False;
   end;
   LogEvent('');
 end;

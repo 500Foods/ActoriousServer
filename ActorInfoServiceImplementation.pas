@@ -338,6 +338,7 @@ var
   CacheFile: String;       // The location where we're going to put it
   Update: Boolean;         // To Update or Not
   Reason: String;          // Why are we doing what we're doing
+  Attempt: Integer;
 
 begin
   // Figure out where to put this
@@ -391,13 +392,33 @@ begin
     Query := Query+'&append_to_response=images,videos,external_ids,tagged_images,combined_credits';
 
     // Try and get the data
+
     try
       Response.Text := Client.Get(Query).ContentAsString(TEncoding.UTF8);
       Client.Free;
       Response.Text := FilterResponse(Response.Text);
-      if (Response.Text <> '{}') and (Response.Text <> '')
-      then Response.SaveToFile(CacheFile, TEncoding.UTF8)
-      else Response.Text := '';
+      Attempt := 0;
+      while Attempt < 3 do
+      begin
+        try
+          if (Response.Text <> '{}') and (Response.Text <> '')
+          then Response.SaveToFile(CacheFile, TEncoding.UTF8)
+          else Response.Text := '';
+          Attempt := 3;
+        except on E: Exception do
+          begin
+            if Attempt < 3 then
+            begin
+              Attempt := Attempt + 1;
+              MainForm.LogEvent('GetPersomFromTMDb/Error Writing File ('+IntToStr(Attempt)+'/3: '+CacheFile);
+            end
+            else
+            begin
+              MainForm.LogException('GetPersonFromTMDb/Error Writing File:', E.ClassName, E.Message, CacheFile);
+            end;
+          end;
+        end;
+      end;
     except on E: Exception do
       begin
         MainForm.LogException('GetPersonFromTMDb', E.ClassName, E.Message, CacheFile);
@@ -5931,6 +5952,8 @@ begin
 
       for Popular := 0 to Data.Count -1 do
       begin
+        ActorData := TJSONObject.Create;
+
         if Pos('['+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt)+']',Unique) = 0 then
         begin
 
@@ -5939,82 +5962,114 @@ begin
 
           try
 
-           // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
+            // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
             if Page = 0
             then Actor := GetPerson(Popular, Data.Count, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False)
             else Actor := GetPerson(Popular + (Page*20), 1500, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
 
-//            try
-//
-//              CacheResponse.Text := '';
-//              CacheResponse.LoadFromFile('cache/people/actorious/'+
-//                RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3)+
-//                '/person-'+
-//                RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8)+
-//                '.json', TEncoding.UTF8);
-//            except on E: Exception do
-//              begin
-//                // missing file - try and get it?
-//                try
-//                  MainForm.LogEvent('- Generating Top1000 Person #'+IntToStr((Page*20)+Popular)+' Without Birthday: '+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt));
-//                  CacheResponse.Text := GetPersonfromTMDb(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt, False);
-//                  ActorData := TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject;
-//                  ProcessActor(Popular, IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt), ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, Regenerate);
-//                  ActorData.Free;
-//                  CacheResponse.LoadFromFile('cache/people/actorious/'+
-//                    RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3)+
-//                    '/person-'+
-//                    RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8)+
-//                    '.json', TEncoding.UTF8);
-//                except on E: Exception do
-//                  begin
-//                    // We tried!
-//                  end;
-//                end;
-//              end;
-//            end;
+          except on E: Exception do
+            begin
+              MainForm.LogException('Top1000/GetPerson', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+            end;
+          end;
 
+          try
             if Actor <> '' then
             begin
-              ActorData := TJSONObject.ParseJSONValue(Actor) as TJSONObject;
-              ActorData.RemovePair('ID');
 
-              if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true)
-              then ActorData.AddPair(TJSONPair.Create('ID', TJSONNumber.Create(AdultActors + 1)))
-              else ActorData.AddPair(TJSONPair.Create('ID', TJSONNumber.Create(TotalActors + 1)));
-
-              // One last time - exclude anyone without any roles
-              if ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
-              begin
-                if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true) then
+              try
+                ActorData := TJSONObject.ParseJSONValue(Actor) as TJSONObject;
+              except on E: Exception do
                 begin
-                  if (AdultActors < 1000) then
-                  begin
-                    if AdultActors = 0
-                    then AdActors := AdActors+ActorData.ToString
-                    else AdActors := AdActors+','+ActorData.ToString;
-                    AdultActors := AdultActors + 1;
-                  end;
-                end
-                else
-                begin
-                  if (TotalActors < 1000) then
-                  begin
-                    if TotalActors = 0
-                    then Actors := Actors+ActorData.ToString
-                    else Actors := Actors+','+ActorData.ToString;
-                    TotalActors := TotalActors + 1;
-                  end;
+                  MainForm.LogException('Top1000/JSONPerson', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                  ActorData.Free;
                 end;
               end;
-              ActorData.Free;
+
+              try
+                if (ActorData.getValue('ID') <> nil) then ActorData.RemovePair('ID');
+              except on E: Exception do
+                begin
+                  MainForm.LogException('Top1000/RemoveID', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                  ActorData.Free;
+                end;
+              end;
+
+              try
+                if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true)
+                then ActorData.AddPair(TJSONPair.Create('ID', TJSONNumber.Create(AdultActors + 1)))
+                else ActorData.AddPair(TJSONPair.Create('ID', TJSONNumber.Create(TotalActors + 1)));
+              except on E: Exception do
+                begin
+                  MainForm.LogException('Top1000/AddID', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                  ActorData.Free;
+                end;
+              end;
+
+              // One last time - exclude anyone without any roles
+              if Assigned(ActorData) then
+              begin
+                try
+
+                  if (ActorData.getValue('NUM') <> nil) and (ActorData.getValue('NUM') is TJSONNumber) and  ((ActorData.getValue('NUM') as TJSONNumber).AsInt <> 0) then
+                  begin
+                    if (ActorData.getValue('XXX') <> nil) and ((ActorData.getValue('XXX') as TJSONBool).AsBoolean = true) then
+                    begin
+
+                      try
+                        if AdultActors = 0
+                        then AdActors := AdActors+ActorData.ToString
+                        else AdActors := AdActors+','+ActorData.ToString;
+                      except on E: Exception do
+                        begin
+                          MainForm.LogException('Top5000/AddAnXActor', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                          ActorData.Free;
+                        end;
+                      end;
+
+                      AdultActors := AdultActors + 1;
+                    end
+                    else
+                    begin
+
+                      try
+                        if TotalActors = 0
+                        then Actors := Actors+ActorData.ToString
+                        else if TotalActors < 1000
+                        then Actors := Actors+','+ActorData.ToString;
+
+                        if TotalActors = 1000 then MainForm.LogEvent('Top1000: Reached at Page '+IntToStr(Page));
+
+                      except on E: Exception do
+                        begin
+                          MainForm.LogException('Top1000/AddAnActor', E.ClassName, E.Message, '[Actors: '+IntToStr(TotalActors)+'] '+RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                          ActorData.Free;
+                        end;
+                      end;
+
+                      TotalActors := TotalActors + 1;
+                    end;
+                  end;
+
+                except on E: Exception do
+                  begin
+                    MainForm.LogException('Top1000/Exclude', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+                    MainForm.LogEvent('[ NUM ] '+INtToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt));
+                    MainForm.LogEvent('[ XXX ] '+BoolToStr((ActorData.getValue('XXX') as TJSONBool).AsBoolean));
+                  end;
+                end;
+
+//                ActorData.Free;
+              end;
             end;
           except on E: Exception do
             begin
-               MainForm.LogEvent('EXCEPTION in TopOneThousand Adding Actors');
+              MainForm.LogException('Top1000/AddActors', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
+              //ActorData.Free;
             end;
           end;
         end;
+        if Assigned(ActorData) then ActorData.Free;
       end;
       Data.Free;
     end;

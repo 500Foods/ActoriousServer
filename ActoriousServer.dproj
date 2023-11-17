@@ -3,7 +3,7 @@
         <ProjectGuid>{F255E47E-358A-472A-8D5C-9F0DEB95C587}</ProjectGuid>
         <ProjectVersion>18.7</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>Actorious.dpr</MainSource>
+        <MainSource>ActoriousServer.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
@@ -68,7 +68,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
-        <SanitizedProjectName>Actorious</SanitizedProjectName>
+        <SanitizedProjectName>ActoriousServer</SanitizedProjectName>
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
     </PropertyGroup>
@@ -129,9 +129,9 @@
         <Icon_MainIcon>Project1_Icon.ico</Icon_MainIcon>
         <DCC_OutputXMLDocumentation>true</DCC_OutputXMLDocumentation>
         <DCC_XmlOutput>Win64\Release\</DCC_XmlOutput>
-        <VerInfo_Build>79</VerInfo_Build>
+        <VerInfo_Build>81</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_Keys>CompanyName=500 Foods Corporation;FileDescription=ActoriousServer;FileVersion=1.0.0.79;InternalName=Actorious Server;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.1;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=500 Foods Corporation;FileDescription=ActoriousServer;FileVersion=1.0.0.81;InternalName=Actorious Server;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.1;Comments=</VerInfo_Keys>
         <UWP_DelphiLogo44>Project1_Icon.ico</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>Project1_Icon.ico</UWP_DelphiLogo150>
     </PropertyGroup>
@@ -166,7 +166,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">Actorious.dpr</Source>
+                    <Source Name="MainSource">ActoriousServer.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="C:\Program Files (x86)\Steema Software\Steema TeeChart Standard VCL FMX 2022.35\Delphi26\Delphi26.win32\Bin\DclTee926.bpl">TeeChart Standard 2022 Components</Excluded_Packages>
@@ -179,15 +179,15 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="Win64\Release\Actorious.exe" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="Win64\Release\ActoriousServer.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win64">
-                        <RemoteName>Actorious.exe</RemoteName>
+                        <RemoteName>ActoriousServer.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win64\Debug\Actorious.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win64\Debug\ActoriousServer.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
-                        <RemoteName>Actorious.exe</RemoteName>
+                        <RemoteName>ActoriousServer.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -198,9 +198,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\Actorious.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\ActoriousServer.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>Actorious.exe</RemoteName>
+                        <RemoteName>ActoriousServer.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

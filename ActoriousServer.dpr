@@ -1,4 +1,4 @@
-program Actorious;
+program ActoriousServer;
 
 uses
   Vcl.Forms,
