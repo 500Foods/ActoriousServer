@@ -149,6 +149,7 @@ type
   public
     Progress: TStringList;
     WaitingMessage: String;
+    LastURL: String;
 
     PersonCacheRequests,
     PersonCacheHit,
@@ -169,6 +170,7 @@ type
     TVShowCacheAge: Integer;
 
     CleanRequests,
+    CleanSmall,
     CleanPeople,
     CleanDays,
     CleanMovies,
@@ -624,11 +626,12 @@ begin
   mmStats.Lines.Add('  Cache Clean Requests: '+FloatToStrF(CleanRequests,ffNumber,9,0).PadLeft(9));
   if (CleanRequests > 0) then
   begin
-    mmStats.Lines.Add('  Cache Clean Days:     '+FloatToStrF(CleanDays,ffNumber,9,0).PadLeft(9)    +FloatToStrF(100.0*CleanDays/CleanRequests,ffNumber,6,1).PadLeft(6)  +' %');
-    mmStats.Lines.Add('  Cache Clean People:   '+FloatToStrF(CleanPeople,ffNumber,9,0).PadLeft(9)  +FloatToStrF(100.0*CleanPeople/CleanRequests,ffNumber,6,1).PadLeft(6)  +' %');
-    mmStats.Lines.Add('  Cache Clean Movies:   '+FloatToStrF(CleanMovies,ffNumber,9,0).PadLeft(9)  +FloatToStrF(100.0*CleanMovies/CleanRequests,ffNumber,6,1).PadLeft(6) +' %');
-    mmStats.Lines.Add('  Cache Clean TVShows:  '+FloatToStrF(CleanTVShows,ffNumber,9,0).PadLeft(9) +FloatToStrF(100.0*CleanTVShows/CleanRequests,ffNumber,6,1).PadLeft(6)  +' %');
-    mmStats.Lines.Add('  Cache Clean Files:    '+FloatToStrF(CleanFiles,ffNumber,9,0).PadLeft(9));
+    mmStats.Lines.Add('  Cache Clean Days:     '+FloatToStrF(CleanDays,    ffNumber,9,0).PadLeft(9) +FloatToStrF(100.0*CleanDays    /CleanRequests,ffNumber,6,1).PadLeft(6)+' %');
+    mmStats.Lines.Add('  Cache Clean People:   '+FloatToStrF(CleanPeople,  ffNumber,9,0).PadLeft(9) +FloatToStrF(100.0*CleanPeople  /CleanRequests,ffNumber,6,1).PadLeft(6)+' %');
+    mmStats.Lines.Add('  Cache Clean Movies:   '+FloatToStrF(CleanMovies,  ffNumber,9,0).PadLeft(9) +FloatToStrF(100.0*CleanMovies  /CleanRequests,ffNumber,6,1).PadLeft(6)+' %');
+    mmStats.Lines.Add('  Cache Clean TVShows:  '+FloatToStrF(CleanTVShows, ffNumber,9,0).PadLeft(9) +FloatToStrF(100.0*CleanTVShows /CleanRequests,ffNumber,6,1).PadLeft(6)+' %');
+    mmStats.Lines.Add('  Cache Clean Files:    '+FloatToStrF(CleanFiles,   ffNumber,9,0).PadLeft(9) +FloatToStrF(100.0*CleanFiles   /CleanRequests,ffNumber,6,1).PadLeft(6)+' %');
+    mmStats.Lines.Add('  Cache Clean Small:    '+FloatToStrF(CleanSmall,   ffNumber,9,0).PadLeft(9) +FloatToStrF(100.0*CleanSmall   /CleanRequests,ffNumber,6,1).PadLeft(6)+' %');
     mmStats.Lines.Add('  Cache Clean Size:     '+FloatToStrF(CleanSize/(1024*1024),ffNumber,9,0).PadLeft(9) +' MB');
   end;
 
@@ -771,7 +774,7 @@ var
   CacheDir: String;
   i: Integer;
 
-  function CleanDir:Integer;
+  function CleanDir: Integer;
   var
     FileName: String;
     FileSize: Int64;
@@ -782,7 +785,7 @@ var
       for FileName in TDirectory.GetFiles(CacheDir, '*') do
       begin
         CleanRequests := CleanRequests + 1;
-        if (TFile.GetLastWriteTime(FileName) < OlderThan) or (Pos('json.working',Filename) > 0) then
+        if (TFile.GetLastWriteTime(FileName) < OlderThan) or (Pos('json.working',Filename) > 0) or (FileSizeByName(FileName) < 120) then
         begin
           FileSize := FileSizeByName(FileName);
           Application.ProcessMessages;
@@ -790,6 +793,10 @@ var
           CleanSize := CleanSize + FileSize;
           CleanFiles := CleanFiles + 1;
           TFile.Delete(FileName);
+
+          if FileSize < 250
+          then CleanSmall := CleanSmall + 1;
+
         end;
       end;
     end;
@@ -802,6 +809,7 @@ begin
   CleanNum := 0;
 
   CleanRequests := 0;
+  CleanSmall := 0;
   CleanDays := 0;
   CleanPeople := 0;
   CleanMovies := 0;
@@ -1160,38 +1168,53 @@ begin
         URL := AppURL+'/ActorInfoService/MovieReleaseDay';
       end;
 
+
       // Setup the Request
       URL := URL+'?Secret='+edSecret.Text;
       URL := URL+'&aMonth='+IntToStr(MonthOf(CacheDate));
       URL := URL+'&aDay='+IntToStr(DayOf(CacheDate));
       URL := URL+'&Progress='+CurrentProgress.Caption;
 
-      // Submit the request (asynchronously)
-      Client := TFancyNetHTTPClient.Create(nil);
-      Client.Tag := DateTimeToUnix(Now);
-      Client.Description := Update+' for '+FormatDateTime('mmmdd',CacheDate)+' / d'+IntToStr(CacheIndex);
-      Client.CacheFile := CacheFile;
-      Client.Asynchronous := True;
-      Client.ConnectionTimeout := 3600000;  // 60 minutes
-      Client.ResponseTimeout := 3600000;    // 60 minutes
-      Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
-      Client.onRequestError := NetHTTPClient1RequestError;
-      Client.URL := TidURI.URLEncode(URL);
+      // sometiems we can get in a loop if a date isn't working, in which case we want to skip
+      // this and move on to the next date.
+      if URL <> LastURL then
+      begin
+        LastURL := URL;
 
-      if Pos('https', URL) > 0
-      then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+        // Submit the request (asynchronously)
+        Client := TFancyNetHTTPClient.Create(nil);
+        Client.Tag := DateTimeToUnix(Now);
+        Client.Description := Update+' for '+FormatDateTime('mmmdd',CacheDate)+' / d'+IntToStr(CacheIndex);
+        Client.CacheFile := CacheFile;
+        Client.Asynchronous := True;
+        Client.ConnectionTimeout := 3600000;  // 60 minutes
+        Client.ResponseTimeout := 3600000;    // 60 minutes
+        Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
+        Client.onRequestError := NetHTTPClient1RequestError;
+        Client.URL := TidURI.URLEncode(URL);
 
-      // Write out a file indicating something is being worked on
-      Progress.SaveToFile(Client.CacheFile+'.working');
+        if Pos('https', URL) > 0
+        then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
 
-      try
-        Client.Get(TidURI.URLEncode(URL));
-      except on E: Exception do
-        begin
-          LogException(Client.Description, E.ClassName, E.Message, Client.URL);
+        // Write out a file indicating something is being worked on
+        Progress.SaveToFile(Client.CacheFile+'.working');
+
+        try
+          Client.Get(TidURI.URLEncode(URL));
+        except on E: Exception do
+          begin
+            LogException(Client.Description, E.ClassName, E.Message, Client.URL);
+          end;
         end;
-      end;
-
+      end
+      else
+      begin
+        // If already processed, let's check the next one
+        CacheTimer.Tag := CacheTimer.Tag + 1;
+        CacheTimer.Interval := 1000;
+        CacheTimer.Enabled := True;
+        CurrentProgress.Caption := 'Scanning';
+      end
     end
     else
     begin
@@ -1200,7 +1223,7 @@ begin
       CacheTimer.Interval := 1000;
       CacheTimer.Enabled := True;
       CurrentProgress.Caption := 'Scanning';
-    end;
+    end
   end
   else
   begin

@@ -14,6 +14,7 @@ object ServerContainer: TServerContainer
     SwaggerOptions.Enabled = True
     SwaggerUIOptions.Enabled = True
     SwaggerUIOptions.ShowFilter = True
+    SwaggerUIOptions.TryItOutEnabled = True
     RedocOptions.Enabled = True
     Left = 216
     Top = 16

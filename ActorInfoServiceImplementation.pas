@@ -251,7 +251,7 @@ end;
 // make this a little simpler in the other functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function GetDataFromWikiData(Query:String; CacheFile: String):String;
+function GetDataFromWikiData(Query: String; CacheFile: String):String;
 var
   Client: TNetHTTPClient;  // The client connection
   Response: TStringList;   // The response from TMDB
@@ -2868,6 +2868,8 @@ begin
       Brotli.SaveToFile(CacheFile+'.br');
       ResponseFile.Free;
       Brotli.Free;
+  //    MainForm.LogEvent('Yeah? Or Nah?');
+
     except on E: Exception do
       begin
 //        MainForm.LogEvent(E.ClassName+': '+E.Message);
@@ -4265,6 +4267,7 @@ var
   CacheFileDay50:   String;  // The abbreviated results
   CacheFileDay50BR: String;  // The abbreviated results, compressed with Brotli
   CacheFileWiki:    String;  // The Wikidata results
+  CacheFileWikiBR:  String;  // The Wikidata results, compressed with Brotli
   CacheFilePerson:  String;  // The person results
 
   FirstCache: TStringList;  // Used to generate the first photo cache
@@ -4309,6 +4312,7 @@ begin
   CacheFileDay50   := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
   CacheFileDay50BR := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json.br';
   CacheFileWiki    := 'cache/days/wikidata-births/birthday-' +RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileWikiBR  := 'cache/days/wikidata-births/birthday-' +RightStr('000'+IntToStr(CacheIndex),3)+'.json.br';
   CacheFilePerson  := 'cache/days/people/';
 
   // Set up our progress system for this request
