@@ -145,7 +145,7 @@ type
     procedure SendActivityLog(Subject: String);
     procedure btEmailClick(Sender: TObject);
     procedure SetProgressStep(Progress: String);
-
+    procedure GetAppParameters(List: TStringList);
   public
     Progress: TStringList;
     WaitingMessage: String;
@@ -179,6 +179,7 @@ type
     CleanFiles: Integer;
 
     AppStartup: TDateTime;
+    AppParameters: TStringList;
     AppConfiguration: TJSONObject;
     AppBaseURL: String;
     AppURL: String;
@@ -187,6 +188,7 @@ type
     AppHAURL: String;
     AppHAToken: String;
     LastException: TDateTime;
+    AppCacheDir: String;
 
     MailServerAvailable: Boolean;
     MailServerHost: String;
@@ -229,6 +231,18 @@ resourcestring
   SServerStartedAt = 'Server started at ';
 
 { TMainForm }
+
+procedure TMainForm.GetAppParameters(List: TStringList);
+var
+  i: Integer;
+begin
+  i := 1;
+  while i <= ParamCount do
+  begin
+    List.Add('"'+ParamStr(i)+'"');
+    i := i + 1;
+  end;
+end;
 
 procedure TMainForm.btTimerClick(Sender: TObject);
 begin
@@ -825,34 +839,34 @@ begin
 
   // Days
   LogEvent('- Cleaning Days');
-  CacheDir := 'cache\days\actorious-births';
+  CacheDir := AppCacheDir+'cache\days\actorious-births';
   CleanDays := CleanDays + CleanDir;
-  CacheDir := 'cache\days\actorious-deaths';
+  CacheDir := AppCacheDir+'cache\days\actorious-deaths';
   CleanDays := CleanDays + CleanDir;
-  CacheDir := 'cache\days\actorious-releases';
+  CacheDir := AppCacheDir+'cache\days\actorious-releases';
   CleanDays := CleanDays + CleanDir;
-  CacheDir := 'cache\days\first';
+  CacheDir := AppCacheDir+'cache\days\first';
   CleanDays := CleanDays + CleanDir;
-  CacheDir := 'cache\days\wikidata-births';
+  CacheDir := AppCacheDir+'cache\days\wikidata-births';
   CleanDays := CleanDays + CleanDir;
-  CacheDir := 'cache\days\wikidata-deaths';
+  CacheDir := AppCacheDir+'cache\days\wikidata-deaths';
   CleanDays := CleanDays + CleanDir;
-  CacheDir := 'cache\days\wikidata-releases';
+  CacheDir := AppCacheDir+'cache\days\wikidata-releases';
   CleanDays := CleanDays + CleanDir;
   btRecentProgressClick(nil);
 
   // People
   LogEvent('- Cleaning People/Top');
-  CacheDir := 'cache\people\top1000';
+  CacheDir := AppCacheDir+'cache\people\top1000';
   CleanPeople := CleanPeople + CleanDir;
-  CacheDir := 'cache\people\top5000';
+  CacheDir := AppCacheDir+'cache\people\top5000';
   CleanPeople := CleanPeople + CleanDir;
   btRecentProgressClick(nil);
 
   LogEvent('- Cleaning People/Actorious');
   for i :=  0 to 999 do
   begin
-    CacheDir := 'cache\people\actorious\'+RightStr('000'+IntToStr(i),3);
+    CacheDir := AppCacheDir+'cache\people\actorious\'+RightStr('000'+IntToStr(i),3);
     try
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
@@ -867,7 +881,7 @@ begin
   LogEvent('- Cleaning People/TMDb');
   for i :=  0 to 999 do
   begin
-    CacheDir := 'cache\people\tmdb\'+RightStr('000'+IntToStr(i),3);
+    CacheDir := AppCacheDir+'cache\people\tmdb\'+RightStr('000'+IntToStr(i),3);
     try
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
@@ -882,16 +896,16 @@ begin
 
   // Movies
   LogEvent('- Cleaning Movies/Top');
-  CacheDir := 'cache\movies\top1000';
+  CacheDir := AppCacheDir+'cache\movies\top1000';
   CleanPeople := CleanPeople + CleanDir;
-  CacheDir := 'cache\movies\top5000';
+  CacheDir := AppCacheDir+'cache\movies\top5000';
   CleanPeople := CleanPeople + CleanDir;
   btRecentProgressClick(nil);
 
   LogEvent('- Cleaning Movies/Actorious');
   for i :=  0 to 999 do
   begin
-    CacheDir := 'cache\movies\actorious\'+RightStr('000'+IntToStr(i),3);
+    CacheDir := AppCacheDir+'cache\movies\actorious\'+RightStr('000'+IntToStr(i),3);
     try
       CleanPeople := CleanPeople + CleanDir;
     except on E: Exception do
@@ -906,7 +920,7 @@ begin
   LogEvent('- Cleaning Movies/TMDb');
   for i :=  0 to 999 do
   begin
-    CacheDir := 'cache\movies\tmdb\'+RightStr('000'+IntToStr(i),3);
+    CacheDir := AppCacheDir+'cache\movies\tmdb\'+RightStr('000'+IntToStr(i),3);
     try
       CleanMovies := CleanMovies + CleanDir;
     except on E: Exception do
@@ -921,16 +935,16 @@ begin
 
   // TV Shows
   LogEvent('- Cleaning TVShows/Top');
-  CacheDir := 'cache\tvshows\top1000';
+  CacheDir := AppCacheDir+'cache\tvshows\top1000';
   Cleantvshows := Cleantvshows + CleanDir;
-  CacheDir := 'cache\tvshows\top5000';
+  CacheDir := AppCacheDir+'cache\tvshows\top5000';
   Cleantvshows := Cleantvshows + CleanDir;
   btRecentProgressClick(nil);
 
   LogEvent('- Cleaning TVShows/Actorious');
   for i :=  0 to 999 do
   begin
-    CacheDir := 'cache\tvshows\actorious\'+RightStr('000'+IntToStr(i),3);
+    CacheDir := AppCacheDir+'cache\tvshows\actorious\'+RightStr('000'+IntToStr(i),3);
     try
       CleanTVShows := CleanTVShows + CleanDir;
     except on E: Exception do
@@ -945,7 +959,7 @@ begin
   LogEvent('- Cleaning TVShows/TMDb');
   for i :=  0 to 999 do
   begin
-    CacheDir := 'cache\tvshows\tmdb\'+RightStr('000'+IntToStr(i),3);
+    CacheDir := AppCacheDir+'cache\tvshows\tmdb\'+RightStr('000'+IntToStr(i),3);
     try
       Cleantvshows := Cleantvshows + CleanDir;
     except on E: Exception do
@@ -1093,7 +1107,7 @@ begin
     // BirthDay Data
     if (update = 'Waiting') then
     begin
-      CacheFile := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+      CacheFile := AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
       if not(FileExists(CacheFile+'.working')) then
       begin
         if not(FileExists(CacheFile)) then
@@ -1111,7 +1125,7 @@ begin
     // DeathDay Data
     if (update = 'Waiting') then
     begin
-      CacheFile := 'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+      CacheFile := AppCacheDir+'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
       if not(FileExists(CacheFile+'.working')) then
       begin
         if not(FileExists(CacheFile)) then
@@ -1129,7 +1143,7 @@ begin
     // ReleaseDay Data
     if (update = 'Waiting') then
     begin
-      CacheFile := 'cache/days/actorious-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+      CacheFile := AppCacheDir+'cache/days/actorious-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
       if not(FileExists(CacheFile+'.working')) then
       begin
         if not(FileExists(CacheFile)) then
@@ -1645,6 +1659,7 @@ end;
 
 procedure TMainForm.StartTimerTimer(Sender: TObject);
 var
+  i: integer;
   AppConfigFile: String;
   ConfigFile: TStringList;
 begin
@@ -1658,10 +1673,24 @@ begin
   LogEvent('');
   LogEvent('SERVER STARTUP.');
 
+
+  // List of App Parameters
+  AppParameters := TStringList.Create;
+  AppParameters.QuoteChar := ' ';
+  GetAppParameters(AppParameters);
+
   // Load JSON Configuration
   LogEvent('');
   LogEvent('Loading Configuration.');
   AppConfigFile := 'Actorious.json';
+  i := 0;
+  while i < AppParameters.Count do
+  begin
+    if Pos('"CONFIG=',UpperCase(AppParameters[i])) = 1
+    then AppConfigFile  := Copy(AppParameters[i],9,length(AppParameters[i])-9);
+    i := i + 1;
+  end;
+
   ConfigFile := TStringList.Create;
   if FileExists(AppConfigFile) then
   begin
@@ -1735,6 +1764,21 @@ begin
   else
   begin
     LogEvent('- ERROR: Missing Required Entry For [AppURL]');
+  end;
+  SetProgressStep('5 of 16');
+
+  // AppCacheDir
+  if AppConfiguration.getValue('AppCacheDir') <> nil then
+  begin
+    AppCacheDir := Trim((AppConfiguration.getValue('AppCacheDir') as TJSONString).Value);
+    if RightSTr(AppCacheDir,1) <> '/' then AppCacheDir := AppCacheDir + '/';
+    if AppCacheDir = '/' then AppCacheDir := '';
+    LogEvent('- AppCacheDir set to [ '+AppCacheDir+' ]');
+  end
+  else
+  begin
+    LogEvent('- WARNING: Missing Entry For [AppCacheDir]');
+    AppCacheDir := '';
   end;
   SetProgressStep('5 of 16');
 
@@ -1838,35 +1882,36 @@ begin
   // Create Cache directory structure
   LogEvent('Creating Cache Directories');
 
-  CreateDir('cache'); // Cache Root
+  CreateDir(AppCacheDir);
+  CreateDir(AppCacheDir+'cache'); // Cache Root
 
-  CreateDir('cache\people');                  // Data cached by TMDb ID, either Actors or Directors or Writers
-  CreateDir('cache\people\tmdb');             // JSON as it originated from TMDb
-  CreateDir('cache\people\actorious');        // JSON formatted for Actorious
-  CreateDir('cache\people\top1000');          // Top 1000 all ready to go
-  CreateDir('cache\people\top5000');          // Top 5000 all ready to go
+  CreateDir(AppCacheDir+'cache\people');                  // Data cached by TMDb ID, either Actors or Directors or Writers
+  CreateDir(AppCacheDir+'cache\people\tmdb');             // JSON as it originated from TMDb
+  CreateDir(AppCacheDir+'cache\people\actorious');        // JSON formatted for Actorious
+  CreateDir(AppCacheDir+'cache\people\top1000');          // Top 1000 all ready to go
+  CreateDir(AppCacheDir+'cache\people\top5000');          // Top 5000 all ready to go
 
-  CreateDir('cache\days');                    // Data cached by Julian Day
-  CreateDir('cache\days\actorious-births');   // People with this birthday
-  CreateDir('cache\days\actorious-deaths');   // People with this birthday
-  CreateDir('cache\days\actorious-releases'); // People with this birthday
-  CreateDir('cache\days\first');              // The first person to appear for this given birthday
-  CreateDir('cache\days\wikidata-births');    // Wikidata response to this birthday
-  CreateDir('cache\days\wikidata-deaths');    // Wikidata response to this deathday
-  CreateDir('cache\days\wikidata-releases');  // Wikidata response to this releaseday
-  CreateDir('cache\days\toptoday');
+  CreateDir(AppCacheDir+'cache\days');                    // Data cached by Julian Day
+  CreateDir(AppCacheDir+'cache\days\actorious-births');   // People with this birthday
+  CreateDir(AppCacheDir+'cache\days\actorious-deaths');   // People with this birthday
+  CreateDir(AppCacheDir+'cache\days\actorious-releases'); // People with this birthday
+  CreateDir(AppCacheDir+'cache\days\first');              // The first person to appear for this given birthday
+  CreateDir(AppCacheDir+'cache\days\wikidata-births');    // Wikidata response to this birthday
+  CreateDir(AppCacheDir+'cache\days\wikidata-deaths');    // Wikidata response to this deathday
+  CreateDir(AppCacheDir+'cache\days\wikidata-releases');  // Wikidata response to this releaseday
+  CreateDir(AppCacheDir+'cache\days\toptoday');
 
-  CreateDir('cache\movies');
-  CreateDir('cache\movies\tmdb');
-  CreateDir('cache\movies\actorious');
-  CreateDir('cache\movies\top1000');
-  CreateDir('cache\movies\top5000');
+  CreateDir(AppCacheDir+'cache\movies');
+  CreateDir(AppCacheDir+'cache\movies\tmdb');
+  CreateDir(AppCacheDir+'cache\movies\actorious');
+  CreateDir(AppCacheDir+'cache\movies\top1000');
+  CreateDir(AppCacheDir+'cache\movies\top5000');
 
-  CreateDir('cache\tvshows');
-  CreateDir('cache\tvshows\tmdb');
-  CreateDir('cache\tvshows\actorious');
-  CreateDir('cache\tvshows\top1000');
-  CreateDir('cache\tvshows\top5000');
+  CreateDir(AppCacheDir+'cache\tvshows');
+  CreateDir(AppCacheDir+'cache\tvshows\tmdb');
+  CreateDir(AppCacheDir+'cache\tvshows\actorious');
+  CreateDir(AppCacheDir+'cache\tvshows\top1000');
+  CreateDir(AppCacheDir+'cache\tvshows\top5000');
   SetProgressStep('13 of 16');
 
   // Show encoded Base64 version of secret

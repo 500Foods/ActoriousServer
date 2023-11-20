@@ -342,8 +342,8 @@ var
 
 begin
   // Figure out where to put this
-  TDirectory.CreateDirectory('cache/people/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
-  CacheFile := 'cache/people/tmdb/'+RightStr('00000000'+IntToStr(TMDB_Id),3)+'/person-'+RightStr('00000000'+IntToStr(TMDb_ID),8)+'.json';
+  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/people/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
+  CacheFile := MainForm.AppCacheDir+'cache/people/tmdb/'+RightStr('00000000'+IntToStr(TMDB_Id),3)+'/person-'+RightStr('00000000'+IntToStr(TMDb_ID),8)+'.json';
   Response := TStringList.Create;
   Response.Text := '';
 
@@ -480,8 +480,8 @@ var
 
 begin
   // Figure out where to put this
-  TDirectory.CreateDirectory('cache/movies/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
-  CacheFile := 'cache/movies/tmdb/'+RightStr('00000000'+IntToStr(TMDB_Id),3)+'/movie-'+RightStr('00000000'+IntToStr(TMDb_ID),8)+'.json';
+  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/movies/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
+  CacheFile := MainForm.AppCacheDir+'cache/movies/tmdb/'+RightStr('00000000'+IntToStr(TMDB_Id),3)+'/movie-'+RightStr('00000000'+IntToStr(TMDb_ID),8)+'.json';
   Response := TStringList.Create;
   Response.Text := '';
 
@@ -618,8 +618,8 @@ var
 
 begin
   // Figure out where to put this
-  TDirectory.CreateDirectory('cache/TVShows/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
-  CacheFile := 'cache/tvshows/tmdb/'+RightStr('00000000'+IntToStr(TMDB_Id),3)+'/tvshow-'+RightStr('00000000'+IntToStr(TMDb_ID),8)+'.json';
+  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/TVShows/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
+  CacheFile := MainForm.AppCacheDir+'cache/tvshows/tmdb/'+RightStr('00000000'+IntToStr(TMDB_Id),3)+'/tvshow-'+RightStr('00000000'+IntToStr(TMDb_ID),8)+'.json';
   Response := TStringList.Create;
 
   // Determine whether we're updating;
@@ -758,8 +758,8 @@ var
 begin
 
   // Figure out where to put this
-  TDirectory.CreateDirectory('cache/people/actorious/'+RightStr('00000000'+IntToStr(PersonID),3));
-  CacheFile := 'cache/people/actorious/'+RightStr('00000000'+IntToStr(PersonID),3)+'/person-'+RightStr('00000000'+IntToStr(PersonID),8);
+  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/people/actorious/'+RightStr('00000000'+IntToStr(PersonID),3));
+  CacheFile := MainForm.AppCacheDir+'cache/people/actorious/'+RightStr('00000000'+IntToStr(PersonID),3)+'/person-'+RightStr('00000000'+IntToStr(PersonID),8);
 
   Success := False;
   Attempt := 1;
@@ -838,8 +838,8 @@ begin
       AdultList := TJSONObject.Create;
 
       try
-        if FileExists('cache/people/top1000/top1000-0.json')
-        then SLLoadJSON(PersonData, 'cache/people/top1000/top1000-0.json');
+        if FileExists(MainForm.AppCacheDir+'cache/people/top1000/top1000-0.json')
+        then SLLoadJSON(PersonData, MainForm.AppCacheDir+'cache/people/top1000/top1000-0.json');
 
         // Create an empty list if one doesn't exist already
         if (PersonData.Text = '')
@@ -869,8 +869,8 @@ begin
 
         // Save the updated list
         PersonData.Text := AdultList.ToString;
-        PersonData.SaveToFile('cache/people/top1000/top1000-0.json', TEncoding.UTF8);
-        PersonData.SaveToFile('cache/people/top5000/top5000-0.json', TEncoding.UTF8);
+        PersonData.SaveToFile(MainForm.AppCacheDir+'cache/people/top1000/top1000-0.json', TEncoding.UTF8);
+        PersonData.SaveToFile(MainForm.AppCacheDir+'cache/people/top5000/top5000-0.json', TEncoding.UTF8);
       end;
 
       PersonData.Free;
@@ -905,8 +905,8 @@ var
 begin
 
   // Figure out where to put this
-  TDirectory.CreateDirectory('cache/movies/actorious/'+RightStr('00000000'+IntToStr(MovieID),3));
-  CacheFile := 'cache/movies/actorious/'+RightStr('00000000'+IntToStr(MovieID),3)+'/movie-'+RightStr('00000000'+IntToStr(MovieID),8);
+  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/movies/actorious/'+RightStr('00000000'+IntToStr(MovieID),3));
+  CacheFile := MainForm.AppCacheDir+'cache/movies/actorious/'+RightStr('00000000'+IntToStr(MovieID),3)+'/movie-'+RightStr('00000000'+IntToStr(MovieID),8);
 
   Success := False;
   Attempt := 1;
@@ -960,8 +960,8 @@ begin
         MovieData := TStringList.Create;
         MovieData.Text := '';
 
-        if FileExists('cache/movies/top1000/top1000-0.json')
-        then SLLoadJSON(MovieData, 'cache/movies/top1000/top1000-0.json');
+        if FileExists(MainForm.AppCacheDir+'cache/movies/top1000/top1000-0.json')
+        then SLLoadJSON(MovieData, MainForm.AppCacheDir+'cache/movies/top1000/top1000-0.json');
 
         // Create an empty list if one doesn't exist already
         if (MovieData.Text = '')
@@ -980,8 +980,8 @@ begin
 
       // Save the updated list
       MovieData.Text := AdultList.ToString;
-      MovieData.SaveToFile('cache/movies/top1000/top1000-0.json', TEncoding.UTF8);
-      MovieData.SaveToFile('cache/movies/top5000/top5000-0.json', TEncoding.UTF8);
+      MovieData.SaveToFile(MainForm.AppCacheDir+'cache/movies/top1000/top1000-0.json', TEncoding.UTF8);
+      MovieData.SaveToFile(MainForm.AppCacheDir+'cache/movies/top5000/top5000-0.json', TEncoding.UTF8);
 
       MovieData.Free;
       AdultList.Free;
@@ -1015,8 +1015,8 @@ var
 begin
 
   // Figure out where to put this
-  TDirectory.CreateDirectory('cache/tvshows/actorious/'+RightStr('00000000'+IntToStr(TVShowID),3));
-  CacheFile := 'cache/tvshows/actorious/'+RightStr('00000000'+IntToStr(TVShowID),3)+'/tvshows-'+RightStr('00000000'+IntToStr(TVShowID),8);
+  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/tvshows/actorious/'+RightStr('00000000'+IntToStr(TVShowID),3));
+  CacheFile := MainForm.AppCacheDir+'cache/tvshows/actorious/'+RightStr('00000000'+IntToStr(TVShowID),3)+'/tvshows-'+RightStr('00000000'+IntToStr(TVShowID),8);
 
   Success := False;
   Attempt := 1;
@@ -1068,8 +1068,8 @@ begin
         TVShowData := TStringList.Create;
         TVShowData.Text := '';
 
-        if FileExists('cache/tvshows/top1000/top1000-0.json')
-        then SLLoadJSON(TVShowData,'cache/tvshows/top1000/top1000-0.json');
+        if FileExists(MainForm.AppCacheDir+'cache/tvshows/top1000/top1000-0.json')
+        then SLLoadJSON(TVShowData,MainForm.AppCacheDir+'cache/tvshows/top1000/top1000-0.json');
 
         // Create an empty list if one doesn't exist already
         if (TVShowData.Text = '')
@@ -1088,8 +1088,8 @@ begin
 
       // Save the updated list
       TVShowData.Text := AdultList.ToString;
-      TVShowData.SaveToFile('cache/tvshows/top1000/top1000-0.json', TEncoding.UTF8);
-      TVShowData.SaveToFile('cache/tvshows/top5000/top5000-0.json', TEncoding.UTF8);
+      TVShowData.SaveToFile(MainForm.AppCacheDir+'cache/tvshows/top1000/top1000-0.json', TEncoding.UTF8);
+      TVShowData.SaveToFile(MainForm.AppCacheDir+'cache/tvshows/top5000/top5000-0.json', TEncoding.UTF8);
 
       TVShowData.Free;
       AdultList.Free;
@@ -2685,8 +2685,8 @@ var
 begin
 
   Reason        := 'Cache';
-  CacheFile     := 'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
-  TMDBCacheFile := 'cache/people/tmdb/'     +ActorRefShort+'/person-'+ActorRef+'.json';
+  CacheFile     := MainForm.AppCacheDir+'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
+  TMDBCacheFile := MainForm.AppCacheDir+'cache/people/tmdb/'     +ActorRefShort+'/person-'+ActorRef+'.json';
 
   // Determine whether we're updating;
   Update := ForceUpdate;
@@ -2798,7 +2798,7 @@ begin
   Result := TMemoryStream.Create;
   TXDataOperationContext.Current.Response.Headers.SetValue('content-type', 'application/json');
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
-  CacheFile := 'cache/days/wikidata-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFile := MainForm.AppCacheDir+'cache/days/wikidata-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
 
   // Set up our progress system for this request
   ProgressPrefix := '{"ST":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"'+
@@ -2953,7 +2953,7 @@ begin
   Result := TMemoryStream.Create;
   TXDataOperationContext.Current.Response.Headers.SetValue('content-type', 'application/json');
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
-  CacheFile := 'cache/days/wikidata-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFile := MainForm.AppCacheDir+'cache/days/wikidata-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
 
   // Set up our progress system for this request
   ProgressPrefix := '{"ST":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"'+
@@ -3083,7 +3083,7 @@ begin
 //  TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
   FirstPhoto := TStringList.Create;
   FirstPhoto.Text := '';
-  SLLoadJSON(FirstPhoto, 'cache/days/first/'+Day+'.json');
+  SLLoadJSON(FirstPhoto, MainForm.AppCacheDir+'cache/days/first/'+Day+'.json');
 
   if FirstPhoto.Text = ''
   then FirstPhoto.Text := '"PIC":"img/person-placeholder.png","NAM":"Unknown","IMG":"img/person-placeholder.png","NUM":0,"BIO":""';
@@ -3153,7 +3153,7 @@ begin
   for i := 0 to Data.Count - 1 do
   begin
     ActorNum := RightStr('0000000'+IntToStr(((data.items[i] as TJSONObject).getValue('ID') as TJSONNumber).AsInt),8);
-    CacheFile := 'cache/people/actorious/'+
+    CacheFile := MainForm.AppCacheDir+'cache/people/actorious/'+
       RightStr(ActorNum,3)+
       '/person-'+
       ActorNum+
@@ -3167,7 +3167,7 @@ begin
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
         ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
         ActorData.Free;
-        SLLoadJSON(Response, 'cache/people/actorious/'+
+        SLLoadJSON(Response, MainForm.AppCacheDir+'cache/people/actorious/'+
           RightStr(ActorNum,3)+
           '/person-'+
           ActorNum+
@@ -3282,9 +3282,9 @@ begin
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
 
-  CacheFileDay      := 'cache/days/actorious-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFileDay50    := 'cache/days/actorious-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
-  CacheFileReleases := 'cache/days/wikidata-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileDay      := MainForm.AppCacheDir+'cache/days/actorious-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileDay50    := MainForm.AppCacheDir+'cache/days/actorious-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
+  CacheFileReleases := MainForm.AppCacheDir+'cache/days/wikidata-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
   CacheResponse     := TStringList.Create;
 
 
@@ -3392,7 +3392,7 @@ begin
         MovieRef := RightStr('00000000'+IntToStr(StrToIntDef(MovieRef,0)),8);
         MovieRefShort := RightStr(MovieRef,3);
 
-        CacheFilePerson := 'cache/movies/actorious/'+MovieRefShort+'/movie-'+MovieRef+'.json';
+        CacheFilePerson := MainForm.AppCacheDir+'cache/movies/actorious/'+MovieRefShort+'/movie-'+MovieRef+'.json';
         MovieNew := '';
 
         // For each person, we're looking for either a processed person file on disk (Movieious), in which case we're done with this person.
@@ -3407,7 +3407,7 @@ begin
         // If we can't, or we're regenerating this data, then lets go and get it again
         if ((CacheResponse.Text = '') or (Regenerate)) then
         begin
-          CacheFilePerson := 'cache/movies/tmdb/'+RightStr('00000000'+MovieRef,3)+'/movie-'+RightStr('00000000'+MovieRef,8)+'.json';
+          CacheFilePerson := MainForm.AppCacheDir+'cache/movies/tmdb/'+RightStr('00000000'+MovieRef,3)+'/movie-'+RightStr('00000000'+MovieRef,8)+'.json';
 
           // We don't have data
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Retrieving Movie # '+MovieRef+' ( '+IntToStr(j+1)+' of '+IntToStr(Movies.Count)+' )","TP":'+FloatToStr(Now)+'}';
@@ -3665,7 +3665,7 @@ begin
     Response.Text := '';
     ActorNum := RightStr('0000000'+(((data.items[i] as TJSONObject).getValue('TMDB') as TJSONObject).getValue('value') as TJSONString).value,8);
 //      MainForm.LogEvent('Searching for #'+IntToStr(i)+' Relative: '+ActorNum);
-    CacheFile := 'cache/people/actorious/'+
+    CacheFile := MainForm.AppCacheDir+'cache/people/actorious/'+
       RightStr(ActorNum,3)+
       '/person-'+
       ActorNum+
@@ -3679,7 +3679,7 @@ begin
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
         ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
         ActorData.Free;
-        SLLoadJSON(Response, 'cache/people/actorious/'+
+        SLLoadJSON(Response, MainForm.AppCacheDir+'cache/people/actorious/'+
           RightStr(ActorNum,3)+
           '/person-'+
           ActorNum+
@@ -3770,7 +3770,7 @@ begin
   Result := TMemoryStream.Create;
   TXDataOperationContext.Current.Response.Headers.SetValue('content-type', 'application/json');
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
-  CacheFile := 'cache/days/wikidata-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFile := MainForm.AppCacheDir+'cache/days/wikidata-releases/releaseday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
 
   // Set up our progress system for this request
   ProgressPrefix := '{"ST":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"'+
@@ -3972,7 +3972,7 @@ begin
   for i := 0 to Data.Count - 1 do
   begin
     ActorNum := RightStr('0000000'+IntToStr(((data.items[i] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8);
-    CacheFile := 'cache/people/actorious/'+
+    CacheFile := MainForm.AppCacheDir+'cache/people/actorious/'+
       RightStr(ActorNum,3)+
       '/person-'+
       ActorNum+
@@ -3986,7 +3986,7 @@ begin
         // That's what makes it Quick, after all, in addition to only searching one page
         // of results from TMDb
 //        UpdatePersonfromTMDb(StrToInt(ActorNum), False);
-//        Response.LoadFromFile('cache/people/tmdb/'+
+//        Response.LoadFromFile(MainForm.AppCacheDir+'cache/people/tmdb/'+
 //        RightStr(ActorNum,3)+
 //          '/person-'+
 //          ActorNum+
@@ -3994,7 +3994,7 @@ begin
 //        ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
 //        ProcessActor(ActorCount, ActorNum, ActorData, -1, nil, ProgressPrefix, ProgressKey);
 //        ActorData.Free;
-//        Response.LoadFromFile('cache/people/actorious/'+
+//        Response.LoadFromFile(MainForm.AppCacheDir+'cache/people/actorious/'+
 //          RightStr(ActorNum,3)+
 //          '/person-'+
 //          ActorNum+
@@ -4152,7 +4152,7 @@ begin
     for i := 0 to Data.Count - 1 do
     begin
       ActorNum := RightStr('0000000'+IntToStr(((data.items[i] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8);
-      CacheFile := 'cache/people/actorious/'+
+      CacheFile := MainForm.AppCacheDir+'cache/people/actorious/'+
         RightStr(ActorNum,3)+
         '/person-'+
         ActorNum+
@@ -4167,7 +4167,7 @@ begin
             ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
             ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
             ActorData.Free;
-            SLLoadJSON(Response, 'cache/people/actorious/'+
+            SLLoadJSON(Response, MainForm.AppCacheDir+'cache/people/actorious/'+
               RightStr(ActorNum,3)+
               '/person-'+
               ActorNum+
@@ -4307,13 +4307,13 @@ begin
   SetBrotliHeaders;
 
   // We'll be referencing a number of files, so let's identify them now.
-  CacheFileDay     := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFileDayBR   := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json.br';
-  CacheFileDay50   := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
-  CacheFileDay50BR := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json.br';
-  CacheFileWiki    := 'cache/days/wikidata-births/birthday-' +RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFileWikiBR  := 'cache/days/wikidata-births/birthday-' +RightStr('000'+IntToStr(CacheIndex),3)+'.json.br';
-  CacheFilePerson  := 'cache/days/people/';
+  CacheFileDay     := MainForm.AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileDayBR   := MainForm.AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json.br';
+  CacheFileDay50   := MainForm.AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
+  CacheFileDay50BR := MainForm.AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json.br';
+  CacheFileWiki    := MainForm.AppCacheDir+'cache/days/wikidata-births/birthday-' +RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileWikiBR  := MainForm.AppCacheDir+'cache/days/wikidata-births/birthday-' +RightStr('000'+IntToStr(CacheIndex),3)+'.json.br';
+  CacheFilePerson  := MainForm.AppCacheDir+'cache/days/people/';
 
   // Set up our progress system for this request
   ProgressPrefix := '{"ST":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"'+
@@ -4481,7 +4481,7 @@ begin
              ((Actors.Items[StrToInt(RightStr(CacheResponse[i],8))] as TJSONObject).getValue('IMG') is TJSONArray)
           then FirstCache.Text := FirstCache.Text + ',"NUM":'+IntToStr(((Actors.Items[StrToInt(RightStr(CacheResponse[i],8))] as TJSONObject).getValue('IMG') as TJSONArray).Count);
 
-          FirstCache.SaveToFile('cache/days/first/'+FormatDateTime('mmdd',encodedate(2020,aMonth,aDay))+'.json', TEncoding.UTF8);
+          FirstCache.SaveToFile(MainForm.AppCacheDir+'cache/days/first/'+FormatDateTime('mmdd',encodedate(2020,aMonth,aDay))+'.json', TEncoding.UTF8);
 
         except on E: Exception do
           begin
@@ -4528,7 +4528,7 @@ begin
         else
         begin
           TodayCache.Add('}]');
-          TodayCache.SaveToFile('cache/days/toptoday/day-'+FormatDateTime('mmdd',encodedate(2020,aMonth,aDay))+'.json', TEncoding.UTF8);
+          TodayCache.SaveToFile(MainForm.AppCacheDir+'cache/days/toptoday/day-'+FormatDateTime('mmdd',encodedate(2020,aMonth,aDay))+'.json', TEncoding.UTF8);
           TodayCache.Free;
         end;
       end;
@@ -4715,10 +4715,10 @@ begin
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
 
-  CacheFileDay    := 'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFileDay50  := 'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
-  CacheFileDeaths := 'cache/days/wikidata-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFilePerson := 'cache/days/people/';
+  CacheFileDay    := MainForm.AppCacheDir+'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileDay50  := MainForm.AppCacheDir+'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
+  CacheFileDeaths := MainForm.AppCacheDir+'cache/days/wikidata-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFilePerson := MainForm.AppCacheDir+'cache/days/people/';
   CacheResponse := TStringList.Create;
 
 
@@ -4828,7 +4828,7 @@ begin
         ActorRef := RightStr('00000000'+IntToStr(StrToIntDef(ActorRef,0)),8);
         ActorRefShort := RightStr(ActorRef,3);
 
-        CacheFilePerson := 'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
+        CacheFilePerson := MainForm.AppCacheDir+'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
         ActorNew := '';
 
         // For each person, we're looking for either a processed person file on disk (actorious), in which case we're done with this person.
@@ -4843,7 +4843,7 @@ begin
         // If we can't, or we're regenerating this data, then lets go and get it again
         if ((CacheResponse.Text = '') or (Regenerate)) then
         begin
-          CacheFilePerson := 'cache/people/tmdb/'+RightStr('00000000'+ActorRef,3)+'/person-'+RightStr('00000000'+ActorRef,8)+'.json';
+          CacheFilePerson := MainForm.AppCacheDir+'cache/people/tmdb/'+RightStr('00000000'+ActorRef,3)+'/person-'+RightStr('00000000'+ActorRef,8)+'.json';
 
           // We don't have data
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Retrieving Person TMDb #'+ActorRef+' ( '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+' )","TP":'+FloatToStr(Now)+'}';
@@ -5100,10 +5100,10 @@ begin
   Result := TMemoryStream.Create;
   TXDataOperationContext.Current.Response.Headers.SetValue('content-type', 'application/json');
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
-  CacheFileDay    := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFileDay50  := 'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
-  CacheFileBirths := 'cache/days/wikidata-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFilePerson := 'cache/days/people/';
+  CacheFileDay    := MainForm.AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileDay50  := MainForm.AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
+  CacheFileBirths := MainForm.AppCacheDir+'cache/days/wikidata-births/birthday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFilePerson := MainForm.AppCacheDir+'cache/days/people/';
   CacheResponse := TStringList.Create;
 
   // Set up our progress system for this request
@@ -5205,7 +5205,7 @@ begin
         ActorRef := RightStr('00000000'+IntToStr(StrToIntDef(ActorRef,0)),8);
         ActorRefShort := RightStr(ActorRef,3);
 
-        CacheFilePerson := 'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
+        CacheFilePerson := MainForm.AppCacheDir+'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
         ActorNew := '';
 
         // For each person, we're looking for either a processed person file on disk (actorious), in which case we're done with this person.
@@ -5220,7 +5220,7 @@ begin
         // If we can't, or we're regenerating this data, then lets go and get it again
         if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
         begin
-          CacheFilePerson := 'cache/people/tmdb/'+ActorRefShort+'/person-'+ActorRef+'.json';
+          CacheFilePerson := MainForm.AppCacheDir+'cache/people/tmdb/'+ActorRefShort+'/person-'+ActorRef+'.json';
 
           // We don't have data
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+': TMDb #'+ActorRef+' Retrieving","TP":'+FloatToStr(Now)+'}';
@@ -5472,10 +5472,10 @@ begin
   Result := TMemoryStream.Create;
   TXDataOperationContext.Current.Response.Headers.SetValue('content-type', 'application/json');
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
-  CacheFileDay    := 'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFileDay50  := 'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
-  CacheFileDeaths := 'cache/days/wikidata-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
-  CacheFilePerson := 'cache/days/people/';
+  CacheFileDay    := MainForm.AppCacheDir+'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFileDay50  := MainForm.AppCacheDir+'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'-50.json';
+  CacheFileDeaths := MainForm.AppCacheDir+'cache/days/wikidata-deaths/deathday-'+RightStr('000'+IntToStr(CacheIndex),3)+'.json';
+  CacheFilePerson := MainForm.AppCacheDir+'cache/days/people/';
   CacheResponse := TStringList.Create;
 
   // Set up our progress system for this request
@@ -5576,7 +5576,7 @@ begin
         ActorRef := RightStr('00000000'+IntToStr(StrToIntDef(ActorRef,0)),8);
         ActorRefShort := RightStr(ActorRef,3);
 
-        CacheFilePerson := 'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
+        CacheFilePerson := MainForm.AppCacheDir+'cache/people/actorious/'+ActorRefShort+'/person-'+ActorRef+'.json';
         ActorNew := '';
 
         // For each person, we're looking for either a processed person file on disk (actorious), in which case we're done with this person.
@@ -5591,7 +5591,7 @@ begin
         // If we can't, or we're regenerating this data, then lets go and get it again
         if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
         begin
-          CacheFilePerson := 'cache/people/tmdb/'+ActorRefShort+'/person-'+ActorRef+'.json';
+          CacheFilePerson := MainForm.AppCacheDir+'cache/people/tmdb/'+ActorRefShort+'/person-'+ActorRef+'.json';
 
           // We don't have data
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person '+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+': TMDb #'+ActorRef+' Retrieving","TP":'+FloatToStr(Now)+'}';
@@ -5832,7 +5832,7 @@ begin
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
 
-  CacheFile := 'cache/people/top1000/top1000';
+  CacheFile := MainForm.AppCacheDir+'cache/people/top1000/top1000';
 
 
   // Sometimes we want to force the regeneration of data, particularly after major structural changes
@@ -6228,8 +6228,8 @@ begin
 //  SetBrotliHeaders;
 
   // We'll be referencing a number of files, so let's identify them now.
-  CacheFileDay     := 'cache/days/toptoday/day-'+FormatDateTime('mmdd',EncodeDate(2020, aMonth, aDay))+'.json';
-//  CacheFileDayBR   := 'cache/days/toptoday/day-'+FormatDateTime('mmdd',EncodeDate(2020, aMonth, aDay))+'.json.br';
+  CacheFileDay     := MainForm.AppCacheDir+'cache/days/toptoday/day-'+FormatDateTime('mmdd',EncodeDate(2020, aMonth, aDay))+'.json';
+//  CacheFileDayBR   := MainForm.AppCacheDir+'cache/days/toptoday/day-'+FormatDateTime('mmdd',EncodeDate(2020, aMonth, aDay))+'.json.br';
 
   // Set up our progress system for this request
   ProgressPrefix := '{"ST":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"'+
@@ -6330,7 +6330,7 @@ begin
   TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
 
-  CacheFile := 'cache/people/top5000/top5000';
+  CacheFile := MainForm.AppCacheDir+'cache/people/top5000/top5000';
 
 
   // Sometimes we want to force the regeneration of data, particularly after major structural changes
