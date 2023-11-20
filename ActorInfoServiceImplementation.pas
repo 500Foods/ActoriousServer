@@ -110,7 +110,8 @@ begin
     except on E: Exception do
       begin
         Attempt := Attempt + 1;
-        if Pos('The system cannot find the file specified', E.Message) > 0 then
+        if (Pos('The system cannot find the file specified', E.Message) > 0) or
+           (Pos('The system cannot find the path specified', E.Message) > 0) then
         begin
           // Not doing anything about this
           Attempt := 10;

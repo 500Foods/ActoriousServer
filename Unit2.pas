@@ -1412,7 +1412,7 @@ var
 begin
   ClientVer := TStringList.Create;
   ClientVer.Text := edtClientVersion.Text;
-  ClientVer.SaveToFile('clientversion.txt');
+  ClientVer.SaveToFile(AppCacheDir+'clientversion.txt');
   ClientVer.Free;
 end;
 
