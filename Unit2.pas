@@ -1453,12 +1453,14 @@ end;
 procedure TMainForm.NetHTTPClient1RequestCompleted(const Sender: TObject; const AResponse: IHTTPResponse);
 var
   MainHandle : THandle;
+  Handling: String;
 begin
   if Pos('BirthDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
+    Handling := 'Birthday';
     LogEvent('');
     LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-    CurrentProgress.Caption := 'Short API Delay (Continue in 10s)';
+    CurrentProgress.Caption := 'Short API Delay (Continue in 90s)';
     CacheTimer.Interval := 90000; // 90 seconds
     CacheTimer.Enabled := True;
 
@@ -1468,6 +1470,7 @@ begin
   end
   else if Pos('DeathDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
+    Handling := 'DeathDay';
     LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Short API Delay (Continue in 90s)';
     CacheTimer.Interval := 90000; // 90 seconds
@@ -1479,6 +1482,7 @@ begin
   end
   else if Pos('Releases',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
+    Handling := 'Releases';
     LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Long API Delay (Continue in 300s)';
     CacheTimer.Interval := 300000;  // 5 minutes
@@ -1488,6 +1492,23 @@ begin
     tmrWaiting.Tag := 300;
     tmrWaiting.Enabled := True;
   end;
+
+  // What if it semi-failed?
+  if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) = '00:00' then
+  begin
+    LogException('Processing Delay (15m)', 'PROCESSING',Handling, (Sender as TFancyNetHTTPClient).Description);
+
+    CurrentProgress.Caption := 'ERROR DELAY (Continue in 15m)';
+    CacheTimer.Interval := 900000; // 900 seconds = 15m
+    CacheTimer.Enabled := False;
+    CacheTimer.Enabled := True;
+
+    WaitingMessage := 'ERROR DELAY (Continue in %s)';
+    tmrWaiting.Tag := 900;
+    tmrWaiting.Enabled := False;
+    tmrWaiting.Enabled := True;
+  end;
+
 
   // Delete the .working file as this request was successfully completed
   DeleteFile((Sender as TFancyNetHTTPClient).CacheFile+'.working');
