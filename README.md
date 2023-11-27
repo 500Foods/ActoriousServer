@@ -5,17 +5,17 @@ TMS XData app that implements the REST API that serves as the backend of the Act
 [![Count Lines of Code](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```
-Last Updated at 2023-11-27 01:52:22 UTC
+Last Updated at 2023-11-27 01:57:33 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Pascal                           2             48             62            160
-Delphi Form                      1              0              0             39
-Markdown                         1              8              2             39
-YAML                             2             11             13             33
-HTML                             2              7              0             23
+Pascal                           5           1499           2318           5687
+Delphi Form                      2              8            259            689
+XML                              1              0              0            379
+YAML                             2              8             12             33
+Markdown                         1              2              2             20
 -------------------------------------------------------------------------------
-SUM:                             8             74             77            294
+SUM:                            11           1517           2591           6808
 -------------------------------------------------------------------------------
 ```
 <!--CLOC-END-->
