@@ -5,18 +5,19 @@ This is a [TMS XData](https://www.tmssoftware.com/site/xdata.asp) app that imple
 [![Count Lines of Code](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml)
 <!--CLOC-START -->
 ```
-Last Updated at 2023-11-29 21:16:59 UTC
+Last updated at 2023-11-29 21:18:23 UTC
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
 Pascal                           5           1499           2318           5687
 Delphi Form                      2              8            259            689
 XML                              1              0              0            379
-YAML                             2              8             12             33
+YAML                             2              8             13             35
 Markdown                         1              2              2             20
 -------------------------------------------------------------------------------
-SUM:                            11           1517           2591           6808
+SUM:                            11           1517           2592           6810
 -------------------------------------------------------------------------------
+13 Files (without source code) were skipped
 ```
 <!--CLOC-END-->
 
