@@ -2569,23 +2569,23 @@ var
 
 begin
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
-
-
   AdultMovie := False;
 
   // Check if we've got valid TMDb data?
   try
-    if not(TMDB_Data.getValue('success') = nil) and (TMDB_Data.getValue('success') is TJSONBool) then
+    if (not(TMDB_Data.getValue('success') = nil) and (TMDB_Data.getValue('success') is TJSONBool)) or
+       (TMDB_Data.toString = '{}') or
+       (TMDB_Data.getValue('title') = nil) then
     begin
       if (WikiIndex <> -1)
-      then MainForm.LogEvent('- ProcessMovie: No data for '+MovieRef+': '+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value)
-      else MainForm.LogEvent('- ProcessMovie: No data for '+MovieRef+' (no WikiData reference)');
+      then MainForm.LogEvent('- ProcessMovie: No TMDb data for '+MovieRef+': '+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value)
+      else MainForm.LogEvent('- ProcessMovie: No TMDb data for '+MovieRef+' (no WikiData reference)');
       Result := '';
       exit;
     end;
   except on E: Exception do
     begin
-      MainForm.LogException('Processing Movie Validation Check', E.ClassName, E.Message, MovieRef);
+      MainForm.LogException('Processing TMDb Movie Validation Check', E.ClassName, E.Message, MovieRef);
       MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
@@ -2594,23 +2594,23 @@ begin
   // This is sort of the 'header' infromation
   try
     // ID is used by Tabulator as an index, so handy to just add it right here.
-    Movie :='{"ID":'+IntToStr(MovieID)+',';
+    Movie :='{"ID":'+IntToStr(MovieID);
 
     // Add a timestamp so that we know when this was generated
-    Movie := Movie+'"DAT":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'",';
+    Movie := Movie+',"DAT":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"';
 
     // Name - Assume it is always present?
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Name","TP":'+FloatToStr(Now)+'}';
-    Movie := Movie+'"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('title') as TJSONString)+',';
+    Movie := Movie+',"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('title') as TJSONString);
 
     // TMDb ID
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: TMDb","TP":'+FloatToStr(Now)+'}';
-    Movie := Movie+'"TID":'+IntToStr(StrToInt(MovieRef))+',';
+    Movie := Movie+',"TID":'+IntToStr(StrToInt(MovieRef));
 
     // WikiData ID
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: WikiData","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1)
-    then Movie := Movie+'"WID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+    then Movie := Movie+',"WID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
 
     // Entries from WikiData Query
@@ -2618,17 +2618,17 @@ begin
     // Rotten Tomatoes ID
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: RT","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') <> nil)
-    then Movie := Movie+'"RID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+    then Movie := Movie+',"RID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
     // MetaCritic ID
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: MetaCritic","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') <> nil)
-    then Movie := Movie+'"MET":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+    then Movie := Movie+',"MET":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
     // Wikipedia Link
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Wikipedia","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') <> nil)
-    then Movie := Movie+'"WIK":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+    then Movie := Movie+',"WIK":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
 
     // Entries from TMDb Query
@@ -2639,19 +2639,19 @@ begin
     begin
       if (TMDB_Data.getValue('adult') as TJSONBool).AsBoolean = false then
       begin
-        Movie := Movie+'"XXX":false,';
+        Movie := Movie+',"XXX":false';
       end
       else
       begin
-        Movie := Movie+'"XXX":true,';
+        Movie := Movie+',"XXX":true';
         AdultMovie := True;
       end;
     end
-    else Movie := Movie+'"XXX":false,';
+    else Movie := Movie+'",XXX":false';
 
     if not(TMDB_Data.getValue('popularity') = nil) and not((TMDB_Data.getValue('popularity') is TJSONNULL))
-    then Movie := Movie+'"POP":'+FloatToStr((TMDB_Data.getValue('popularity') as TJSONNumber).AsDouble)
-    else Movie := Movie+'"POP":0.0';
+    then Movie := Movie+',"POP":'+FloatToStr((TMDB_Data.getValue('popularity') as TJSONNumber).AsDouble)
+    else Movie := Movie+',"POP":0.0';
 
   except on E: Exception do
     begin
@@ -3489,11 +3489,13 @@ begin
       for i := 0 to Movies.Count-1 do
       begin
         MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Final Prep ( '+IntToStr(i)+' of '+IntToStr(Movies.Count-1)+' )","TP":'+FloatToStr(Now)+'}';
-        CacheResponse.Add(
-          FormatFloat('00000000.0000',1000000.0 - ((Movies.Items[i] as TJSONObject).GetValue('POP') as TJSONNumber).AsDouble)+
-          RightStr('00000000'+((Movies.Items[i] as TJSONObject).GetValue('TID') as TJSONString).Value,8)+
-          RightStr('00000000'+IntToSTr(i),8)
-        );
+        if ((Movies.Items[i] as TJSONObject).GetValue('POP') <> nil) and
+           ((Movies.Items[i] as TJSONObject).GetValue('TID') <> nil) then
+          CacheResponse.Add(
+            FormatFloat('00000000.0000',1000000.0 - ((Movies.Items[i] as TJSONObject).GetValue('POP') as TJSONNumber).AsDouble)+
+            RightStr('00000000'+((Movies.Items[i] as TJSONObject).GetValue('TID') as TJSONString).Value,8)+
+            RightStr('00000000'+IntToSTr(i),8)
+          );
       end;
       CacheResponse.Sort;
 
