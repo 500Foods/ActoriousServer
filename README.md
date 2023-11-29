@@ -1,5 +1,5 @@
 # ActoriousServer
-TMS XData app that implements the REST API that serves as the backend of the Actorious website.  This, essentially, builds out a cache of all of the Actorious data from its original sources at WikiData and The Movie Database.
+This is a [TMS XData](https://www.tmssoftware.com/site/xdata.asp) app that implements the REST API that serves up the backend of the [Actorious](https://www.actorious.com/) website. The client side of that project has also been published in [this repository](https://github.com/500Foods/ActoriousClient). This, essentially, builds out a cache of all of the Actorious data from its original sources at Wikidata and The Movie Database. This project first started out as a post in a miniseries on the TMS Software blog, showcasing how to use [Tabulator](https://tabulator.info/) in TMS WEB Core projects. The first post of that miniseries can be found [here](https://www.tmssoftware.com/site/blog.asp?post=948).
 
 ## Repository Information
 [![Count Lines of Code](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml/badge.svg)](https://github.com/500Foods/ActoriousServer/actions/workflows/main.yml)
