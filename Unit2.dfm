@@ -598,7 +598,7 @@ object MainForm: TMainForm
       TabOrder = 10
       Text = 'May'
     end
-    object DateTimePicker1: TDateTimePicker
+    object DateTimePickerBirthday: TDateTimePicker
       Tag = 1
       Left = 606
       Top = 10
@@ -613,9 +613,9 @@ object MainForm: TMainForm
       ParentShowHint = False
       ShowHint = True
       TabOrder = 11
-      OnCloseUp = DateTimePicker1CloseUp
+      OnCloseUp = DateTimePickerBirthdayCloseUp
     end
-    object DateTimePicker2: TDateTimePicker
+    object DateTimePickerDeathDay: TDateTimePicker
       Tag = 1
       Left = 606
       Top = 35
@@ -629,9 +629,9 @@ object MainForm: TMainForm
       ParentShowHint = False
       ShowHint = True
       TabOrder = 12
-      OnCloseUp = DateTimePicker2CloseUp
+      OnCloseUp = DateTimePickerDeathDayCloseUp
     end
-    object DateTimePicker3: TDateTimePicker
+    object DateTimePickerReleaseDay: TDateTimePicker
       Tag = 1
       Left = 606
       Top = 60
@@ -645,7 +645,7 @@ object MainForm: TMainForm
       ParentShowHint = False
       ShowHint = True
       TabOrder = 13
-      OnCloseUp = DateTimePicker3CloseUp
+      OnCloseUp = DateTimePickerReleaseDayCloseUp
     end
     object btTop1000: TButton
       Tag = 1

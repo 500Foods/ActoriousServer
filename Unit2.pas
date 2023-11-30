@@ -80,9 +80,9 @@ type
     progDay: TEdit;
     progMonth: TEdit;
     CurrentProgress: TLabel;
-    DateTimePicker1: TDateTimePicker;
-    DateTimePicker2: TDateTimePicker;
-    DateTimePicker3: TDateTimePicker;
+    DateTimePickerBirthday: TDateTimePicker;
+    DateTimePickerDeathDay: TDateTimePicker;
+    DateTimePickerReleaseDay: TDateTimePicker;
     btTop1000: TButton;
     btTop5000: TButton;
     btAll: TButton;
@@ -122,8 +122,8 @@ type
     procedure btClearClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure DateTimePicker1CloseUp(Sender: TObject);
-    procedure DateTimePicker2CloseUp(Sender: TObject);
+    procedure DateTimePickerBirthdayCloseUp(Sender: TObject);
+    procedure DateTimePickerDeathDayCloseUp(Sender: TObject);
     procedure btTop1000Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     function GetProcessThreadCount(ProcessId: Cardinal): Integer;
@@ -134,7 +134,7 @@ type
     procedure UpdateHomeAssistant;
     procedure tmrVersionCheckTimer(Sender: TObject);
     procedure tmrTopUpdateTimer(Sender: TObject);
-    procedure DateTimePicker3CloseUp(Sender: TObject);
+    procedure DateTimePickerReleaseDayCloseUp(Sender: TObject);
     procedure tmrWaitingTimer(Sender: TObject);
     procedure btInternalClick(Sender: TObject);
     procedure tmrProgressTimer(Sender: TObject);
@@ -284,8 +284,8 @@ begin
   Client.Tag := DateTimeToUnix(Now);
   Client.Description := 'Top 1000';
   Client.Asynchronous := True;
-  Client.ConnectionTimeout := 3600000;  // 1 hour
-  Client.ResponseTimeout := 3600000;  // 1 hour
+  Client.ConnectionTimeout := 5400000;  // 90 minutes
+  Client.ResponseTimeout := 5400000;  // 90 minutes
   Client.onRequestCompleted := ManualRequestCompleted;
   Client.onRequestError := ManualRequestError;
   Client.URL := TidURI.URLEncode(URL);
@@ -322,8 +322,8 @@ begin
   Client.Tag := DateTimeToUnix(Now);
   Client.Description := 'Top 5000';
   client.Asynchronous := True;
-  Client.ConnectionTimeout := 3600000; // 1 hour
-  Client.ResponseTimeout := 3600000; // 1 hour
+  Client.ConnectionTimeout := 5400000; // 90 minutes
+  Client.ResponseTimeout := 5400000; // 90 minutes
   Client.onRequestCompleted := ManualRequestCompleted;
   Client.onRequestError := ManualRequestError;
   Client.URL := TidURI.URLEncode(URL);
@@ -1201,8 +1201,8 @@ begin
         Client.Description := Update+' for '+FormatDateTime('mmmdd',CacheDate)+' / d'+IntToStr(CacheIndex);
         Client.CacheFile := CacheFile;
         Client.Asynchronous := True;
-        Client.ConnectionTimeout := 3600000;  // 60 minutes
-        Client.ResponseTimeout := 3600000;    // 60 minutes
+        Client.ConnectionTimeout := 5400000;  // 90 minutes
+        Client.ResponseTimeout := 5400000;    // 90 minutes
         Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
         Client.onRequestError := NetHTTPClient1RequestError;
         Client.URL := TidURI.URLEncode(URL);
@@ -1253,41 +1253,41 @@ begin
 
 end;
 
-procedure TMainForm.DateTimePicker1CloseUp(Sender: TObject);
+procedure TMainForm.DateTimePickerBirthdayCloseUp(Sender: TObject);
 var
   URL: String;
   Client: TFancyNetHTTPClient;
 begin
-  if (DateTimePicker1.Tag <> DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker1.Date),DayOfTheMonth(DateTimePicker1.Date)))) then
+  if (DateTimePickerBirthDay.Tag <> DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePickerBirthDay.Date),DayOfTheMonth(DateTimePickerBirthDay.Date)))) then
   begin
-    DateTimePicker1.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker1.Date),DayOfTheMonth(DateTimePicker1.Date)));
-    CacheTimer.Tag := DateTimePicker1.Tag;
+    DateTimePickerBirthDay.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePickerBirthDay.Date),DayOfTheMonth(DateTimePickerBirthDay.Date)));
+    CacheTimer.Tag := DateTimePickerBirthDay.Tag;
     LogEvent('');
-    LogEvent('Regenerating BirthDay Data [ '+FormatDateTime('mmmdd',DateTimePicker1.Date)+' / d'+IntToStr(DateTimePicker1.Tag)+' ]');
-    CurrentProgress.Caption := 'ManReGenBirthDay['+FormatDateTime('mmmdd',DateTimePicker1.Date)+'/d'+IntToStr(DateTimePicker1.Tag)+']: '+TGUID.NewGUID.ToString;
+    LogEvent('Regenerating BirthDay Data [ '+FormatDateTime('mmmdd',DateTimePickerBirthDay.Date)+' / d'+IntToStr(DateTimePickerBirthDay.Tag)+' ]');
+    CurrentProgress.Caption := 'ManReGenBirthDay['+FormatDateTime('mmmdd',DateTimePickerBirthDay.Date)+'/d'+IntToStr(DateTimePickerBirthDay.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
-    progMonth.Text := FormatDateTime('mmm', DateTimePicker1.date);
-    progDay.Text := FormatDateTime('dd', DateTimePicker1.date);
+    progMonth.Text := FormatDateTime('mmm', DateTimePickerBirthDay.date);
+    progDay.Text := FormatDateTime('dd', DateTimePickerBirthDay.date);
     progMonth.Enabled := True;
     progDay.Enabled := True;
-    CacheTimer.Tag := DayOfTheYear(DateTimePicker1.Date);
+    CacheTimer.Tag := DayOfTheYear(DateTimePickerBirthDay.Date);
 
     URL := AppURL+'/ActorInfoService/ActorBirthDay';
 
     // Setup the Request
     URL := URL+'?Secret='+edSecret.Text;
-    URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePicker1.Date));
-    URL := URL+'&aDay='+IntToStr(DayOf(DateTimePicker1.Date));
+    URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePickerBirthDay.Date));
+    URL := URL+'&aDay='+IntToStr(DayOf(DateTimePickerBirthDay.Date));
     URL := URL+'&Progress='+CurrentProgress.Caption;
 
     // Submit the request (asynchronously)
     Client := TFancyNetHTTPClient.Create(nil);
     Client.Tag := DateTimeToUnix(Now);
-    Client.Description := 'BirthDay:'+FormatDateTime('mmmdd',DateTimePicker1.Date)+'/d'+IntToStr(DateTimePicker1.Tag);
+    Client.Description := 'BirthDay:'+FormatDateTime('mmmdd',DateTimePickerBirthDay.Date)+'/d'+IntToStr(DateTimePickerBirthDay.Tag);
     client.Asynchronous := True;
-    Client.ConnectionTimeout := 1200000;
-    Client.ResponseTimeout := 1200000;
+    Client.ConnectionTimeout := 1800000; // 30 minutes
+    Client.ResponseTimeout := 1800000; // 30 minutes
     Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
     Client.onRequestError := NetHTTPClient1RequestError;
     Client.URL := TidURI.URLEncode(URL);
@@ -1304,41 +1304,41 @@ begin
   end;
 end;
 
-procedure TMainForm.DateTimePicker2CloseUp(Sender: TObject);
+procedure TMainForm.DateTimePickerDeathDayCloseUp(Sender: TObject);
 var
   URL: String;
   Client: TFancyNetHTTPClient;
 begin
-  if (DateTimePicker2.Tag <> DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker2.Date),DayOfTheMonth(DateTimePicker2.Date)))) then
+  if (DateTimePickerDeathDay.Tag <> DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePickerDeathDay.Date),DayOfTheMonth(DateTimePickerDeathDay.Date)))) then
   begin
-    DateTimePicker2.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker2.Date),DayOfTheMonth(DateTimePicker2.Date)));
-    CacheTimer.Tag := DateTimePicker2.Tag;
+    DateTimePickerDeathDay.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePickerDeathDay.Date),DayOfTheMonth(DateTimePickerDeathDay.Date)));
+    CacheTimer.Tag := DateTimePickerDeathDay.Tag;
     LogEvent('');
-    LogEvent('Regenerating DeathDay Data [ '+FormatDateTime('mmmdd',DateTimePicker2.Date)+' / d'+IntToStr(DateTimePicker2.Tag)+' ]');
-    CurrentProgress.Caption := 'ManReGenDeathDay['+FormatDateTime('mmmdd',DateTimePicker2.Date)+'/d'+IntToStr(DateTimePicker2.Tag)+']: '+TGUID.NewGUID.ToString;
+    LogEvent('Regenerating DeathDay Data [ '+FormatDateTime('mmmdd',DateTimePickerDeathDay.Date)+' / d'+IntToStr(DateTimePickerDeathDay.Tag)+' ]');
+    CurrentProgress.Caption := 'ManReGenDeathDay['+FormatDateTime('mmmdd',DateTimePickerDeathDay.Date)+'/d'+IntToStr(DateTimePickerDeathDay.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
-    progMonth.Text := FormatDateTime('mmm', DateTimePicker2.date);
-    progDay.Text := FormatDateTime('dd', DateTimePicker2.date);
+    progMonth.Text := FormatDateTime('mmm', DateTimePickerDeathDay.date);
+    progDay.Text := FormatDateTime('dd', DateTimePickerDeathDay.date);
     progMonth.Enabled := True;
     progDay.Enabled := True;
-    CacheTimer.Tag := DayOfTheYear(DateTimePicker2.Date);
+    CacheTimer.Tag := DayOfTheYear(DateTimePickerDeathDay.Date);
 
     URL := AppURL+'/ActorInfoService/ActorDeathDay';
 
     // Setup the Request
     URL := URL+'?Secret='+edSecret.Text;
-    URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePicker2.Date));
-    URL := URL+'&aDay='+IntToStr(DayOf(DateTimePicker2.Date));
+    URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePickerDeathDay.Date));
+    URL := URL+'&aDay='+IntToStr(DayOf(DateTimePickerDeathDay.Date));
     URL := URL+'&Progress='+CurrentProgress.Caption;
 
     // Submit the request (asynchronously)
     Client := TFancyNetHTTPClient.Create(nil);
     Client.Tag := DateTimeToUnix(Now);
-    Client.Description := 'DeathDay:'+FormatDateTime('mmmdd',DateTimePicker2.Date)+'/d'+IntToStr(DateTimePicker2.Tag);
+    Client.Description := 'DeathDay:'+FormatDateTime('mmmdd',DateTimePickerDeathDay.Date)+'/d'+IntToStr(DateTimePickerDeathDay.Tag);
     client.Asynchronous := True;
-    Client.ConnectionTimeout := 1200000;
-    Client.ResponseTimeout := 1200000;
+    Client.ConnectionTimeout := 1800000; // 30 minutes
+    Client.ResponseTimeout := 1800000; // 30 minutes
     Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
     Client.onRequestError := NetHTTPClient1RequestError;
     Client.URL := TidURI.URLEncode(URL);
@@ -1355,41 +1355,41 @@ begin
   end;
 end;
 
-procedure TMainForm.DateTimePicker3CloseUp(Sender: TObject);
+procedure TMainForm.DateTimePickerReleaseDayCloseUp(Sender: TObject);
 var
   URL: String;
   Client: TFancyNetHTTPClient;
 begin
-  if (DateTimePicker3.Tag <> DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker3.Date),DayOfTheMonth(DateTimePicker3.Date)))) then
+  if (DateTimePickerReleaseDay.Tag <> DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePickerReleaseDay.Date),DayOfTheMonth(DateTimePickerReleaseDay.Date)))) then
   begin
-    DateTimePicker3.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePicker3.Date),DayOfTheMonth(DateTimePicker3.Date)));
-    CacheTimer.Tag := DateTimePicker3.Tag;
+    DateTimePickerReleaseDay.Tag := DayOfTheYear(EncodeDate(2020,MonthOfTheYear(DateTimePickerReleaseDay.Date),DayOfTheMonth(DateTimePickerReleaseDay.Date)));
+    CacheTimer.Tag := DateTimePickerReleaseDay.Tag;
     LogEvent('');
-    LogEvent('Regenerating Releases Data [ '+FormatDateTime('mmmdd',DateTimePicker3.Date)+' / d'+IntToStr(DateTimePicker3.Tag)+' ]');
-    CurrentProgress.Caption := 'ManReGenReleases['+FormatDateTime('mmmdd',DateTimePicker3.Date)+'/d'+IntToStr(DateTimePicker3.Tag)+']: '+TGUID.NewGUID.ToString;
+    LogEvent('Regenerating Releases Data [ '+FormatDateTime('mmmdd',DateTimePickerReleaseDay.Date)+' / d'+IntToStr(DateTimePickerReleaseDay.Tag)+' ]');
+    CurrentProgress.Caption := 'ManReGenReleases['+FormatDateTime('mmmdd',DateTimePickerReleaseDay.Date)+'/d'+IntToStr(DateTimePickerReleaseDay.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
-    progMonth.Text := FormatDateTime('mmm', DateTimePicker3.date);
-    progDay.Text := FormatDateTime('dd', DateTimePicker3.date);
+    progMonth.Text := FormatDateTime('mmm', DateTimePickerReleaseDay.date);
+    progDay.Text := FormatDateTime('dd', DateTimePickerReleaseDay.date);
     progMonth.Enabled := True;
     progDay.Enabled := True;
-    CacheTimer.Tag := DayOfTheYear(DateTimePicker3.Date);
+    CacheTimer.Tag := DayOfTheYear(DateTimePickerReleaseDay.Date);
 
     URL := AppURL+'/ActorInfoService/MovieReleaseDay';
 
     // Setup the Request
     URL := URL+'?Secret='+edSecret.Text;
-    URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePicker3.Date));
-    URL := URL+'&aDay='+IntToStr(DayOf(DateTimePicker3.Date));
+    URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePickerReleaseDay.Date));
+    URL := URL+'&aDay='+IntToStr(DayOf(DateTimePickerReleaseDay.Date));
     URL := URL+'&Progress='+CurrentProgress.Caption;
 
     // Submit the request (asynchronously)
     Client := TFancyNetHTTPClient.Create(nil);
     Client.Tag := DateTimeToUnix(Now);
-    Client.Description := 'Releases:'+FormatDateTime('mmmdd',DateTimePicker3.Date)+'/d'+IntToStr(DateTimePicker3.Tag);
+    Client.Description := 'Releases:'+FormatDateTime('mmmdd',DateTimePickerReleaseDay.Date)+'/d'+IntToStr(DateTimePickerReleaseDay.Tag);
     client.Asynchronous := True;
-    Client.ConnectionTimeout := 1200000;
-    Client.ResponseTimeout := 1200000;
+    Client.ConnectionTimeout := 1800000; // 30 minutes
+    Client.ResponseTimeout := 1800000;  // 30 minutes
     Client.onRequestCompleted := NetHTTPClient1RequestCompleted;
     Client.onRequestError := NetHTTPClient1RequestError;
     Client.URL := TidURI.URLEncode(URL);
