@@ -105,6 +105,9 @@ type
     btEmail: TButton;
     shapeProgressBG: TShape;
     shapeProgressFG: TShape;
+    lblBirthDays: TLabel;
+    lblDeathDays: TLabel;
+    lblReleaseDays: TLabel;
     procedure GetAppVersionString;
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
@@ -177,6 +180,7 @@ type
     CleanTVShows: Integer;
     CleanSize: Int64;
     CleanFiles: Integer;
+    BirthDaysCount: String;
 
     AppStartup: TDateTime;
     AppParameters: TStringList;
@@ -447,7 +451,13 @@ begin
       Data := TStringStream.Create('{"state":"'+ProgMonth.text+' '+ProgDay.Text+'"}');
       Response := Client.Post(URL+Endpoint, Data).ContentAsString;
       if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
-       Data.Free();
+      Data.Free();
+
+      Endpoint := '/api/states/sensor.actorious_server_statistics';
+      Data := TStringStream.Create('{"state":"'+BirthDaysCount+' / '+lblBirthDays.Caption+' / '+lblDeathDays.Caption+' / '+lblReleaseDays.Caption+'"}');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
 
       Client.Free;
 
@@ -971,6 +981,13 @@ begin
     btRecentProgressClick(nil);
   end;
 
+  // BirthdayCount is a count of the number of files in the cache/days/actorious-birthdays folder
+  // This should be 366 * 4 = 1464. If the regen is slow, then the cleaning will delete files older
+  // than 7 days that should have been regenerated after 5 days. We provide a count here so that
+  // we can pass this info to Home Assistant and keep an eye on it there.
+  BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache\days\actorious-births', '*')) div 4)+'d';
+  LogEvent('- Cleaning Date Count: '+BirthDaysCount);
+
   LogEvent('Cache Clean Completed: '+FloatToStrF(CleanFiles-CleanNum,ffNumber,8,0)+' Files, '+FloatToStrF((CleanSize - CleanData)/(1024*1024),ffNumber,8,0)+' MB ('+FormatDateTime('hh:nn:ss.zzz',Now-CleanTime)+')');
 
 end;
@@ -1116,7 +1133,7 @@ begin
         end
         else
         begin
-          if TFile.GetLastWriteTime(CacheFile) < (Now - 5)
+          if TFile.GetLastWriteTime(CacheFile) < (Now - 6)
           then Update := 'Refreshing BirthDay';
         end;
       end;
@@ -1134,7 +1151,7 @@ begin
         end
         else
         begin
-          if TFile.GetLastWriteTime(CacheFile) < (Now - 5)
+          if TFile.GetLastWriteTime(CacheFile) < (Now - 6)
           then Update := 'Refreshing DeathDay';
         end;
       end;
@@ -1152,7 +1169,7 @@ begin
         end
         else
         begin
-          if TFile.GetLastWriteTime(CacheFile) < (Now - 5)
+          if TFile.GetLastWriteTime(CacheFile) < (Now - 6)
           then Update := 'Refreshing Releases';
         end;
       end;
@@ -1467,6 +1484,13 @@ begin
     WaitingMessage := 'Short API Delay (Continue in %s)';
     tmrWaiting.Tag := 90;
     tmrWaiting.Enabled := True;
+
+    if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00' then
+    begin
+      lblBirthDays.Tag := lblBirthDays.Tag + 1;
+      lblBirthDays.Caption := IntToStr(lblBirthDays.Tag);
+      BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache\days\actorious-births', '*')) div 4)+'d';
+    end;
   end
   else if Pos('DeathDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
@@ -1479,6 +1503,12 @@ begin
     WaitingMessage := 'Short API Delay (Continue in %s)';
     tmrWaiting.Tag := 90;
     tmrWaiting.Enabled := True;
+
+    if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00' then
+    begin
+      lblDeathDays.Tag := lblDeathDays.Tag + 1;
+      lblDeathDays.Caption := IntToStr(lblDeathDays.Tag);
+    end;
   end
   else if Pos('Releases',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
@@ -1491,6 +1521,12 @@ begin
     WaitingMessage := 'Long API Delay (Continue in %s)';
     tmrWaiting.Tag := 300;
     tmrWaiting.Enabled := True;
+
+    if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00' then
+    begin
+      lblReleaseDays.Tag := lblReleaseDays.Tag + 1;
+      lblReleaseDays.Caption := IntToStr(lblReleaseDays.Tag);
+    end;
   end;
 
   // What if it semi-failed?
@@ -1508,7 +1544,6 @@ begin
     tmrWaiting.Enabled := False;
     tmrWaiting.Enabled := True;
   end;
-
 
   // Delete the .working file as this request was successfully completed
   DeleteFile((Sender as TFancyNetHTTPClient).CacheFile+'.working');
@@ -1801,6 +1836,8 @@ begin
     LogEvent('- WARNING: Missing Entry For [AppCacheDir]');
     AppCacheDir := '';
   end;
+  BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache\days\actorious-births', '*')) div 4)+'d';
+  LogEvent('- Available Cache History: '+BirthDaysCount);
   SetProgressStep('5 of 16');
 
   // Swagger Support

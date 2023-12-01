@@ -473,6 +473,36 @@ object MainForm: TMainForm
       Caption = 'Detail'
       Layout = tlCenter
     end
+    object lblBirthDays: TLabel
+      Left = 685
+      Top = 8
+      Width = 25
+      Height = 25
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '0'
+      Layout = tlCenter
+    end
+    object lblDeathDays: TLabel
+      Left = 685
+      Top = 33
+      Width = 25
+      Height = 25
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '0'
+      Layout = tlCenter
+    end
+    object lblReleaseDays: TLabel
+      Left = 685
+      Top = 58
+      Width = 25
+      Height = 25
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '0'
+      Layout = tlCenter
+    end
     object btStart: TButton
       Left = 8
       Top = 8
@@ -649,9 +679,9 @@ object MainForm: TMainForm
     end
     object btTop1000: TButton
       Tag = 1
-      Left = 689
+      Left = 709
       Top = 33
-      Width = 94
+      Width = 74
       Height = 25
       Caption = 'Top 1000'
       TabOrder = 14
@@ -659,9 +689,9 @@ object MainForm: TMainForm
     end
     object btTop5000: TButton
       Tag = 1
-      Left = 689
+      Left = 709
       Top = 58
-      Width = 94
+      Width = 74
       Height = 25
       Caption = 'Top 5000'
       TabOrder = 15
@@ -706,9 +736,9 @@ object MainForm: TMainForm
       OnClick = btInternalClick
     end
     object btClean: TButton
-      Left = 689
+      Left = 709
       Top = 8
-      Width = 94
+      Width = 74
       Height = 25
       Caption = 'Clean Cache'
       TabOrder = 20
