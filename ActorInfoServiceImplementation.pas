@@ -77,14 +77,14 @@ uses Unit2;
 
 { TActorInfoService }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// LoadJSON                                                                                      //
-//                                                                                               //
-// This is intended as an alternative to TStringList.LoadFromFile.  Why?  Well, that seems to do //
-// a lot of file locking that blocks other processes reading the same files.                     //
-// https://stackoverflow.com/questions/4845380/how-can-i-efficiently-read-the-first-few-lines-of-many-files-in-delphi //                                                                                           //
-// Will see if this helps.                                                                       //
-///////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// LoadJSON                                                                                                           //
+//                                                                                                                    //
+// This is intended as an alternative to TStringList.LoadFromFile.  Why?  Well, that seems to do                      //
+// a lot of file locking that blocks other processes reading the same files.                                          //
+// https://stackoverflow.com/questions/4845380/how-can-i-efficiently-read-the-first-few-lines-of-many-files-in-delphi //
+// Will see if this helps.                                                                                            //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 procedure SLLoadJSON(var StrList: TStringList; Filename: String);
 var
@@ -246,13 +246,13 @@ end;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// GetDataFromWikiData                                                                           //
+// GetDataFromWikidata                                                                           //
 //                                                                                               //
-// The process is largely the same for retrieving data from WikiData.  So lets use a function to //
+// The process is largely the same for retrieving data from Wikidata.  So lets use a function to //
 // make this a little simpler in the other functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function GetDataFromWikiData(Query: String; CacheFile: String):String;
+function GetDataFromWikidata(Query: String; CacheFile: String):String;
 var
   Client: TNetHTTPClient;  // The client connection
   Response: TStringList;   // The response from TMDB
@@ -300,7 +300,7 @@ begin
       Client.Free;
     except on E: Exception do
       begin
-        MainForm.LogException('GetDataFromWikiData', E.ClassName, E.Message, CacheFile);
+        MainForm.LogException('GetDataFromWikidata', E.ClassName, E.Message, CacheFile);
       end;
     end;
   end;
@@ -1115,7 +1115,7 @@ end;
 // on actor selections.  We'll need to go back for data if a different role is selected though.  //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function ProcessActor(ActorID: Integer; ActorRef: String; TMDB_Data_String: String; WikiIndex: Integer; WikiData_String: String; ProgressPrefix: String; ProgressKey: Integer; ForceUpdate: Boolean):String;
+function ProcessActor(ActorID: Integer; ActorRef: String; TMDB_Data_String: String; WikiIndex: Integer; Wikidata_String: String; ProgressPrefix: String; ProgressKey: Integer; ForceUpdate: Boolean):String;
 var
   Actor: String;  // This is the result set we're building up
 
@@ -1166,7 +1166,7 @@ var
   RoleName: String;
   ThisRoleName: String;
   TMDB_Data: TJSONObject;
-  WikiData: TJSONArray;
+  Wikidata: TJSONArray;
 begin
   // Here we are building up a new JSON object to store everything to do with one actor.
   Step := 'Init';
@@ -1203,12 +1203,12 @@ begin
   end;
 
   Step := 'ProcessActor: Wikidata JSON';
-  WikiData := TJSONArray.Create;
+  Wikidata := TJSONArray.Create;
   try
-    WikiData := TJSONObject.ParseJSONValue(FilterArrayResponse(WikiData_String)) as TJSONArray;
+    Wikidata := TJSONObject.ParseJSONValue(FilterArrayResponse(Wikidata_String)) as TJSONArray;
   except on E: Exception do
     begin
-      MainForm.LogException(Step, E.ClassName, E.Message, Copy(WikiData_String,1,150));
+      MainForm.LogException(Step, E.ClassName, E.Message, Copy(Wikidata_String,1,150));
     end;
   end;
 
@@ -1240,66 +1240,66 @@ begin
     SocialMedia := SocialMedia + 1;
 
 
-    // Entries from WikiData Query /////////////////////////////////////////////
+    // Entries from Wikidata Query /////////////////////////////////////////////
 
 
-    // WikiData ID
+    // Wikidata ID
     Step := 'ProcessActor: Header/WID';
     if (WikiIndex <> -1) then
     begin
-      Actor := Actor+'"WID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('person') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+      Actor := Actor+'"WID":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('person') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
       SocialMedia := SocialMedia + 1;
     end;
 
     // Models ID
     Step := 'ProcessActor: Header/MID';
-    if ( WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('ModelID') <> nil) then
+    if ( WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('ModelID') <> nil) then
     begin
-     if Trim((((WikiData.Items[WikiIndex] as TJSONObject).getValue('ModelID') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
+     if Trim((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('ModelID') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
      begin
-        Actor := Actor +'"MID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('ModelID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+        Actor := Actor +'"MID":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('ModelID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
         SocialMedia := SocialMedia + 1;
      end;
     end;
 
     // Rotten Tomatoes ID
     Step := 'ProcessActor: Header/RID';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') <> nil) then
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('RTID') <> nil) then
     begin
-      if Trim((((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
+      if Trim((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
      begin
-        Actor := Actor+'"RID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+        Actor := Actor+'"RID":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
         SocialMedia := SocialMedia + 1;
      end;
     end;
 
     // MetaCritic ID
     Step := 'ProcessActor: Header/MET';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') <> nil) then
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') <> nil) then
     begin
-      if Trim((((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
+      if Trim((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
       begin
-        Actor := Actor+'"MET":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+        Actor := Actor+'"MET":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
         SocialMedia := SocialMedia + 1;
       end;
     end;
 
     // Wikipedia Link
     Step := 'ProcessActor: Header/WIK';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') <> nil) then
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') <> nil) then
     begin
-      if Trim((((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
+      if Trim((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value) <> '' then
       begin
-        Actor := Actor+'"WIK":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
+        Actor := Actor+'"WIK":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value+'",';
         SocialMedia := SocialMedia + 1;
       end;
     end;
 
     // Height
     Step := 'ProcessActor: Header/HT1+HT2';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('Height') <> nil) then
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Height') <> nil) then
     begin
-      ActorHeight := StrToFloatDef(Trim((((WikiData.Items[WikiIndex] as TJSONObject).getValue('Height') as TJSONObject).GetValue('value') as TJSONString).Value),0.0);
+      ActorHeight := StrToFloatDef(Trim((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Height') as TJSONObject).GetValue('value') as TJSONString).Value),0.0);
       if (ActorHeight > 0.0) then
       begin
 
@@ -1372,15 +1372,15 @@ begin
     Step := 'ProcessActor: Header/DOB';
     if (WikiIndex <> -1) then
     begin
-      Actor := Actor+'"DOB":"'+Copy((((WikiData.Items[WikiIndex] as TJSONObject).getValue('DOB') as TJSONObject).GetValue('value') as TJSONString).Value,1,10)+'",';
+      Actor := Actor+'"DOB":"'+Copy((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('DOB') as TJSONObject).GetValue('value') as TJSONString).Value,1,10)+'",';
       BasicScore := BasicScore + 10;
     end;
 
     // Deathday - We got the deathday from Wikipedia, but not always set (or even the same?!) in TMDb
     Step := 'ProcessActor: Header/DOD';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('DOD') <> nil) then
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('DOD') <> nil) then
     begin
-      Actor := Actor+'"DOD":"'+Copy((((WikiData.Items[WikiIndex] as TJSONObject).getValue('DOD') as TJSONObject).GetValue('value') as TJSONString).Value,1,10)+'",';
+      Actor := Actor+'"DOD":"'+Copy((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('DOD') as TJSONObject).GetValue('value') as TJSONString).Value,1,10)+'",';
       BasicScore := BasicScore + 10;
     end;
 
@@ -1396,12 +1396,12 @@ begin
 
     // Citizenship
     Step := 'ProcessActor: Header/CTZ';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('CountryCode') <> nil) then
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('CountryCode') <> nil) then
     begin
-      CTZ := Trim((((WikiData.Items[WikiIndex] as TJSONObject).getValue('CountryCode') as TJSONObject).GetValue('value') as TJSONString).Value);
+      CTZ := Trim((((Wikidata.Items[WikiIndex] as TJSONObject).getValue('CountryCode') as TJSONObject).GetValue('value') as TJSONString).Value);
       BasicScore := BasicScore + 10;
     end;
-    // Don't have a citizenship specified from WikiData so let's try and use the BPL to set one
+    // Don't have a citizenship specified from Wikidata so let's try and use the BPL to set one
     if (CTZ = 'YU')  then CTZ := 'MK';
     if (CTZ = '') then
     begin
@@ -2551,11 +2551,11 @@ begin
   ShowData.Free;
   TopMovieRoles.Free;
   TopTVRoles.Free;
-  if (WikiData is TJSONArray) then WikiData.Free;
+  if (Wikidata is TJSONArray) then Wikidata.Free;
   if (TMDB_Data is TJSONObject) then TMDB_Data.Free;
 end;
 
-function ProcessMovie(MovieID: Integer; MovieRef: String; TMDB_Data: TJSONObject; WikiIndex: Integer; WikiData: TJSONArray; ProgressPrefix: String; ProgressKey: Integer):String;
+function ProcessMovie(MovieID: Integer; MovieRef: String; TMDB_Data: TJSONObject; WikiIndex: Integer; Wikidata: TJSONArray; ProgressPrefix: String; ProgressKey: Integer):String;
 var
   Movie: String;  // This is the result set we're building up
 
@@ -2578,8 +2578,8 @@ begin
        (TMDB_Data.getValue('title') = nil) then
     begin
       if (WikiIndex <> -1)
-      then MainForm.LogEvent('- ProcessMovie: No TMDb data for '+MovieRef+': '+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value)
-      else MainForm.LogEvent('- ProcessMovie: No TMDb data for '+MovieRef+' (no WikiData reference)');
+      then MainForm.LogEvent('- ProcessMovie: No TMDb data for '+MovieRef+': '+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value)
+      else MainForm.LogEvent('- ProcessMovie: No TMDb data for '+MovieRef+' (no Wikidata reference)');
       Result := '';
       exit;
     end;
@@ -2607,28 +2607,28 @@ begin
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: TMDb","TP":'+FloatToStr(Now)+'}';
     Movie := Movie+',"TID":'+IntToStr(StrToInt(MovieRef));
 
-    // WikiData ID
-//    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: WikiData","TP":'+FloatToStr(Now)+'}';
+    // Wikidata ID
+//    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Wikidata","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1)
-    then Movie := Movie+',"WID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
+    then Movie := Movie+',"WID":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
 
-    // Entries from WikiData Query
+    // Entries from Wikidata Query
 
     // Rotten Tomatoes ID
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: RT","TP":'+FloatToStr(Now)+'}';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') <> nil)
-    then Movie := Movie+',"RID":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('RTID') <> nil)
+    then Movie := Movie+',"RID":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
     // MetaCritic ID
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: MetaCritic","TP":'+FloatToStr(Now)+'}';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') <> nil)
-    then Movie := Movie+',"MET":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') <> nil)
+    then Movie := Movie+',"MET":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
     // Wikipedia Link
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Wikipedia","TP":'+FloatToStr(Now)+'}';
-    if (WikiIndex <> -1) and ((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') <> nil)
-    then Movie := Movie+',"WIK":"'+(((WikiData.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
+    if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') <> nil)
+    then Movie := Movie+',"WIK":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
 
     // Entries from TMDb Query
@@ -2806,7 +2806,7 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"BirthDay"'+
+                    ',"RQ":"WikiBirthDay"'+
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+',"TP":'+FloatToStr(Now)+'}');
@@ -2818,7 +2818,7 @@ begin
   except on E: Exception do
     begin
 //      MainForm.LogEvent(E.ClassName+': '+E.Message);
-//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData Data Not Cached","TP":'+FloatToStr(Now)+'}';
+//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata Data Not Cached","TP":'+FloatToStr(Now)+'}';
     end;
   end;
 
@@ -2961,7 +2961,7 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"DeathDay"'+
+                    ',"RQ":"WikiDeathDay"'+
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
@@ -2973,7 +2973,7 @@ begin
   except on E: Exception do
     begin
 //      MainForm.LogEvent(E.ClassName+': '+E.Message);
-//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData Data Not Cached","TP":'+FloatToStr(Now)+'}';
+//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata Data Not Cached","TP":'+FloatToStr(Now)+'}';
     end;
   end;
 
@@ -3200,7 +3200,7 @@ begin
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
-  Response.SaveToStream(NotBrotli);
+  Response.SaveToStream(NotBrotli, TEncoding.UTF8);
   NotBrotli.Seek(0, soFromBeginning);
 
   // Compress the stream with Brotli
@@ -3342,13 +3342,13 @@ begin
     if ((CacheResponse.Text = '') or (Regenerate)) then
     begin
       // Get Updated Releaseday Data
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata","TP":'+FloatToStr(Now)+'}';
       ReleaseDay(Secret, aMonth, aDay, Progress);
       try
         SLLoadJSON(CacheResponse, CacheFileReleases);
 //        CacheResponse.LoadFromFile(CacheFileReleases);
         Movies := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Movies.count)+'People","TP":'+FloatToStr(Now)+'}';
+        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current Wikidata: '+IntToStr(Movies.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
         begin
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"ReleaseDay Data STILL Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -3358,7 +3358,7 @@ begin
     else
     begin
       Movies := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior WikiData: '+IntToStr(Movies.count)+'People","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior Wikidata: '+IntToStr(Movies.count)+'People","TP":'+FloatToStr(Now)+'}';
     end;
 
     if CacheResponse.Text = '' then
@@ -3637,13 +3637,13 @@ begin
   URL := TidURI.URLEncode('https://query.wikidata.org/sparql?query='+qry+'&format=json');
   Data := TJSONArray.Create;
   try
-    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Searching WikiData for Relatives","TP":'+FloatToStr(Now)+'}';
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Searching Wikidata for Relatives","TP":'+FloatToStr(Now)+'}';
 
     try
       SearchResponse := ClientReq.Get(URL).ContentAsString(TEncoding.UTF8);
     except on E:Exception do
       begin
-        MainForm.LogException('WikiData Relatives ClientREq.Get', E.Classname, E.Message, URL);
+        MainForm.LogException('Wikidata Relatives ClientREq.Get', E.Classname, E.Message, URL);
       end;
     end;
 //    MainForm.LogEvent(qry);
@@ -3655,7 +3655,7 @@ begin
 
   except on E: Exception do
     begin
-      MainForm.LogException('WikiData Relatives Results Processing', E.Classname, E.Message, URL);
+      MainForm.LogException('Wikidata Relatives Results Processing', E.Classname, E.Message, URL);
     end;
   end;
 
@@ -3780,7 +3780,7 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"ReleaseDay"'+
+                    ',"RQ":"WikiReleaseDay"'+
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
@@ -3792,7 +3792,7 @@ begin
   except on E: Exception do
     begin
 //      MainForm.LogEvent(E.ClassName+': '+E.Message);
-//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData Data Not Cached","TP":'+FloatToStr(Now)+'}';
+//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata Data Not Cached","TP":'+FloatToStr(Now)+'}';
     end;
   end;
 
@@ -3926,7 +3926,7 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"SearchPerson"'+
+                    ',"RQ":"SearchPeople"'+
                     ',"TM":"'+QuotedStr(SearchTerm)+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
 
@@ -4089,7 +4089,7 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"SearchPerson"'+
+                    ',"RQ":"SearchPeopleExt"'+
                     ',"TM":"'+QuotedStr(SearchTerm)+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
 
@@ -4236,7 +4236,7 @@ function TActorInfoService.ActorBirthDay(Secret: String; aMonth, aDay: Integer; 
 var
   Regenerate: Boolean;              // Flag whether cached data can be used
 
-  SPARQL: String;                   // The query sent to WikiData
+  SPARQL: String;                   // The query sent to Wikidata
 
   CacheIndex: Integer;              // The Julian day of the request (Jan1=1, Dec31=366)
   CacheResponse: TStringList;       // The JSON response, ideally loaded from disk cache
@@ -4354,11 +4354,11 @@ begin
 
 
   // Get Birthdays from Wikidata
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Retrieving Birthdays from WikiData","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Retrieving Birthdays from Wikidata","TP":'+FloatToStr(Now)+'}';
   SPARQL := MainForm.sparqlBirthDays.Lines.Text;
   SPARQL := StringReplace(StringReplace(SPARQL, ':MONTH', IntToStr(aMonth), [rfReplaceAll]), ':DAY', IntToStr(aDay), [rfReplaceAll]);
   SPARQL := TidURI.URLEncode('https://query.wikidata.org/sparql?query='+SPARQL+'&format=json');
-  CacheResponse.Text := GetDataFromWikiData(SPARQL,CacheFileWiki);
+  CacheResponse.Text := GetDataFromWikidata(SPARQL,CacheFileWiki);
 
   Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing '+IntToStr(Actors.Count)+' Actors","TP":'+FloatToStr(Now)+'}';
@@ -4780,13 +4780,13 @@ begin
     if ((CacheResponse.Text = '') or (Regenerate)) then
     begin
       // Get Updated Deathday Data
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata","TP":'+FloatToStr(Now)+'}';
       DeathDay(Secret, aMonth, aDay, Progress);
       try
         SLLoadJSON(CacheResponse, CacheFileDeaths);
 //        CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
         Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
+        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current Wikidata: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
         begin
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"DeathDay Data STILL Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -4796,7 +4796,7 @@ begin
     else
     begin
       Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior Wikidata: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
     end;
 
     if CacheResponse.Text = '' then
@@ -4980,7 +4980,7 @@ begin
 
         // Now lets do it all again for the 50 version
         CacheResponse.Text := SortedActors50.ToString;
-        CacheResponse.SaveToFile(CacheFileDay50);
+        CacheResponse.SaveToFile(CacheFileDay50, TEncoding.UTF8);
 
         Actors.Free;
 
@@ -5114,7 +5114,7 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"ActorBirthDay"'+
+                    ',"RQ":"ActorBirthDay50"'+
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
@@ -5156,13 +5156,13 @@ begin
     if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
     begin
       // Get Updated Birthday Data
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata","TP":'+FloatToStr(Now)+'}';
       BirthDay(Secret, aMonth, aDay, Progress);
       try
         SLLoadJSON(CacheResponse, CacheFileBirths);
 //        CacheResponse.LoadFromFile(CacheFileBirths, TEncoding.UTF8);
         Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
+        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current Wikidata: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
         begin
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"BirthDay Data STILL Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -5172,7 +5172,7 @@ begin
     else
     begin
       Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior Wikidata: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
     end;
 
     if CacheResponse.Text = '' then
@@ -5352,7 +5352,7 @@ begin
 
         // Now lets do it all again for the 50 version
         CacheResponse.Text := SortedActors50.ToString;
-        CacheResponse.SaveToFile(CacheFileDay50);
+        CacheResponse.SaveToFile(CacheFileDay50, TEncoding.UTF8);
 
         Actors.Free;
 
@@ -5486,7 +5486,7 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"ActorDeathDay"'+
+                    ',"RQ":"ActorDeathDay50"'+
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
@@ -5527,13 +5527,13 @@ begin
     if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
     begin
       // Get Updated Deathday Data
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"WikiData","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata","TP":'+FloatToStr(Now)+'}';
       DeathDay(Secret, aMonth, aDay, Progress);
       try
         SLLoadJSON(CacheResponse, CacheFileDeaths);
 //        CacheResponse.LoadFromFile(CacheFileDeaths, TEncoding.UTF8);
         Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
+        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Current Wikidata: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
       except on E: Exception do
         begin
           MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"DeathDay Data STILL Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -5543,7 +5543,7 @@ begin
     else
     begin
       Actors := ((TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONObject).getValue('bindings') as TJSONArray;
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior WikiData: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Using Prior Wikidata: '+IntToStr(Actors.count)+'People","TP":'+FloatToStr(Now)+'}';
     end;
 
     if CacheResponse.Text = '' then
@@ -5722,7 +5722,7 @@ begin
 
         // Now lets do it all again for the 50 version
         CacheResponse.Text := SortedActors50.ToString;
-        CacheResponse.SaveToFile(CacheFileDay50);
+        CacheResponse.SaveToFile(CacheFileDay50, TEncoding.UTF8);
 
         Actors.Free;
 
