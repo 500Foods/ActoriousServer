@@ -5898,7 +5898,7 @@ begin
     AdultActors := 0;
     Unique := '';
 
-    for Page := 0 to 75 do
+    for Page := 0 to 70 do
     begin
 
       // Time to Regenerate this data
@@ -6413,7 +6413,7 @@ begin
     AdultActors := 0;
     Unique := '';
 
-    for Page := 0 to 500 do
+    for Page := 0 to 275 do
     begin
 
       // Time to Regenerate this data
