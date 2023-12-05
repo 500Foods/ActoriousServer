@@ -3949,7 +3949,8 @@ begin
 
   // Setup the URL and encode the query in it
   URL := TidURI.URLEncode('https://api.themoviedb.org/3/'+qry);
-  MainForm.LogEvent(URL);
+//  MainForm.LogEvent(URL);
+
   Data := TJSONArray.Create;
   try
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Searching","TP":'+FloatToStr(Now)+'}';
@@ -3963,7 +3964,7 @@ begin
       end;
     end;
 
-    MainForm.LogEvent(SearchResponse);
+//    MainForm.LogEvent(SearchResponse);
 
     Data := (TJSONObject.ParseJSONValue(SearchResponse) as TJSONObject).getValue('results') as TJSONArray;
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Search Results: '+IntToStr(Data.Count)+' hits","TP":'+FloatToStr(Now)+'}';

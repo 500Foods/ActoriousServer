@@ -1081,10 +1081,10 @@ begin
   begin
 
     // First check and see if we're in a 'quiet time' and want to pause and
-    // let the Top1000 and Top5000 functions operate without interferenece
+    // let the Clean, Top1000, and Top5000 functions operate without interferenece
     QuietWindow := TimeOf(Now);
-    if ((QuietWindow >= EncodeTime( 4,50,0,0)) and (QuietWindow <= EncodeTime( 5,59,59,0))  or
-        (QuietWindow >= EncodeTime(17,00,0,0)) and (QuietWindow <= EncodeTime(18,29,59,0))) then
+    if ((QuietWindow >= EncodeTime( 4, 50, 0, 0)) and (QuietWindow <= EncodeTime( 5, 59, 59, 0))  or
+        (QuietWindow >= EncodeTime(17, 00, 0, 0)) and (QuietWindow <= EncodeTime(18, 29, 59, 0))) then
     begin
       CurrentProgress.Caption := 'Waiting for Top Refresh to Complete (Retry in 60s)';
       CacheTimer.Interval := 60000; // Wait 1 minute and check again
@@ -2085,36 +2085,14 @@ begin
     exit;
   end;
 
-//  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 05, 30, 0, 0);
-//  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 05, 35, 0, 0);
-//  if (WindowStart < Now) and (WindowEnd > Now) and (btTop5000.Tag <> Today) then
-//  begin
-//    btTop5000.Tag := Trunc(Today);
-//    btTop1000.Tag := 0;
-//    btClean.Tag   := 0;
-//    btTop5000Click(Sender);
-//    exit;
-//  end;
-
-
   // 6PM Run
 
-  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 00, 0, 0);
-  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 05, 0, 0);
-  if (WindowStart < Now) and (WindowEnd > Now) and (btClean.Tag <> Today) then
-  begin
-    btClean.Tag := Trunc(Today);
-    btCleanClick(Sender);
-    exit;
-  end;
-//
-//  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 15, 0, 0);
-//  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 20, 0, 0);
-//  if (WindowStart < Now) and (WindowEnd > Now) and (btTop1000.Tag <> Today) then
+//  WindowStart := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 00, 0, 0);
+//  WindowEnd   := EncodeDateTime(YearOf(now), MonthOf(Now), DayOf(now), 17, 05, 0, 0);
+//  if (WindowStart < Now) and (WindowEnd > Now) and (btClean.Tag <> Today) then
 //  begin
-//    btTop1000.Tag := Trunc(Today);
-//    btTop5000.Tag := 0;
-//    btTop1000Click(Sender);
+//    btClean.Tag := Trunc(Today);
+//    btCleanClick(Sender);
 //    exit;
 //  end;
 
