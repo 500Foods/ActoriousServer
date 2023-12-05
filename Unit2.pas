@@ -497,7 +497,7 @@ begin
             (Pos('23.111.75.19'  ,(d.getValue('IP') as TJSONString).Value) = 0)) then
         begin
           d1 := (d.getValue('ST') as TJSONString).Value;
-          d2 := FormatDateTime('hh:nn:ss.zzz',(d.getValue('TP') as TJSONNumber).AsDouble-(d.getValue('TS') as TJSONNumber).AsDouble);
+          d2 := FormatDateTime('HH:nn:ss.zzz',(d.getValue('TP') as TJSONNumber).AsDouble-(d.getValue('TS') as TJSONNumber).AsDouble);
 
           d3 := '';
           if (d.getValue('DY') <> nil)
@@ -988,7 +988,7 @@ begin
   BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache\days\actorious-births', '*')) div 4)+'d';
   LogEvent('- Cleaning Date Count: '+BirthDaysCount);
 
-  LogEvent('Cache Clean Completed: '+FloatToStrF(CleanFiles-CleanNum,ffNumber,8,0)+' Files, '+FloatToStrF((CleanSize - CleanData)/(1024*1024),ffNumber,8,0)+' MB ('+FormatDateTime('hh:nn:ss.zzz',Now-CleanTime)+')');
+  LogEvent('Cache Clean Completed: '+FloatToStrF(CleanFiles-CleanNum,ffNumber,8,0)+' Files, '+FloatToStrF((CleanSize - CleanData)/(1024*1024),ffNumber,8,0)+' MB ('+FormatDateTime('HH:nn:ss.zzz',Now-CleanTime)+')');
 
 end;
 
@@ -1029,7 +1029,7 @@ begin
             (Pos('23.111.75.19'  ,(d.getValue('IP') as TJSONString).Value) > 0)) then
         begin
           d1 := (d.getValue('ST') as TJSONString).Value;
-          d2 := FormatDateTime('hh:nn:ss.zzz',(d.getValue('TP') as TJSONNumber).AsDouble-(d.getValue('TS') as TJSONNumber).AsDouble);
+          d2 := FormatDateTime('HH:nn:ss.zzz',(d.getValue('TP') as TJSONNumber).AsDouble-(d.getValue('TS') as TJSONNumber).AsDouble);
 
           d3 := '';
           if (d.getValue('DY') <> nil)
@@ -1437,7 +1437,7 @@ procedure TMainForm.ManualRequestCompleted(const Sender: TObject; const ARespons
 var
   MainHandle : THandle;
 begin
-  LogEvent('Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+  LogEvent('Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   CurrentProgress.Caption := 'Waiting';
   CacheTimer.Enabled := True;
   Sender.Free;
@@ -1457,7 +1457,7 @@ end;
 procedure TMainForm.ManualRequestError(const Sender: TObject; const AError: string);
 begin
   LogEvent('| ');
-  LogEvent('| Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+  LogEvent('| Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('HH:nn:ss',-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   LogEvent('| ERROR: '+AError);
   LogEvent('| COMMS: '+(Sender as TFancyNetHTTPClient).uRL);
   LogEvent('| ');
@@ -1476,7 +1476,7 @@ begin
   begin
     Handling := 'Birthday';
     LogEvent('');
-    LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Short API Delay (Continue in 90s)';
     CacheTimer.Interval := 90000; // 90 seconds
     CacheTimer.Enabled := True;
@@ -1485,7 +1485,7 @@ begin
     tmrWaiting.Tag := 90;
     tmrWaiting.Enabled := True;
 
-    if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00' then
+    if FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00:00' then
     begin
       lblBirthDays.Tag := lblBirthDays.Tag + 1;
       lblBirthDays.Caption := IntToStr(lblBirthDays.Tag);
@@ -1495,7 +1495,7 @@ begin
   else if Pos('DeathDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
     Handling := 'DeathDay';
-    LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Short API Delay (Continue in 90s)';
     CacheTimer.Interval := 90000; // 90 seconds
     CacheTimer.Enabled := True;
@@ -1504,7 +1504,7 @@ begin
     tmrWaiting.Tag := 90;
     tmrWaiting.Enabled := True;
 
-    if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00' then
+    if FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00:00' then
     begin
       lblDeathDays.Tag := lblDeathDays.Tag + 1;
       lblDeathDays.Caption := IntToStr(lblDeathDays.Tag);
@@ -1513,7 +1513,7 @@ begin
   else if Pos('Releases',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
     Handling := 'Releases';
-    LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
     CurrentProgress.Caption := 'Long API Delay (Continue in 300s)';
     CacheTimer.Interval := 300000;  // 5 minutes
     CacheTimer.Enabled := True;
@@ -1522,7 +1522,7 @@ begin
     tmrWaiting.Tag := 300;
     tmrWaiting.Enabled := True;
 
-    if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00' then
+    if FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00:00' then
     begin
       lblReleaseDays.Tag := lblReleaseDays.Tag + 1;
       lblReleaseDays.Caption := IntToStr(lblReleaseDays.Tag);
@@ -1530,7 +1530,7 @@ begin
   end;
 
   // What if it semi-failed?
-  if FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) = '00:00' then
+  if FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) = '00:00:00' then
   begin
     LogException('Processing Delay (15m)', 'PROCESSING',Handling, (Sender as TFancyNetHTTPClient).Description);
 
@@ -1570,15 +1570,15 @@ begin
   if Pos('BirthDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
     LogEvent('');
-    LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   end
   else if Pos('DeathDay',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   end
   else if Pos('Releases',(Sender as TFancyNetHTTPClient).Description) > 0 then
   begin
-    LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+    LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] FAILED: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   end;
   LogEvent('| ');
   LogEvent('| ERROR: '+AError);
@@ -1644,7 +1644,7 @@ begin
         // Startup should be < 10s but otherwise send the running time
         if MillisecondsBetween(Now, AppStartup) < 30000
         then Msg1.Subject := '['+GetEnvironmentVariable('COMPUTERNAME')+'] '+Subject+': '+MainForm.Caption+' ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)'
-        else Msg1.Subject := '['+GetEnvironmentVariable('COMPUTERNAME')+'] '+Subject+': '+MainForm.Caption+' ('+FormatDateTime('hh:nn:ss', Now - AppStartup)+'}';
+        else Msg1.Subject := '['+GetEnvironmentVariable('COMPUTERNAME')+'] '+Subject+': '+MainForm.Caption+' ('+FormatDateTime('HH:nn:ss', Now - AppStartup)+'}';
 
         Msg1.From.Text := MainForm.MailServerFrom;
         Msg1.From.Name := MainForm.MailServerName;
