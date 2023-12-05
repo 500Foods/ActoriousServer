@@ -1083,8 +1083,8 @@ begin
     // First check and see if we're in a 'quiet time' and want to pause and
     // let the Top1000 and Top5000 functions operate without interferenece
     QuietWindow := TimeOf(Now);
-    if ((QuietWindow >= EncodeTime( 5,0,0,0)) and (QuietWindow <= EncodeTime( 5,59,59,0))  or
-        (QuietWindow >= EncodeTime(17,0,0,0)) and (QuietWindow <= EncodeTime(17,59,59,0))) then
+    if ((QuietWindow >= EncodeTime( 4,50,0,0)) and (QuietWindow <= EncodeTime( 5,59,59,0))  or
+        (QuietWindow >= EncodeTime(17,00,0,0)) and (QuietWindow <= EncodeTime(18,29,59,0))) then
     begin
       CurrentProgress.Caption := 'Waiting for Top Refresh to Complete (Retry in 60s)';
       CacheTimer.Interval := 60000; // Wait 1 minute and check again

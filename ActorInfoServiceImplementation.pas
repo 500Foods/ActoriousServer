@@ -3935,28 +3935,35 @@ begin
   ClientReq.ConnectionTimeout := 900000; // 15 minutes
   ClientReq.ResponseTimeout := 900000; // 15 minutes
   ClientReq.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+  ClientReq.CustomHeaders['accept'] := 'application/json';
 
-  qry := 'search/person/';
+  qry := 'search/person';
   qry := qry+'?api_key='+MainForm.edTMDbAPI.Text;
+  qry := qry+'&query='+trim(SearchTerm);
   qry := qry+'&language=en-US';
   qry := qry+'&page=1';
-  qry := qry+'&include_adult=true';
-  qry := qry+'&query='+trim(SearchTerm);
+
+  if Pos('Adult',Progress) > 0
+  then qry := qry+'&include_adult=true'
+  else qry := qry+'&include_adult=false';
 
   // Setup the URL and encode the query in it
   URL := TidURI.URLEncode('https://api.themoviedb.org/3/'+qry);
+  MainForm.LogEvent(URL);
   Data := TJSONArray.Create;
   try
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Searching","TP":'+FloatToStr(Now)+'}';
 
     try
-      SearchResponse := ClientReq.Get(URL).ContentAsString(tencoding.UTF8);
+      SearchResponse := ClientReq.Get(URL).ContentAsString(TEncoding.UTF8);
     except on E:Exception do
       begin
         MainForm.LogEvent('EXCEPTION in SearchPerson TMDb ClientReq.Get');
         MainForm.LogEvent(E.Classname+': '+E.Message);
       end;
     end;
+
+    MainForm.LogEvent(SearchResponse);
 
     Data := (TJSONObject.ParseJSONValue(SearchResponse) as TJSONObject).getValue('results') as TJSONArray;
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Search Results: '+IntToStr(Data.Count)+' hits","TP":'+FloatToStr(Now)+'}';
@@ -4093,8 +4100,6 @@ begin
                     ',"TM":"'+QuotedStr(SearchTerm)+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
 
-
-
   Page := 1;
   PagesAvail := 1;
   ActorCount := 1;
@@ -4110,14 +4115,17 @@ begin
   while Page <= PagesAvail  do
   begin
 
-    qry := 'search/person/';
+    qry := 'search/person';
     qry := qry+'?api_key='+MainForm.edTMDbAPI.Text;
     qry := qry+'&language=en-US';
-    qry := qry+'*&page='+IntToStr(Page);
-    qry := qry+'&include_adult=true';
+    qry := qry+'&page='+IntToStr(Page);
     qry := qry+'&query='+trim(SearchTerm);
 
-//    MainForm.LogEvent('Searching Page '+IntToStr(Page)+' of '+IntToStr(PagesAvail));
+    if Pos('Adult',Progress) > 0
+    then qry := qry+'&include_adult=true'
+    else qry := qry+'&include_adult=false';
+
+    //    MainForm.LogEvent('Searching Page '+IntToStr(Page)+' of '+IntToStr(PagesAvail));
 
     // Setup the URL and encode the query in it
     URL := TidURI.URLEncode('https://api.themoviedb.org/3/'+qry);
