@@ -619,7 +619,7 @@ var
 
 begin
   // Figure out where to put this
-  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/TVShows/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
+  TDirectory.CreateDirectory(MainForm.AppCacheDir+'cache/tvshows/tmdb/'+RightStr('00000000'+IntToStr(TMDB_ID),3));
   CacheFile := MainForm.AppCacheDir+'cache/tvshows/tmdb/'+RightStr('00000000'+IntToStr(TMDB_Id),3)+'/tvshow-'+RightStr('00000000'+IntToStr(TMDb_ID),8)+'.json';
   Response := TStringList.Create;
 
@@ -1915,6 +1915,22 @@ begin
             end;
           end;
 
+          // Genres
+          Step := 'ProcessActor: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/GEN';
+          if not(ShowData.getValue('genres') = nil) and not((ShowData.getValue('genres') is TJSONNULL)) then
+          begin
+            if (ShowData.getValue('genres') is TJSONArray) then
+            begin
+              Actor := Actor+',"GEN":"';
+              for i := 0 to (ShowData.getValue('genres') as TJSONArray).Count -1 do
+              begin
+                Actor := Actor+(((ShowData.getValue('genres') as TJSONArray).Items[i] as TJSONObject).getValue('name') as TJSONString).Value;
+                if i < (ShowData.getValue('genres') as TJSONArray).Count -1 then Actor := Actor + ', ';
+              end;
+              Actor := Actor+'"';
+            end;
+          end;
+
           // Tagline
           Step := 'ProcessActor: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/TGL';
           if not(ShowData.getValue('tagline') = nil) and not((ShowData.getValue('tagline') is TJSONNULL)) then
@@ -2244,6 +2260,22 @@ begin
             if REST.JSON.TJSON.JSONEncode(ShowData.getValue('status') as TJSONString) <> '""' then
             begin
               Actor := Actor+',"STS":'+REST.JSON.TJSON.JSONEncode(ShowData.getValue('status') as TJSONString);
+            end;
+          end;
+
+          // Genres
+          if not(ShowData.getValue('genres') = nil) and not((ShowData.getValue('genres') is TJSONNULL)) then
+          begin
+            if (ShowData.getValue('genres') is TJSONArray) then
+            begin
+              Actor := Actor+',"GEN":"';
+              for i := 0 to (ShowData.getValue('genres') as TJSONArray).Count -1 do
+              begin
+                Actor := Actor+(((ShowData.getValue('genres') as TJSONArray).Items[i] as TJSONObject).getValue('name') as TJSONString).Value;
+                if i < (ShowData.getValue('genres') as TJSONArray).Count -1 then Actor := Actor + ', ';
+
+              end;
+              Actor := Actor+'"';
             end;
           end;
 
@@ -3713,7 +3745,7 @@ begin
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
-  Response.SaveToStream(NotBrotli);
+  Response.SaveToStream(NotBrotli, TEncoding.UTF8);
   NotBrotli.Seek(0, soFromBeginning);
 
   // Compress the stream with Brotli
@@ -4035,7 +4067,7 @@ begin
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
-  Response.SaveToStream(NotBrotli);
+  Response.SaveToStream(NotBrotli, TEncoding.UTF8);
   NotBrotli.Seek(0, soFromBeginning);
 
   // Compress the stream with Brotli
@@ -4223,7 +4255,7 @@ begin
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
-  Response.SaveToStream(NotBrotli);
+  Response.SaveToStream(NotBrotli, TEncoding.UTF8);
   NotBrotli.Seek(0, soFromBeginning);
 
   // Compress the stream with Brotli

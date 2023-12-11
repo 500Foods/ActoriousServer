@@ -1836,6 +1836,7 @@ begin
     LogEvent('- WARNING: Missing Entry For [AppCacheDir]');
     AppCacheDir := '';
   end;
+  ForceDirectories(AppCacheDir+'cache\days\actorious-births');
   BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache\days\actorious-births', '*')) div 4)+'d';
   LogEvent('- Available Cache History: '+BirthDaysCount);
   SetProgressStep('5 of 16');
@@ -1940,8 +1941,7 @@ begin
   // Create Cache directory structure
   LogEvent('Creating Cache Directories');
 
-  CreateDir(AppCacheDir);
-  CreateDir(AppCacheDir+'cache'); // Cache Root
+  ForceDirectories(AppCacheDir+'cache'); // Cache Root
 
   CreateDir(AppCacheDir+'cache\people');                  // Data cached by TMDb ID, either Actors or Directors or Writers
   CreateDir(AppCacheDir+'cache\people\tmdb');             // JSON as it originated from TMDb
