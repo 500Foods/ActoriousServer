@@ -3228,7 +3228,8 @@ begin
   Response.Text := Actors;
 //  MainForm.LogEvent(Response.Text);
 
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+QuotedStr(StringReplace(Lookup,'"','',[rfReplaceAll]))+' ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
+//  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+QuotedStr(StringReplace(Lookup,'"','',[rfReplaceAll]))+' ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+IntToStr(Data.Count)+' Request(s) ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
