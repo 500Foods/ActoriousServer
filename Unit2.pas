@@ -191,8 +191,9 @@ type
     AppRedoc: String;
     AppHAURL: String;
     AppHAToken: String;
-    LastException: TDateTime;
     AppCacheDir: String;
+    AppCacheSkips: Integer;
+    LastException: TDateTime;
 
     MailServerAvailable: Boolean;
     MailServerHost: String;
@@ -1129,12 +1130,16 @@ begin
       begin
         if not(FileExists(CacheFile)) then
         begin
-          Update := 'Generating BirthDay'
+          Update := 'Generating BirthDay';
+          AppCacheSkips := 0;
         end
         else
         begin
-          if TFile.GetLastWriteTime(CacheFile) < (Now - 6)
-          then Update := 'Refreshing BirthDay';
+          if TFile.GetLastWriteTime(CacheFile) < (Now - 6) then
+          begin
+            Update := 'Refreshing BirthDay';
+            AppCacheSkips := 0;
+          end;
         end;
       end;
     end;
@@ -1175,8 +1180,16 @@ begin
       end;
     end;
 
+    // If we've run around a complete cycle, maybe make a note of that
+    AppCacheSkips := AppCacheSkips + 1;
+    if AppCacheSkips >= 366 then
+    begin
+      SendActivityLog('Cache update complete.');
+    end;
+
     if (Update <> 'Waiting') then
     begin
+
 
       // Set a timer so we can track how long it is taking
       CurrentProgress.Caption := Update+': '+TGUID.NewGUID.ToString;
@@ -2150,6 +2163,9 @@ begin
 
   // Help with flooding exception emails
   LastException := Now - 1;
+
+  // How many days have we skipped because they were not out of date?
+  AppCacheSkips := 0;
 
   // Sort out the Server Version
   GetAppVersionString;
