@@ -1112,6 +1112,11 @@ begin
     begin
       CacheIndex := 1;
       CacheTimer.Tag := 1;
+      CacheTimer.Interval := 15000;
+    end
+    else
+    begin
+      CacheTimer.Interval := 5000;
     end;
 
     // Get the actual date, update the "now serving" part of the form
@@ -1256,7 +1261,7 @@ begin
       begin
         // If already processed, let's check the next one
         CacheTimer.Tag := CacheTimer.Tag + 1;
-        CacheTimer.Interval := 1000;
+//        CacheTimer.Interval := 1000;
         CacheTimer.Enabled := True;
         CurrentProgress.Caption := 'Scanning';
       end
@@ -1265,7 +1270,7 @@ begin
     begin
       // If already processed, let's check the next one
       CacheTimer.Tag := CacheTimer.Tag + 1;
-      CacheTimer.Interval := 1000;
+//      CacheTimer.Interval := 1000;
       CacheTimer.Enabled := True;
       CurrentProgress.Caption := 'Scanning';
     end
