@@ -905,7 +905,7 @@ object MainForm: TMainForm
   object CacheTimer: TTimer
     Tag = 100
     Enabled = False
-    Interval = 10000
+    Interval = 5000
     OnTimer = CacheTimerTimer
     Left = 896
     Top = 360

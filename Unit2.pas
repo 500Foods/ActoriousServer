@@ -1112,11 +1112,6 @@ begin
     begin
       CacheIndex := 1;
       CacheTimer.Tag := 1;
-      CacheTimer.Interval := 15000;
-    end
-    else
-    begin
-      CacheTimer.Interval := 5000;
     end;
 
     // Get the actual date, update the "now serving" part of the form
@@ -1191,11 +1186,20 @@ begin
     begin
       SendActivityLog('Cache update complete.');
       AppCacheSkips := 0;
+
+      // Everything up to date, so we don't need to check as frequently
+      CacheTimer.Interval := 15000;
     end;
+
+    // If just woke up from delay, let's shorten the scanning timef
+    if CacheTimer.Interval > 15000
+    then CacheTimer.Interval := 5000;
 
     if (Update <> 'Waiting') then
     begin
 
+      // Found something, so don't want so long to find the next something
+      CacheTimer.Interval := 5000;
 
       // Set a timer so we can track how long it is taking
       CurrentProgress.Caption := Update+': '+TGUID.NewGUID.ToString;
@@ -1277,7 +1281,7 @@ begin
   end
   else
   begin
-    // Disabled, so wait a minute and check again
+    // Disabled, so wait 30s and check again
     CurrentProgress.Caption := 'Timer Disabled (Retry in 30s)';
     CacheTimer.Interval := 30000;
     CacheTimer.Enabled := True;
@@ -1939,13 +1943,13 @@ begin
   Application.ProcessMessages;
 
   // Kick off Cache Populator
-  CurrentProgress.Caption := 'Startup Delay (Continue in 15s)';
-  CacheTimer.Interval := 15000;
+  CurrentProgress.Caption := 'Startup Delay (Continue in 30s)';
+  CacheTimer.Interval := 30000;
   CacheTimer.Enabled := True;
   SetProgressStep('10 of 16');
 
   WaitingMessage := 'Startup Delay (Continue in %s)';
-  tmrWaiting.Tag := 15;
+  tmrWaiting.Tag := 30;
   tmrWaiting.Enabled := True;
   SetProgressStep('11 of 16');
 
