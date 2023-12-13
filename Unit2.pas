@@ -1185,6 +1185,7 @@ begin
     if AppCacheSkips >= 366 then
     begin
       SendActivityLog('Cache update complete.');
+      AppCacheSkips := 0;
     end;
 
     if (Update <> 'Waiting') then
