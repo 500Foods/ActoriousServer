@@ -275,7 +275,7 @@ object MainForm: TMainForm
     object lbSecret: TLabel
       Left = 80
       Top = 8
-      Width = 56
+      Width = 36
       Height = 25
       Alignment = taRightJustify
       AutoSize = False
@@ -285,7 +285,7 @@ object MainForm: TMainForm
     object Label1: TLabel
       Left = 80
       Top = 33
-      Width = 56
+      Width = 36
       Height = 25
       Alignment = taRightJustify
       AutoSize = False
@@ -295,15 +295,15 @@ object MainForm: TMainForm
     object lbTMDbAPI: TLabel
       Left = 80
       Top = 58
-      Width = 56
+      Width = 36
       Height = 25
       Alignment = taRightJustify
       AutoSize = False
-      Caption = 'TMDb API'
+      Caption = 'TMDb'
       Layout = tlCenter
     end
     object Image1: TImage
-      Left = 350
+      Left = 330
       Top = 10
       Width = 72
       Height = 72
@@ -503,6 +503,59 @@ object MainForm: TMainForm
       Caption = '0'
       Layout = tlCenter
     end
+    object lblSearchPeople: TLabel
+      Left = 578
+      Top = 8
+      Width = 29
+      Height = 25
+      Cursor = crHandPoint
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '0'
+      Layout = tlCenter
+      OnClick = lblSearchPeopleClick
+    end
+    object Label3: TLabel
+      Left = 578
+      Top = 33
+      Width = 29
+      Height = 25
+      Cursor = crHandPoint
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '0'
+      Layout = tlCenter
+    end
+    object Label4: TLabel
+      Left = 578
+      Top = 58
+      Width = 29
+      Height = 25
+      Cursor = crHandPoint
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '0'
+      Layout = tlCenter
+    end
+    object progMonth: TEdit
+      Left = 508
+      Top = 10
+      Width = 68
+      Height = 25
+      Alignment = taCenter
+      AutoSize = False
+      Color = clWhite
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 10
+      Text = 'May'
+    end
     object btStart: TButton
       Left = 8
       Top = 8
@@ -534,7 +587,7 @@ object MainForm: TMainForm
       OnClick = btSwaggerClick
     end
     object edSecret: TEdit
-      Left = 140
+      Left = 120
       Top = 10
       Width = 200
       Height = 21
@@ -545,7 +598,7 @@ object MainForm: TMainForm
       OnChange = edSecretChange
     end
     object edSecretBase64: TEdit
-      Left = 140
+      Left = 120
       Top = 35
       Width = 200
       Height = 21
@@ -553,7 +606,7 @@ object MainForm: TMainForm
       TabOrder = 4
     end
     object edTMDbAPI: TEdit
-      Left = 140
+      Left = 120
       Top = 60
       Width = 200
       Height = 21
@@ -562,7 +615,7 @@ object MainForm: TMainForm
     end
     object btTimer: TButton
       Tag = 1
-      Left = 428
+      Left = 408
       Top = 8
       Width = 94
       Height = 25
@@ -571,7 +624,7 @@ object MainForm: TMainForm
       OnClick = btTimerClick
     end
     object btRecentProgress: TButton
-      Left = 428
+      Left = 408
       Top = 33
       Width = 42
       Height = 25
@@ -580,7 +633,7 @@ object MainForm: TMainForm
       OnClick = btRecentProgressClick
     end
     object btClear: TButton
-      Left = 428
+      Left = 408
       Top = 58
       Width = 42
       Height = 25
@@ -589,9 +642,9 @@ object MainForm: TMainForm
       OnClick = btClearClick
     end
     object progDay: TEdit
-      Left = 528
+      Left = 508
       Top = 34
-      Width = 72
+      Width = 68
       Height = 47
       Margins.Top = 0
       Alignment = taCenter
@@ -608,25 +661,6 @@ object MainForm: TMainForm
       ReadOnly = True
       TabOrder = 9
       Text = '25'
-    end
-    object progMonth: TEdit
-      Left = 528
-      Top = 10
-      Width = 72
-      Height = 25
-      Alignment = taCenter
-      AutoSize = False
-      Color = clWhite
-      Enabled = False
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -15
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      TabOrder = 10
-      Text = 'May'
     end
     object DateTimePickerBirthday: TDateTimePicker
       Tag = 1
@@ -698,7 +732,7 @@ object MainForm: TMainForm
       OnClick = btTop5000Click
     end
     object btAll: TButton
-      Left = 496
+      Left = 476
       Top = 33
       Width = 26
       Height = 25
@@ -727,7 +761,7 @@ object MainForm: TMainForm
       OnClick = btUpdateVersionClick
     end
     object btInternal: TButton
-      Left = 470
+      Left = 450
       Top = 33
       Width = 26
       Height = 25
@@ -766,7 +800,7 @@ object MainForm: TMainForm
       OnClick = btRedocClick
     end
     object btEmail: TButton
-      Left = 470
+      Left = 450
       Top = 58
       Width = 52
       Height = 25

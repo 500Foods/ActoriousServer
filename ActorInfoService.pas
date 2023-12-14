@@ -310,6 +310,27 @@ type
     [HttpGet] function SearchPeople(Secret: String; SearchTerm: String; Progress: String):TStream;
 
     ///  <summary>
+    ///    SearchLocal
+    ///  </summary>
+    ///  <remarks>
+    ///    Returns a list of Actors that match whatever search term is passed. the
+    ///    search results include only those poeple that have been cached already,
+    ///    which is limited to anyone in the Top5000 list or that has a defined
+    ///    birthday in Wikidata, or that has been cached due to an extended search.
+    ///  </remarks>
+    ///  <param name="Secret">
+    ///    If I told you, it wouldn't be a secret.
+    ///  </param>
+    ///  <param name="SearchTerm">
+    ///    Term to search for in People. Must be at least three characters.
+    ///  </param>
+    ///  <param name="Progress">
+    ///    Key to lookup progress with the Progress endpoint.
+    ///  </param>
+
+    [HttpGet] function SearchLocal(Secret: String; SearchTerm: String; Progress: String):TStream;
+
+    ///  <summary>
     ///    SearchPeopleExtended
     ///  </summary>
     ///  <remarks>

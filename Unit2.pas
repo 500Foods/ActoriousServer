@@ -108,6 +108,9 @@ type
     lblBirthDays: TLabel;
     lblDeathDays: TLabel;
     lblReleaseDays: TLabel;
+    lblSearchPeople: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
     procedure GetAppVersionString;
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
@@ -149,6 +152,13 @@ type
     procedure btEmailClick(Sender: TObject);
     procedure SetProgressStep(Progress: String);
     procedure GetAppParameters(List: TStringList);
+    function SearchPeople(ActorID: Integer):Integer;
+    procedure UpdateSearch(SearchIndex: Integer; SearchData: String);
+    function LocalSearch(SearchTerm: String; Adult: Boolean):String;
+    procedure lblSearchPeopleClick(Sender: TObject);
+    function Occurrences(const Substring, Text: string): integer;
+    procedure SaveSearchIndexes;
+    procedure LoadSearchIndexes;
   public
     Progress: TStringList;
     WaitingMessage: String;
@@ -218,7 +228,6 @@ type
     property URL: String read local_URL write local_URL;
   end;
 
-
 var
   MainForm: TMainForm;
   AppVersionString: String;
@@ -226,6 +235,13 @@ var
   AppRelease: String;
   MemoryUsage: String;
   MemoryUsageNice: String;
+
+  IndexPeople: Array of String;
+  IndexMovies: Array of String;
+  IndexTVShow: Array of String;
+  IndexPeopleSize: Integer;
+  IndexMoviesSize: Integer;
+  IndexTVShowSize: Integer;
 
 implementation
 
@@ -236,6 +252,22 @@ resourcestring
   SServerStartedAt = 'Server started at ';
 
 { TMainForm }
+
+
+
+function TMainForm.Occurrences(const Substring, Text: string): integer;
+var
+  offset: integer;
+begin
+  result := 0;
+  offset := PosEx(Substring, Text, 1);
+  while offset <> 0 do
+  begin
+    inc(result);
+    offset := PosEx(Substring, Text, offset + length(Substring));
+  end;
+end;
+
 
 procedure TMainForm.GetAppParameters(List: TStringList);
 var
@@ -472,6 +504,43 @@ begin
 
 end;
 
+procedure TMainForm.UpdateSearch(SearchIndex: Integer; SearchData: String);
+var
+  SearchFormat: String;
+begin
+  SearchFormat := Uppercase(SearchData);
+  SearchFormat := StringReplace(SearchFormat,' ','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'''','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'"','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'/','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'-','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,',','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'.','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'(','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,')','',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'HERSELFGUEST:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'HIMSELFGUEST:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'HERSELF:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'HIMSELF:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'SELFGUEST:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'SELF:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'GUEST:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'VOICE:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'UNCREDITED:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'ARCHIVALFOOTAGE:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'ARCHIVEFOOTAGE:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'FOOTAGE:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,':HERSELF:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,':HIMSELF:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,':SELF:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,':VOICE:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'::',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'::',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'::',':',[rfReplaceAll]);
+
+  IndexPeople[SearchIndex] := SearchFormat;
+end;
+
 procedure TMainForm.btAllClick(Sender: TObject);
 var
   i: integer;
@@ -645,6 +714,15 @@ begin
   mmStats.Lines.Add('');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
+  mmStats.Lines.Add('  SEARCH INDEX INFORMATION');
+  mmStats.Lines.Add('  ========================================');
+  mmStats.Lines.Add('');
+  mmStats.Lines.Add('  Person Cache Size:    '+FloatToStrF(IndexPeopleSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
+
+  mmStats.Lines.Add('');
+  mmStats.Lines.Add('');
+  mmStats.Lines.Add('');
+  mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  CACHE CLEANING INFORMATION');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('');
@@ -762,6 +840,174 @@ begin
     finally
       CloseHandle(SnapshotHandle);
     end;
+end;
+
+procedure TMainForm.lblSearchPeopleClick(Sender: TObject);
+var
+  i: Integer;
+begin
+
+  // Shows the most recent additions to the People search index
+
+  i := Length(IndexPeople) - 1;
+  while i >= 0 do
+  begin
+    if Length(IndexPeople[i]) >= 150
+    then LogEvent(RightStr('00000'+IntToStr(i),5)+' '+LeftStr(IndexPeople[i],100)+' ... '+RightStr(IndexPeople[i],50))
+    else LogEvent(RightStr('00000'+IntToStr(i),5)+' '+IndexPeople[i]);
+    i := i - 1;
+
+    // Only want the most recent 50
+    if i = Length(IndexPeople) - 50 then i := -1;
+  end;
+
+  SaveSearchIndexes;
+end;
+
+function TMainForm.LocalSearch(SearchTerm: String; Adult: Boolean): String;
+var
+  i: Integer;
+  SearchEnd: Boolean;
+  SearchAdult: String;
+  SearchKey: String;
+  SearchKey1: String;
+  SearchKey2: String;
+  SearchKey3: String;
+  SearchKey4: String;
+  Matches: TStringList;
+  Found: TStringList;
+  Points: Integer;
+  Relevance: Double;
+  MatchSearch: String;
+//  ElapsedTime: TDateTime;
+
+begin
+//  ElapsedTime := Now;
+  Result := '[';
+  Matches := TStringList.Create;
+  Found := TStringList.Create;
+
+  // Cleanup our search value so we don't accidentally hit every entry
+  // And so we don't also accidentally miss every entry
+  SearchKey := Uppercase(Trim(SearchTerm));
+  SearchKey := StringReplace(SearchKey,'.',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,':',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'''','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'"','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'(','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,')','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'     ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'    ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'   ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
+
+  SearchKey1 := SearchKey;
+  SearchKey2 := '';
+  SearchKey3 := '';
+  SearchKey4 := '';
+
+  if Pos(' ', SearchKey) > 0 then
+  begin
+    SearchKey1 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
+    SearchKey := Copy(SearchKey,Length(SearchKey1)+2,Length(SearchKey));
+    SearchKey2 := SearchKey;
+  end;
+  if Pos(' ', SearchKey) > 0 then
+  begin
+    SearchKey2 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
+    SearchKey := Copy(SearchKey,Length(SearchKey2)+2,Length(SearchKey));
+    SearchKey3 := SearchKey;
+  end;
+  if Pos(' ', SearchKey) > 0 then
+  begin
+    SearchKey3 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
+    SearchKey := Copy(SearchKey,Length(SearchKey3)+2,Length(SearchKey));
+    SearchKey4 := SearchKey;
+  end;
+  if Pos(' ', SearchKey) > 0 then
+  begin
+    SearchKey4 := StringReplace(SearchKey,' ','',[rfReplaceAll]);
+  end;
+
+//  LogEvent('Search1: ['+SearchKey1+']');
+//  LogEvent('Search2: ['+SearchKey2+']');
+//  LogEvent('Search3: ['+SearchKey3+']');
+//  LogEvent('Search4: ['+SearchKey4+']');
+
+  if Adult
+  then SearchAdult := 'Y'
+  else SearchAdult := 'N';
+
+  // Quick pass to get all the candidates. Might be a lot for a short search key
+  i := 0;
+  SearchEnd := False;
+  while not(SearchEnd) do
+  begin
+    if i > Length(IndexPeople) - 1 then
+    begin
+      SearchEnd := True;
+    end
+    else if (Copy(IndexPeople[i],1,1) = SearchAdult)                     and  // Matches adult rating
+            (Pos(SearchKey1, IndexPeople[i]) > 0)                        and  // Contains first term
+            ((SearchKey2 = '') or (Pos(SearchKey2, IndexPeople[i]) > 0)) and  // Contains second term if available
+            ((SearchKey3 = '') or (Pos(SearchKey3, IndexPeople[i]) > 0)) and  // Contains third term if available
+            ((SearchKey4 = '') or (Pos(SearchKey4, IndexPeople[i]) > 0)) then // Contains fourth term if available
+    begin
+      Matches.Add(IndexPeople[i]);
+    end;
+
+    i := i + 1;
+  end;
+
+//  LogEvent('First Matches '+IntToStr(Matches.Count)+' out of '+IntToStr(Length(IndexPeople)));
+
+  // Do a more exhaustive check to filter out garbage and come up with some kind of relevance score for each
+  i := 0;
+  while i < Matches.Count do
+  begin
+    Points := StrToIntDef(RightStr(Matches[i],6),0);           // Points assigned by Actorious
+    MatchSearch := LeftStr(Matches[i], Length(Matches[i]) - 7); // Remove the points from the end of the searched string
+    MatchSearch := Copy(Matches[i], 10, Length(Matches[i]));    // Remove the Ref# at the beginning of the searched string
+
+    Relevance := Points * (1.0 + ((Occurrences(SearchKey1, MatchSearch) / Min(1,(10 - Length(SearchKey1)))) +
+                                  (Occurrences(SearchKey2, MatchSearch) / Min(1,(20 - Length(SearchKey2)))) +
+                                  (Occurrences(SearchKey3, MatchSearch) / Min(1,(30 - Length(SearchKey3)))) +
+                                  (Occurrences(SearchKey4, MatchSearch) / Min(1,(40 - Length(SearchKey4)))) / 100.0 ));
+
+//    LogEvent(SearchKey+': ' + IntToStr(Points) + ' -> ' +IntToStr(Trunc(Relevance)));
+
+    Found.Add(RightStr('00000000'+IntToStr(Trunc(Relevance)),8)+Copy(Matches[i],1,10));
+
+    i := i + 1;
+  end;
+
+  // Sort those that remain
+  Found.Sort;
+
+  // Return the top 25
+  i := 0;
+  while i < Min(Found.Count,25) do
+  begin
+    if Found[i] <> '' then
+    begin
+      if Result = '['
+      then Result := Result + '{"Person":"'+Copy(Found[i],10,8)+'"}'
+      else Result := Result + ',{"Person":"'+Copy(Found[i],10,8)+'"}';
+      i := i + 1;
+    end;
+  end;
+
+  Result := Result + ']';
+
+//  LogEvent('Second Matches '+IntToStr(Found.Count)+' out of '+IntToStr(Length(IndexPeople)));
+//  LogEvent(Result);
+
+  Matches.Free;
+  Found.Free;
+
+//  LogEvent('Search Time: '+IntToStr(MillisecondsBetween(Now, ElapsedTime))+'ms');
 end;
 
 procedure TMainForm.LogEvent(Details: String);
@@ -1625,6 +1871,103 @@ begin
   tmrWaiting.Enabled := True;
 end;
 
+procedure TMainForm.SaveSearchIndexes;
+var
+  i: Integer;
+  IndexFileName: String;
+  IndexFile: TStringList;
+begin
+  // Here we're just taking our search arrays and writing them out to disk.
+
+  // people
+  if Length(IndexPeople) > 0 then
+  begin
+    IndexFileName := AppCacheDir+'cache/search/IndexPeople.idx';
+    IndexFile := TStringList.Create;
+
+    i := 0;
+    while i < Length(IndexPeople) do
+    begin
+      IndexFile.Add(IndexPeople[i]);
+      i := i + 1;
+    end;
+
+    IndexFile.SaveToFile(IndexFileName, TEncoding.UTF8);
+    IndexFile.Free;
+    IndexPeopleSize := FileSizeByName(IndexFileName);
+    btRecentProgressClick(nil);
+  end;
+
+end;
+
+procedure TMainForm.LoadSearchIndexes;
+var
+  i: Integer;
+  IndexFileName: String;
+  IndexFile: TStringList;
+begin
+  // Here we're just loading our search arrays from disk
+
+  // people
+  IndexFileName := AppCacheDir+'cache/search/IndexPeople.idx';
+  IndexFile := TStringList.Create;
+  IndexFile.LoadFromFile(IndexFileName);
+
+  if IndexFile.Count > 0 then
+  begin
+    SetLength(IndexPeople, IndexFile.Count);
+    i := 0;
+    while i < IndexFile.Count do
+    begin
+      IndexPeople[i] := IndexFile[i];
+      i := i + 1;
+    end;
+
+    lblSearchPeople.Caption := IntToStr(IndexFile.Count);
+    IndexPeopleSize := FileSizeByName(IndexFileName);
+    IndexFile.Free;
+
+    btRecentProgressClick(nil);
+  end;
+
+end;
+
+function TMainForm.SearchPeople(ActorID: Integer):Integer;
+var
+  i: Integer;
+  SearchTerm: String;
+  SearchEnd: Boolean;
+
+begin
+  i := 0;
+  Result := -1;
+  SearchTerm := RightStr('00000000'+IntToStr(ActorID),8);
+
+  SearchEnd := False;
+  while not(SearchEnd) do
+  begin
+    // Not found, so let's add it
+    if i = Length(IndexPeople)  then
+    begin
+      Result := i;
+      SetLength(IndexPeople,i+1);
+      lblSearchPeople.Caption := IntToStr(Length(IndexPeople));
+      IndexPeople[i] := 'Pending';
+      SearchEnd := True;
+    end;
+
+    // Found it
+    if Copy(IndexPeople[i],2,8) = SearchTerm then
+    begin
+      Result := i;
+      SearchEnd := True;
+    end;
+
+    i := i + 1;
+  end;
+
+end;
+
 procedure TMainForm.SendActivityLog(Subject: String);
 var
   SMTP1: TIdSMTP;
@@ -1745,7 +2088,7 @@ begin
   StartTimer.Enabled := False;
 
   ProgressDetail.Caption := 'Startup';
-  SetProgressStep('0 of 16');
+  SetProgressStep('0 of 17');
 
   LogEvent('');
   LogEvent('______________________________________________________');
@@ -1789,7 +2132,7 @@ begin
   end;
   ConfigFile.Free;
   Application.ProcessMessages;
-  SetProgressStep('1 of 16');
+  SetProgressStep('1 of 17');
 
   if Appconfiguration = nil then
   begin
@@ -1808,7 +2151,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [Actorious API Secret]');
   end;
-  SetProgressStep('2 of 16');
+  SetProgressStep('2 of 17');
 
   // Used to access The Movie Database API
   if AppConfiguration.getValue('TMDb API Key') <> nil then
@@ -1820,7 +2163,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [TMDb API Key]');
   end;
-  SetProgressStep('3 of 16');
+  SetProgressStep('3 of 17');
 
   // BaseURL
   if AppConfiguration.getValue('BaseURL') <> nil then
@@ -1832,7 +2175,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [BaseURL]');
   end;
-  SetProgressStep('4 of 16');
+  SetProgressStep('4 of 17');
 
   // AppURL
   if AppConfiguration.getValue('AppURL') <> nil then
@@ -1844,7 +2187,7 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [AppURL]');
   end;
-  SetProgressStep('5 of 16');
+  SetProgressStep('5 of 17');
 
   // AppCacheDir
   if AppConfiguration.getValue('AppCacheDir') <> nil then
@@ -1862,7 +2205,7 @@ begin
   ForceDirectories(AppCacheDir+'cache\days\actorious-births');
   BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache\days\actorious-births', '*')) div 4)+'d';
   LogEvent('- Available Cache History: '+BirthDaysCount);
-  SetProgressStep('5 of 16');
+  SetProgressStep('5 of 17');
 
   // Swagger Support
   if AppConfiguration.getValue('Swagger') <> nil then
@@ -1876,7 +2219,7 @@ begin
     btSwagger.Enabled := False;
     LogEvent('- Swagger not configured');
   end;
-  SetProgressStep('6 of 16');
+  SetProgressStep('6 of 17');
 
   // Redoc Support
   if AppConfiguration.getValue('Redoc') <> nil then
@@ -1890,7 +2233,7 @@ begin
     btRedoc.Enabled := False;
     LogEvent('- Redoc not configured');
   end;
-  SetProgressStep('7 of 16');
+  SetProgressStep('7 of 17');
 
   // HomeAssistant Support
   if AppConfiguration.getValue('HA_URL') <> nil then
@@ -1903,7 +2246,7 @@ begin
     AppHAURL := '';
     LogEvent(' - HomeAssistant not configured');
   end;
-  SetProgressStep('8 of 16');
+  SetProgressStep('8 of 17');
 
   // HomeAssistant Token
   if AppConfiguration.getValue('HA_Token') <> nil then
@@ -1915,7 +2258,7 @@ begin
   begin
     AppHAToken := '';
   end;
-  SetProgressStep('9 of 16');
+  SetProgressStep('9 of 17');
 
 
   // Get Mail Configuration
@@ -1946,12 +2289,12 @@ begin
   CurrentProgress.Caption := 'Startup Delay (Continue in 30s)';
   CacheTimer.Interval := 30000;
   CacheTimer.Enabled := True;
-  SetProgressStep('10 of 16');
+  SetProgressStep('10 of 17');
 
   WaitingMessage := 'Startup Delay (Continue in %s)';
   tmrWaiting.Tag := 30;
   tmrWaiting.Enabled := True;
-  SetProgressStep('11 of 16');
+  SetProgressStep('11 of 17');
 
   // Change URL of server depending on machine it is running on
   if AppBaseURL <> '' then
@@ -1959,7 +2302,7 @@ begin
     ServerContainer.XDataServer.BaseURL := AppBaseURL;
     ServerContainer.SparkleHttpSysDispatcher.Active := True;
   end;
-  SetProgressStep('12 of 16');
+  SetProgressStep('12 of 17');
 
   // Create Cache directory structure
   LogEvent('Creating Cache Directories');
@@ -1993,22 +2336,30 @@ begin
   CreateDir(AppCacheDir+'cache\tvshows\actorious');
   CreateDir(AppCacheDir+'cache\tvshows\top1000');
   CreateDir(AppCacheDir+'cache\tvshows\top5000');
-  SetProgressStep('13 of 16');
+
+  CreateDir(AppCacheDir+'cache\search');
+  SetProgressStep('13 of 17');
+
+  // Loading Search Indexes
+  LogEvent('Loading Search Indexes');
+  LoadSearchIndexes;
+  LogEvent('- People Search Index Loaded: '+IntToStr(Length(IndexPeople))+' entries');
+  SetProgressStep('14 of 17');
 
   // Show encoded Base64 version of secret
   LogEvent('Encoding Actorious API Secret');
   edSecretChange(nil);
-  SetProgressStep('14 of 16');
+  SetProgressStep('15 of 17');
 
   // Check for new ActoriousClient Version right away
   LogEvent('Updating Client Version');
   btUpdateVersionClick(nil);
-  SetProgressStep('15 of 16');
+  SetProgressStep('16 of 17');
 
   // Display the progress at start
   LogEvent('Updating Progress');
   btRecentProgressClick(Sender);
-  SetProgressStep('16 of 16');
+  SetProgressStep('17 of 17');
 
   LogEvent('');
   LogEvent('SERVER STARTUP COMPLETE ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms).');
@@ -2105,6 +2456,7 @@ begin
     btTop1000.Tag := Trunc(Today);
     btTop5000.Tag := 0;
     btTop1000Click(Sender);
+    SaveSearchIndexes;
     exit;
   end;
 
@@ -2127,6 +2479,7 @@ begin
     btTop1000.Tag := 0;
     btClean.Tag   := 0;
     btTop5000Click(Sender);
+    SaveSearchIndexes;
     exit;
   end;
 
@@ -2176,6 +2529,11 @@ begin
 
   // How many days have we skipped because they were not out of date?
   AppCacheSkips := 0;
+
+  // Initialize Index Sizes
+  IndexPeopleSize := 0;
+  IndexMoviesSize := 0;
+  IndexTVShowSize := 0;
 
   // Sort out the Server Version
   GetAppVersionString;

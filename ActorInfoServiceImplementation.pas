@@ -66,6 +66,9 @@ type
       function SearchPeople(Secret: String; SearchTerm: String; Progress: String):TStream;
       function SearchPeopleExtended(Secret: String; SearchTerm: String; Progress: String):TStream;
 
+      // Do our own search, thanks very much
+      function SearchLocal(Secret: String; SearchTerm: String; Progress: String):TStream;
+
       // Return current progress of a request
       function Progress(Secret: String; Progress: String):String;
 
@@ -1167,6 +1170,9 @@ var
   ThisRoleName: String;
   TMDB_Data: TJSONObject;
   Wikidata: TJSONArray;
+
+  SearchPerson: Integer;
+  SearchData: String;
 begin
   // Here we are building up a new JSON object to store everything to do with one actor.
   Step := 'Init';
@@ -1191,6 +1197,9 @@ begin
   ActorRoles := 0;
   MovieRoles := 0;
   TVRoles := 0;
+
+  SearchPerson := MainForm.SearchPeople(StrToInt(ActorRef));
+  SearchData := RightStr('00000000'+ActorRef,8)+':';
 
   Step := 'ProcessActor: TMDb JSON';
   TMDB_Data := TJSONObject.Create;
@@ -1231,8 +1240,11 @@ begin
 
     // Name - Assume it is always present?
     Step := 'ProcessActor: Header/NAM';
-    if (TMDB_Data.getValue('name') <> nil)
-    then Actor := Actor+'"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('name') as TJSONString)+',';
+    if (TMDB_Data.getValue('name') <> nil) then
+    begin
+      Actor := Actor+'"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('name') as TJSONString)+',';
+      SearchData := SearchData + (TMDB_Data.getValue('name') as TJSONString).Value + ':';
+    end;
 
     // TMDb ID
     Step := 'ProcessActor: Header/WID';
@@ -1486,10 +1498,16 @@ begin
         AdultActor := True;
       end;
     end;
-    if AdultActor
-    then Actor := Actor+'"XXX":true,'
-    else Actor := Actor+'"XXX":false,';
-
+    if AdultActor then
+    begin
+      Actor := Actor+'"XXX":true,';
+      SearchData := 'Y'+SearchData;
+    end
+    else
+    begin
+      Actor := Actor+'"XXX":false,';
+      SearchData := 'N'+SearchData;
+    end;
 
     if not(TMDB_Data.getValue('external_ids') = nil) then
     begin
@@ -1523,6 +1541,7 @@ begin
         if (REST.JSON.TJSON.JSONEncode((TMDB_Data.getValue('external_ids') as TJSONOBJECT).getValue('twitter_id') as TJSONString)) <> '""' then
         begin
           Actor := Actor+'"TWT":'+REST.JSON.TJSON.JSONEncode((TMDB_Data.getValue('external_ids') as TJSONOBJECT).getValue('twitter_id') as TJSONString)+',';
+          SearchData := SearchData + ((TMDB_Data.getValue('external_ids') as TJSONOBJECT).getValue('twitter_id') as TJSONString).Value + ':';
           SocialMedia := SocialMedia + 1;
         end;
       end;
@@ -1540,7 +1559,7 @@ begin
 
     end; // external_ids
 
-    // HomePage
+    // Home Page
     Step := 'ProcessActor: Header/WWW';
     if not(TMDB_Data.getValue('homepage') = nil) and not((TMDB_Data.getValue('homepage') is TJSONNULL)) then
     begin
@@ -1866,8 +1885,11 @@ begin
 
           // Character
           Step := 'ProcessActor: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/CHR';
-          if not(Role.getValue('character') = nil) and not(Role.getValue('character') is TJSONNULL)
-          then Actor := Actor+',"CHR":'+REST.JSON.TJSON.JSONEncode(Role.getValue('character') as TJSONString);
+          if not(Role.getValue('character') = nil) and not(Role.getValue('character') is TJSONNULL) then
+          begin
+            Actor := Actor+',"CHR":'+REST.JSON.TJSON.JSONEncode(Role.getValue('character') as TJSONString);
+            SearchData := SearchData + (Role.getValue('character') as TJSONString).Value + ':';
+          end;
 
           // Overview
           Step := 'ProcessActor: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/OVR';
@@ -2213,8 +2235,11 @@ begin
 
           // Character
 //          MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"TV CHR","TP":'+FloatToStr(Now)+'}';
-          if not(Role.getValue('character') = nil) and not(Role.getValue('character') is TJSONNULL)
-          then Actor := Actor+',"CHR":'+REST.JSON.TJSON.JSONEncode(Role.getValue('character') as TJSONString);
+          if not(Role.getValue('character') = nil) and not(Role.getValue('character') is TJSONNULL) then
+          begin
+            Actor := Actor+',"CHR":'+REST.JSON.TJSON.JSONEncode(Role.getValue('character') as TJSONString);
+            SearchData := SearchData + (Role.getValue('character') as TJSONString).Value + ':';
+          end;
 
           // Overview
 //          MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"TV OVR","TP":'+FloatToStr(Now)+'}';
@@ -2543,7 +2568,7 @@ begin
   // Section 9/10 - TV Shows Recent Work
   // Section 10/10 - Awards Recognition
 
-  Actor := Actor + '],"PTS":'+FloatToStrF(ActorScore,ffNumber,5,3)+',';
+  Actor := Actor + '],"PTS":'+FloatToStrF(ActorScore,ffNumber,6,3)+',';
   Actor := Actor + '"PTB":{'+
     '"Basic":'+FloatToStrF(Min(BasicScore,100.0),ffNumber,6,3)+','+
     '"TMDb":'+FloatToStrF(Min(PopScore,100.0),ffNumber,6,3)+','+
@@ -2556,9 +2581,12 @@ begin
     '"TVRecent":'+FloatToStrF(Min(0.0,100.0),ffNumber,6,3)+','+
     '"Awards":'+FloatToStrF(Min(0.0,100.0),ffNumber,6,3)+
   '}}';
+  SearchData := SearchData + RightStr('000000'+IntToStr(Trunc(ActorScore*1000.0)),6);
 
   // All Done !!!
   if ActorRoles = 0 then Actor := '';
+
+  MainForm.UpdateSearch(SearchPerson, SearchData);
 
   Result := FilterResponse(Actor);
 
@@ -3945,7 +3973,7 @@ begin
   if (Secret <> MainForm.edSecret.Text) then raise EXDataHttpUnauthorized.Create('Access Not Authorized');
 
   // Second, did they send a valid search?
-  if (Length(Trim(SearchTerm)) < 3) or (Length(Trim(SearchTerm)) > 25) then raise EXDataHttpUnauthorized.Create('Search not Authorized');
+  if (Length(Trim(SearchTerm)) < 3) or (Length(Trim(SearchTerm)) > 50) then raise EXDataHttpUnauthorized.Create('Search not Authorized');
 
 
   // Alright, seems like we've got a valid request.
@@ -4088,6 +4116,125 @@ begin
   Data.Free;
 end;
 
+function TActorInfoService.SearchLocal(Secret, SearchTerm, Progress: String): TStream;
+var
+  Data: TJSONArray;
+  ProgressPrefix: String;
+  ProgressKey: Integer;
+  Actors: String;
+  ActorCount: Integer;
+  Response: TStringList;
+  CacheFile: String;
+  i : Integer;
+  ActorData: TJSONObject;
+  ActorNum: String;
+  NotBrotli: TMemoryStream;
+  Brotli: TMemoryStream;
+
+begin
+  TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+
+  // First, did they send the correct secret?
+  if (Secret <> MainForm.edSecret.Text) then raise EXDataHttpUnauthorized.Create('Access Not Authorized');
+
+  // Second, did they send a valid search?
+  if (Length(Trim(SearchTerm)) < 3) or (Length(Trim(SearchTerm)) > 50) then raise EXDataHttpUnauthorized.Create('Search not Authorized');
+
+  // Alright, seems like we've got a valid request.
+  // Here, we're creating the desired result - JSON.
+  Result := TMemoryStream.Create;
+  TXDataOperationContext.Current.Response.Headers.SetValue('content-type', 'application/json');
+  TXDataOperationContext.Current.Response.Headers.SetValue('content-encoding', 'br');
+
+  // Set up our progress system for this request
+  ProgressPrefix := '{"ST":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"'+
+                    ',"TS":'+FloatToStr(Now)+
+                    ',"ID":"'+Progress+'"'+
+                    ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
+                    ',"RQ":"SearchPeople"'+
+                    ',"TM":"'+QuotedStr(SearchTerm)+'"';
+  ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+
+  Data := TJSONObject.ParseJSONValue(MainForm.LocalSearch(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
+
+  Response := TStringList.Create;
+
+  Actors := '[';
+  ActorCount := 0;
+  for i := 0 to Data.Count - 1 do
+  begin
+    ActorNum := ((data.items[i] as TJSONObject).getValue('Person') as TJSONString).Value;
+    CacheFile := MainForm.AppCacheDir+'cache/people/actorious/'+
+      RightStr(ActorNum,3)+
+      '/person-'+
+      ActorNum+
+      '.json';
+    try
+      SLLoadJSON(Response, CacheFile);
+    except on E: Exception do
+      begin
+        // In QuickSearch, we're just returning cached values so we won't do this step.
+        // That's what makes it Quick, after all, in addition to only searching one page
+        // of results from TMDb
+//        UpdatePersonfromTMDb(StrToInt(ActorNum), False);
+//        Response.LoadFromFile(MainForm.AppCacheDir+'cache/people/tmdb/'+
+//        RightStr(ActorNum,3)+
+//          '/person-'+
+//          ActorNum+
+//          '.json');
+//        ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
+//        ProcessActor(ActorCount, ActorNum, ActorData, -1, nil, ProgressPrefix, ProgressKey);
+//        ActorData.Free;
+//        Response.LoadFromFile(MainForm.AppCacheDir+'cache/people/actorious/'+
+//          RightStr(ActorNum,3)+
+//          '/person-'+
+//          ActorNum+
+//          '.json');
+      end;
+    end;
+
+    if (Response.Text <> '')  then
+    begin
+      ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
+      ActorData.RemovePair('ID');
+      ActorData.AddPair(TJSONPair.Create('ID', TJSONNumber.Create(ActorCount+1)));
+
+      if ActorCount = 0
+      then Actors := Actors+ActorData.ToString
+      else Actors := Actors+','+ActorData.ToString;
+      ActorCount := ActorCount + 1;
+
+      ActorData.Free;
+    end;
+  end;
+  Actors := Actors +']';
+
+  Response.Text := Actors;
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(ActorCount)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
+
+  // This is what we're sending back
+  NotBrotli := TMemoryStream.Create;
+  Response.SaveToStream(NotBrotli, TEncoding.UTF8);
+  NotBrotli.Seek(0, soFromBeginning);
+
+  // Compress the stream with Brotli
+  Brotli := TMemoryStream.Create;
+  BrotliCompressStream(NotBrotli, Brotli, bcGood);
+  Brotli.Seek(0, soFromBeginning);
+
+  Result.CopyFrom(Brotli,Brotli.Size);
+  TXDataOperationContext.Current.Response.Headers.SetValue('content-length',IntToSTr(Length(Response.Text)));
+  TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length',IntToStr(Brotli.Size));
+  TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+
+  NotBrotli.Free;
+  Brotli.Free;
+  Response.Free;
+  Data.Free;
+
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Completed Local Search for '+QuotedStr(SearchTerm)+': '+IntToStr(ActorCount)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
+
+end;
 
 function TActorInfoService.SearchPeopleExtended(Secret, SearchTerm, Progress: String): TStream;
 var
@@ -4116,7 +4263,7 @@ begin
   if (Secret <> MainForm.edSecret.Text) then raise EXDataHttpUnauthorized.Create('Access Not Authorized');
 
   // Second, did they send a valid search?
-  if (Length(Trim(SearchTerm)) < 3) or (Length(Trim(SearchTerm)) > 25) then raise EXDataHttpUnauthorized.Create('Search not Authorized');
+  if (Length(Trim(SearchTerm)) < 3) or (Length(Trim(SearchTerm)) > 50) then raise EXDataHttpUnauthorized.Create('Search not Authorized');
 
 
   // Alright, seems like we've got a valid request.
