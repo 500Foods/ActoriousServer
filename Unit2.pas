@@ -1908,26 +1908,30 @@ var
 begin
   // Here we're just loading our search arrays from disk
 
-  // people
+  // People
   IndexFileName := AppCacheDir+'cache/search/IndexPeople.idx';
-  IndexFile := TStringList.Create;
-  IndexFile.LoadFromFile(IndexFileName);
-
-  if IndexFile.Count > 0 then
+  if FileExists(IndexFileName) then
   begin
-    SetLength(IndexPeople, IndexFile.Count);
-    i := 0;
-    while i < IndexFile.Count do
+    IndexFile := TStringList.Create;
+
+    IndexFile.LoadFromFile(IndexFileName);
+
+    if IndexFile.Count > 0 then
     begin
-      IndexPeople[i] := IndexFile[i];
-      i := i + 1;
+      SetLength(IndexPeople, IndexFile.Count);
+      i := 0;
+      while i < IndexFile.Count do
+      begin
+        IndexPeople[i] := IndexFile[i];
+        i := i + 1;
+      end;
+
+      lblSearchPeople.Caption := FloatToStrF(IndexFile.Count,ffNumber,6,0);
+      IndexPeopleSize := FileSizeByName(IndexFileName);
+      IndexFile.Free;
+
+      btRecentProgressClick(nil);
     end;
-
-    lblSearchPeople.Caption := IntToStr(IndexFile.Count);
-    IndexPeopleSize := FileSizeByName(IndexFileName);
-    IndexFile.Free;
-
-    btRecentProgressClick(nil);
   end;
 
 end;
@@ -2084,6 +2088,13 @@ var
   i: integer;
   AppConfigFile: String;
   ConfigFile: TStringList;
+
+  oldestdate: Integer;
+  oldesttime: TDateTime;
+  oldestfile: Integer;
+  oldestname: String;
+  oldestchks: Integer;
+
 begin
   StartTimer.Enabled := False;
 
@@ -2346,6 +2357,41 @@ begin
   LogEvent('- People Search Index Loaded: '+IntToStr(Length(IndexPeople))+' entries');
   SetProgressStep('14 of 17');
 
+  // Find oldest file to start on
+
+  oldestdate := DayOfTheYear(EncodeDate(2020, MonthOf(Now), DayOftheMonth(Now)));
+  oldesttime := Now;
+  oldestchks := 0;
+  oldestname := '';
+
+  oldestfile := oldestdate;
+  
+  while oldestchks < 366 do
+  begin
+
+    oldestname := AppCacheDir+'cache/days/actorious-births/birthday-'+RightStr('000'+IntToStr(oldestfile),3)+'.json';
+    if not(FileExists(oldestname)) then
+    begin
+      oldestdate := oldestfile;
+      oldestchks := 367;
+    end
+    else if TFile.getLAstWriteTime(oldestname) < oldesttime then
+    begin
+      oldesttime := TFile.getLAstWriteTime(oldestname);
+      oldestdate := oldestfile;
+    end;
+    
+    oldestfile := oldestfile + 1;
+    if oldestfile = 367 then oldestfile := 1;
+    
+    oldestchks := oldestchks + 1;
+  end;
+
+  LogEvent('Oldest Data found is for DY: '+IntToStr(oldestdate)+' / DT: '+FormatDateTime('mmmdd',EncodeDate(2020, 1, 1) + (oldestdate - 1)));
+  progMonth.Text := FormatDateTime('mmm',EncodeDate(2020, 1, 1) + (oldestdate - 1));
+  progDay.Text   := FormatDateTime('dd',EncodeDate(2020, 1, 1) + (oldestdate - 1));
+  CacheTimer.Tag := oldestdate;
+
   // Show encoded Base64 version of secret
   LogEvent('Encoding Actorious API Secret');
   edSecretChange(nil);
@@ -2552,11 +2598,6 @@ begin
   MovieCacheRequests  := 0;
   TVShowCacheRequests := 0;
   CleanRequests       := 0;
-
-  // Set starting time for cache to today
-  progMonth.Text := FormatDateTime('mmm',Now);
-  progDay.Text   := FormatDateTime('dd',Now);
-  CacheTimer.Tag := DayOfTheYear(EncodeDate(2020,MonthOf(Now),DayOf(Now)));
 
   // Do it this way so we don't wait for screen to appear
   StartTimer.Enabled := True;

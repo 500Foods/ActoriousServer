@@ -474,7 +474,7 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object lblBirthDays: TLabel
-      Left = 685
+      Left = 715
       Top = 8
       Width = 25
       Height = 25
@@ -484,7 +484,7 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object lblDeathDays: TLabel
-      Left = 685
+      Left = 715
       Top = 33
       Width = 25
       Height = 25
@@ -494,7 +494,7 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object lblReleaseDays: TLabel
-      Left = 685
+      Left = 715
       Top = 58
       Width = 25
       Height = 25
@@ -504,9 +504,9 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object lblSearchPeople: TLabel
-      Left = 578
+      Left = 575
       Top = 8
-      Width = 29
+      Width = 61
       Height = 25
       Cursor = crHandPoint
       Alignment = taCenter
@@ -516,9 +516,9 @@ object MainForm: TMainForm
       OnClick = lblSearchPeopleClick
     end
     object Label3: TLabel
-      Left = 578
+      Left = 575
       Top = 33
-      Width = 29
+      Width = 61
       Height = 25
       Cursor = crHandPoint
       Alignment = taCenter
@@ -527,9 +527,9 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object Label4: TLabel
-      Left = 578
+      Left = 575
       Top = 58
-      Width = 29
+      Width = 61
       Height = 25
       Cursor = crHandPoint
       Alignment = taCenter
@@ -664,7 +664,7 @@ object MainForm: TMainForm
     end
     object DateTimePickerBirthday: TDateTimePicker
       Tag = 1
-      Left = 606
+      Left = 636
       Top = 10
       Width = 77
       Height = 21
@@ -681,7 +681,7 @@ object MainForm: TMainForm
     end
     object DateTimePickerDeathDay: TDateTimePicker
       Tag = 1
-      Left = 606
+      Left = 636
       Top = 35
       Width = 77
       Height = 21
@@ -697,7 +697,7 @@ object MainForm: TMainForm
     end
     object DateTimePickerReleaseDay: TDateTimePicker
       Tag = 1
-      Left = 606
+      Left = 636
       Top = 60
       Width = 77
       Height = 21
@@ -713,7 +713,7 @@ object MainForm: TMainForm
     end
     object btTop1000: TButton
       Tag = 1
-      Left = 709
+      Left = 739
       Top = 33
       Width = 74
       Height = 25
@@ -723,7 +723,7 @@ object MainForm: TMainForm
     end
     object btTop5000: TButton
       Tag = 1
-      Left = 709
+      Left = 739
       Top = 58
       Width = 74
       Height = 25
@@ -741,9 +741,9 @@ object MainForm: TMainForm
       OnClick = btAllClick
     end
     object edtClientVersion: TEdit
-      Left = 789
+      Left = 819
       Top = 35
-      Width = 90
+      Width = 60
       Height = 21
       Alignment = taCenter
       AutoSize = False
@@ -752,11 +752,11 @@ object MainForm: TMainForm
       OnChange = edtClientVersionChange
     end
     object btUpdateVersion: TButton
-      Left = 787
+      Left = 817
       Top = 8
-      Width = 94
+      Width = 64
       Height = 25
-      Caption = 'Client Ver Chk'
+      Caption = 'Client Chk'
       TabOrder = 18
       OnClick = btUpdateVersionClick
     end
@@ -770,7 +770,7 @@ object MainForm: TMainForm
       OnClick = btInternalClick
     end
     object btClean: TButton
-      Left = 709
+      Left = 739
       Top = 8
       Width = 74
       Height = 25
@@ -779,11 +779,11 @@ object MainForm: TMainForm
       OnClick = btCleanClick
     end
     object ckRegenerate: TCheckBox
-      Left = 789
+      Left = 819
       Top = 62
-      Width = 97
+      Width = 67
       Height = 17
-      Caption = 'Regenerate'
+      Caption = 'Regen'
       Checked = True
       State = cbChecked
       TabOrder = 21
