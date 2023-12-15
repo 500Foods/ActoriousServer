@@ -947,6 +947,7 @@ object MainForm: TMainForm
   object StartTimer: TTimer
     Tag = 1
     Enabled = False
+    Interval = 2500
     OnTimer = StartTimerTimer
     Left = 1008
     Top = 360

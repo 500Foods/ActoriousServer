@@ -4151,11 +4151,14 @@ begin
                     ',"TS":'+FloatToStr(Now)+
                     ',"ID":"'+Progress+'"'+
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
-                    ',"RQ":"SearchPeople"'+
+                    ',"RQ":"SearchLocal"'+
                     ',"TM":"'+QuotedStr(SearchTerm)+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
 
+
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Acquiring Local Search Results for '+QuotedStr(SearchTerm)+'","TP":'+FloatToStr(Now)+'}';
   Data := TJSONObject.ParseJSONValue(MainForm.LocalSearch(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Checking Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(Data.Count)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
 
   Response := TStringList.Create;
 
