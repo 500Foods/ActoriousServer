@@ -1025,16 +1025,24 @@ begin
 
     // If the search terms appear early in the search (starting within the name),
     // we want the relevance to be much higher (as in, if it is the name and not a role)
+    // and a super-bonus if the name matches exactly.
     MatchName := Copy(MatchSearch,11,Length(MatchSearch));
     MatchName := Copy(MatchName,1,Pos(':', MatchName) - 1);
     if Trim(MatchName) = '' then Relevance := 0;
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 
-    if (Pos(SearchKey1 + SearchKey2, MatchName) > 0) or
-       (Pos(SearchKey1 + SearchKey3, MatchName) > 0) or
-       (Pos(SearchKey2 + SearchKey3, MatchName) > 0)
-    then Relevance := Relevance * 100;
+    if (SearchKey1 = MatchName) or
+       (SearchKey2 = MatchName) or
+       (SearchKey3 = MatchName) or
+       (SearchKey1+SearchKey2 = MatchName) or
+       (SearchKey1+SearchKey3 = MatchName) or
+       (SearchKey2+SearchKey3 = MatchName)
+    then Relevance := Relevance * 1000
+    else if (Pos(SearchKey1 + SearchKey2, MatchName) > 0) or
+            (Pos(SearchKey1 + SearchKey3, MatchName) > 0) or
+            (Pos(SearchKey2 + SearchKey3, MatchName) > 0)
+         then Relevance := Relevance * 100;
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 
