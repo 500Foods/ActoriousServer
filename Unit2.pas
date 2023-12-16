@@ -844,12 +844,14 @@ end;
 
 procedure TMainForm.lblSearchPeopleClick(Sender: TObject);
 var
-  i: Integer;
+  i,j : Integer;
 begin
 
   // Shows the most recent additions to the People search index
+  btClearClick(Sender);
 
   i := Length(IndexPeople) - 1;
+  j := 0;
   while i >= 0 do
   begin
     if Length(IndexPeople[i]) >= 150
@@ -858,7 +860,8 @@ begin
     i := i - 1;
 
     // Only want the most recent 50
-    if i = Length(IndexPeople) - 50 then i := -1;
+    j := j + 1;
+    if j = 50 then i := -1;
   end;
 
   SaveSearchIndexes;
@@ -866,7 +869,7 @@ end;
 
 function TMainForm.LocalSearch(SearchTerm: String; Adult: Boolean): String;
 var
-  i: Integer;
+  i, j: Integer;
   SearchEnd: Boolean;
   SearchAdult: String;
   SearchKey: String;
@@ -875,17 +878,28 @@ var
   SearchKey3: String;
   SearchKey4: String;
   Matches: TStringList;
-  Found: TStringList;
+  Matched: Boolean;
   Points: Integer;
   Relevance: Double;
   MatchSearch: String;
+
+  Search1: Integer;
+  Search2: Integer;
+  Search3: Integer;
+  Search4: Integer;
+
+  Search1OK: Boolean;
+  Search2OK: Boolean;
+  Search3OK: Boolean;
+  Search4OK: Boolean;
+
+  MatchName: String;
 //  ElapsedTime: TDateTime;
 
 begin
 //  ElapsedTime := Now;
   Result := '[';
   Matches := TStringList.Create;
-  Found := TStringList.Create;
 
   // Cleanup our search value so we don't accidentally hit every entry
   // And so we don't also accidentally miss every entry
@@ -903,30 +917,30 @@ begin
   SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
   SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
 
+  // Want to separate out keys so they can be searched independently
   SearchKey1 := SearchKey;
   SearchKey2 := '';
   SearchKey3 := '';
   SearchKey4 := '';
-
-  if Pos(' ', SearchKey) > 0 then
+  if Pos(' ', SearchKey1) > 0 then
   begin
     SearchKey1 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
     SearchKey := Copy(SearchKey,Length(SearchKey1)+2,Length(SearchKey));
     SearchKey2 := SearchKey;
   end;
-  if Pos(' ', SearchKey) > 0 then
+  if Pos(' ', SearchKey2) > 0 then
   begin
     SearchKey2 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
     SearchKey := Copy(SearchKey,Length(SearchKey2)+2,Length(SearchKey));
     SearchKey3 := SearchKey;
   end;
-  if Pos(' ', SearchKey) > 0 then
+  if Pos(' ', SearchKey3) > 0 then
   begin
     SearchKey3 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
     SearchKey := Copy(SearchKey,Length(SearchKey3)+2,Length(SearchKey));
     SearchKey4 := SearchKey;
   end;
-  if Pos(' ', SearchKey) > 0 then
+  if Pos(' ', SearchKey4) > 0 then
   begin
     SearchKey4 := StringReplace(SearchKey,' ','',[rfReplaceAll]);
   end;
@@ -935,77 +949,149 @@ begin
 //  LogEvent('Search2: ['+SearchKey2+']');
 //  LogEvent('Search3: ['+SearchKey3+']');
 //  LogEvent('Search4: ['+SearchKey4+']');
+  if Length(Trim(SearchKey1)) >= 3 then Search1OK := True else Search1OK := False;
+  if Length(Trim(SearchKey2)) >= 3 then Search2OK := True else Search2OK := False;
+  if Length(Trim(SearchKey3)) >= 3 then Search3OK := True else Search3OK := False;
+  if Length(Trim(SearchKey4)) >= 3 then Search4OK := True else Search4OK := False;
 
+
+  // The first character of the index is used to flag as Adult
   if Adult
   then SearchAdult := 'Y'
   else SearchAdult := 'N';
 
   // Quick pass to get all the candidates. Might be a lot for a short search key
-  i := 0;
+  // If we don't have any decent-sized keys, then not much point in searching
   SearchEnd := False;
+  if not(Search1OK or Search2OK or Search3OK or Search4OK)
+  then SearchEnd := True;
+
+  i := 0;
   while not(SearchEnd) do
   begin
+    Matched := False;
     if i > Length(IndexPeople) - 1 then
     begin
       SearchEnd := True;
     end
-    else if (Copy(IndexPeople[i],1,1) = SearchAdult)                     and  // Matches adult rating
-            (Pos(SearchKey1, IndexPeople[i]) > 0)                        and  // Contains first term
-            ((SearchKey2 = '') or (Pos(SearchKey2, IndexPeople[i]) > 0)) and  // Contains second term if available
-            ((SearchKey3 = '') or (Pos(SearchKey3, IndexPeople[i]) > 0)) and  // Contains third term if available
-            ((SearchKey4 = '') or (Pos(SearchKey4, IndexPeople[i]) > 0)) then // Contains fourth term if available
+    else
     begin
-      Matches.Add(IndexPeople[i]);
+      // Filter for Adult content
+      if (Copy(IndexPeople[i],1,1) = SearchAdult) then
+      begin
+        // Include if something matches
+        if Search1OK then Search1 := Pos(SearchKey1, IndexPeople[i]) else Search1 := 0;
+        if Search2OK then Search2 := Pos(SearchKey2, IndexPeople[i]) else Search2 := 0;
+        if Search3OK then Search3 := Pos(SearchKey3, IndexPeople[i]) else Search3 := 0;
+        if Search4OK then Search4 := Pos(SearchKey4, IndexPeople[i]) else Search4 := 0;
+
+        if (Search1OK and (Search1 > 0)) then Matched := True;
+        if (Search2OK and (Search2 > 0)) then Matched := True;
+        if (Search3OK and (Search3 > 0)) then Matched := True;
+        if (Search4OK and (Search4 > 0)) then Matched := True;
+
+        // Exclude if something doesn't match
+        if Matched then
+        begin
+          if (Search1OK and (Search1 = 0)) then Matched := False;
+          if (Search2OK and (Search2 = 0)) then Matched := False;
+          if (Search3OK and (Search3 = 0)) then Matched := False;
+          if (Search4OK and (Search4 = 0)) then Matched := False;
+        end;
+      end;
     end;
 
+    if Matched then Matches.Add(IndexPeople[i]);
     i := i + 1;
   end;
 
 //  LogEvent('First Matches '+IntToStr(Matches.Count)+' out of '+IntToStr(Length(IndexPeople)));
 
-  // Do a more exhaustive check to filter out garbage and come up with some kind of relevance score for each
+  // Do a more exhaustive review to come up with a relevance score for each
   i := 0;
   while i < Matches.Count do
   begin
-    Points := StrToIntDef(RightStr(Matches[i],6),0);           // Points assigned by Actorious
-    MatchSearch := LeftStr(Matches[i], Length(Matches[i]) - 7); // Remove the points from the end of the searched string
-    MatchSearch := Copy(Matches[i], 10, Length(Matches[i]));    // Remove the Ref# at the beginning of the searched string
+    // These are the points assigned by the Actorious ranking algorithm (as opposed to the TMDb ranking)
+    Points := StrToIntDef(RightStr(Matches[i],6),0);
 
-    Relevance := Points * (1.0 + ((Occurrences(SearchKey1, MatchSearch) / Min(1,(10 - Length(SearchKey1)))) +
-                                  (Occurrences(SearchKey2, MatchSearch) / Min(1,(20 - Length(SearchKey2)))) +
-                                  (Occurrences(SearchKey3, MatchSearch) / Min(1,(30 - Length(SearchKey3)))) +
-                                  (Occurrences(SearchKey4, MatchSearch) / Min(1,(40 - Length(SearchKey4)))) / 100.0 ));
+    // We don't need to search the whole thing technically, but most of it
+    // Here we're just removing the ranking at the end as we don't want it to be matched
+    // We could do the same for the ref# in the beginning, but it might be fun to match that in some cases
+    MatchSearch := LeftStr(Matches[i], Length(Matches[i]) - 6);
+//    MatchSearch := Copy(Matches[i], 10, Length(Matches[i]));    // Remove the Ref# at the beginning of the searched string
 
-//    LogEvent(SearchKey+': ' + IntToStr(Points) + ' -> ' +IntToStr(Trunc(Relevance)));
+    // To start with, the relevance will be the points from the Actorious algorithm
+    Relevance := Points / 1000;
 
-    Found.Add(RightStr('00000000'+IntToStr(Trunc(Relevance)),8)+Copy(Matches[i],1,10));
+    // If the search terms appear early in the search (starting within the name),
+    // we want the relevance to be much higher (as in, if it is the name and not a role)
+    MatchName := Copy(MatchSearch,11,Length(MatchSearch));
+    MatchName := Copy(MatchName,1,Pos(':', MatchName) - 1);
+    if Trim(MatchName) = '' then Relevance := 0;
+
+//    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
+
+    if (Pos(SearchKey1 + SearchKey2, MatchName) > 0) or
+       (Pos(SearchKey1 + SearchKey3, MatchName) > 0) or
+       (Pos(SearchKey2 + SearchKey3, MatchName) > 0)
+    then Relevance := Relevance * 100;
+
+//    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
+
+    // Does the search appear in a role?
+    Search1 := Pos(SearchKey1, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
+    Search2 := Pos(SearchKey2, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
+    Search3 := Pos(SearchKey3, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
+    Search4 := Pos(SearchKey4, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
+
+    // Otherwise, we want the relevance to increase if the name appears a lot.  For example, if the search is for Spok,
+    // an index item where this appears many times should be ranked higher than if it appears just once. But we also
+    // have to factor in how long the search term is, and give a heigher weighting for longer terms.
+    // Successive terms are weighted slightly less as well
+    if Search1OK and (Search1 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey1) * Occurrences(SearchKey1, MatchSearch) / 10));
+    if Search2OK and (Search2 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey2) * Occurrences(SearchKey2, MatchSearch) / 20));
+    if Search3OK and (Search3 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey3) * Occurrences(SearchKey3, MatchSearch) / 30));
+    if Search4OK and (Search4 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey4) * Occurrences(SearchKey4, MatchSearch) / 40));
+
+//    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
+//    LogEvent(' ');
+
+    // Relevance is added to beginning of term
+    Matches[i] := RightStr('0000000000'+IntToStr(Trunc(Relevance)),10)+Copy(Matches[i],1,10);
 
     i := i + 1;
   end;
 
-  // Sort those that remain
-  Found.Sort;
+  // Sort based on relevance. Might still be a large number here.
+  Matches.Sort;
 
-  // Return the top 25
-  i := 0;
-  while i < Min(Found.Count,26) do
+  // Return the ___bottom___  50
+  i := Matches.Count - 1;
+  j := 0;
+  while i >= 0 do
   begin
-    if Found[i] <> '' then
+    if ((Matches[i] <> '') and (Copy(Matches[i],1,10) <> '0000000000')) then
     begin
       if Result = '['
-      then Result := Result + '{"Person":"'+Copy(Found[i],10,8)+'"}'
-      else Result := Result + ',{"Person":"'+Copy(Found[i],10,8)+'"}';
-      i := i + 1;
+      then Result := Result + '{"Person":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}'
+      else Result := Result + ',{"Person":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}';
+      i := i - 1;
+
+      j := j + 1;
+      if j = 50 then i := -1;
+    end
+    else
+    begin
+      i := i - 1;
     end;
   end;
 
   Result := Result + ']';
 
-//  LogEvent('Second Matches '+IntToStr(Found.Count)+' out of '+IntToStr(Length(IndexPeople)));
+//  LogEvent('Second Matches '+IntToStr(Matches.Count)+' out of '+IntToStr(Length(IndexPeople)));
 //  LogEvent(Result);
 
   Matches.Free;
-  Found.Free;
 
 //  LogEvent('Search Time: '+IntToStr(MillisecondsBetween(Now, ElapsedTime))+'ms');
 end;
@@ -1072,20 +1158,23 @@ var
                (Pos('.working', FileName) > 0) or
                ((Pos('.br',FileName) > 0) and (Trim(CheckFile.Text) = '') and (FileSize < 130)) then
              begin
-               LogEvent('    - Small File Detected: '+StringReplace(Filename,'\','/',[rfReplaceAll])+ ' [ '+IntToStr(Filesize)+' bytes ]');
+               // Curious when this condition is met, unless it is just an old file
+               if (TFile.GetLastWriteTime(FileName) >= OlderThan)
+               then LogEvent('    - Small File Detected: '+StringReplace(Filename,'\','/',[rfReplaceAll])+ ' [ '+IntToStr(Filesize)+' bytes ]');
+
                Result := Result + 1;
-               CleanSize := CleanSize + FileSize;
                CleanFiles := CleanFiles + 1;
-               TFile.Delete(FileName);
                CleanSmall := CleanSmall + 1;
+               CleanSize := CleanSize + FileSize;
+               TFile.Delete(FileName);
              end;
              CheckFile.Free;
           end
           else
           begin
             Result := Result + 1;
-            CleanSize := CleanSize + FileSize;
             CleanFiles := CleanFiles + 1;
+            CleanSize := CleanSize + FileSize;
             TFile.Delete(FileName);
           end;
         end;
@@ -1936,7 +2025,7 @@ end;
 
 procedure TMainForm.LoadSearchIndexes;
 var
-  i: Integer;
+  i,j: Integer;
   IndexFileName: String;
   IndexFile: TStringList;
 begin
@@ -1952,11 +2041,17 @@ begin
 
     if IndexFile.Count > 0 then
     begin
-      SetLength(IndexPeople, IndexFile.Count);
       i := 0;
+      j := 0;
       while i < IndexFile.Count do
       begin
-        IndexPeople[i] := IndexFile[i];
+        if (Pos(' Pending', IndexFile[i]) = 0) and
+           (IndexFile[i] <> '') then
+        begin
+          SetLength(IndexPeople, j + 1);
+          IndexPeople[j] := IndexFile[i];
+          j := j + 1;
+        end;
         i := i + 1;
       end;
 
@@ -2419,11 +2514,41 @@ begin
       oldestdate := oldestfile;
       oldestmesg := FormatDateTime(' dd"d" hh"h" mm"m" ss"s"',Now - oldesttime);
     end;
-    
+
+    oldestname := AppCacheDir+'cache/days/actorious-deaths/deathday-'+RightStr('000'+IntToStr(oldestfile),3)+'.json';
+    if not(FileExists(oldestname)) then
+    begin
+      oldestdate := oldestfile;
+      oldestchks := 367;
+      oldestmesg := ' (missing)';
+    end
+    else if TFile.getLAstWriteTime(oldestname) < oldesttime then
+    begin
+      oldesttime := TFile.getLastWriteTime(oldestname);
+      oldestdate := oldestfile;
+      oldestmesg := FormatDateTime(' dd"d" hh"h" mm"m" ss"s"',Now - oldesttime);
+    end;
+
+    oldestname := AppCacheDir+'cache/days/actorious-releases/releaseday-'+RightStr('000'+IntToStr(oldestfile),3)+'.json';
+    if not(FileExists(oldestname)) then
+    begin
+      oldestdate := oldestfile;
+      oldestchks := 367;
+      oldestmesg := ' (missing)';
+    end
+    else if TFile.getLAstWriteTime(oldestname) < oldesttime then
+    begin
+      oldesttime := TFile.getLastWriteTime(oldestname);
+      oldestdate := oldestfile;
+      oldestmesg := FormatDateTime(' dd"d" hh"h" mm"m" ss"s"',Now - oldesttime);
+    end;
+
     oldestfile := oldestfile + 1;
     if oldestfile = 367 then oldestfile := 1;
-    
+
     oldestchks := oldestchks + 1;
+
+    Application.ProcessMessages;
   end;
 
   LogEvent('Oldest Data found is for DY: '+IntToStr(oldestdate)+' / DT: '+FormatDateTime('mmmdd',EncodeDate(2020, 1, 1) + (oldestdate - 1))+oldestmesg);

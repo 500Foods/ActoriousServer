@@ -478,9 +478,12 @@ object MainForm: TMainForm
       Top = 8
       Width = 25
       Height = 25
+      Hint = 'Birth Days Generated Today'
       Alignment = taCenter
       AutoSize = False
       Caption = '0'
+      ParentShowHint = False
+      ShowHint = True
       Layout = tlCenter
     end
     object lblDeathDays: TLabel
@@ -488,9 +491,12 @@ object MainForm: TMainForm
       Top = 33
       Width = 25
       Height = 25
+      Hint = 'Death Days Generated Today'
       Alignment = taCenter
       AutoSize = False
       Caption = '0'
+      ParentShowHint = False
+      ShowHint = True
       Layout = tlCenter
     end
     object lblReleaseDays: TLabel
@@ -498,9 +504,12 @@ object MainForm: TMainForm
       Top = 58
       Width = 25
       Height = 25
+      Hint = 'Release Days Generated Today'
       Alignment = taCenter
       AutoSize = False
       Caption = '0'
+      ParentShowHint = False
+      ShowHint = True
       Layout = tlCenter
     end
     object lblSearchPeople: TLabel
@@ -509,9 +518,12 @@ object MainForm: TMainForm
       Width = 61
       Height = 25
       Cursor = crHandPoint
+      Hint = 'Search Index: People'
       Alignment = taCenter
       AutoSize = False
       Caption = '0'
+      ParentShowHint = False
+      ShowHint = True
       Layout = tlCenter
       OnClick = lblSearchPeopleClick
     end
@@ -521,9 +533,12 @@ object MainForm: TMainForm
       Width = 61
       Height = 25
       Cursor = crHandPoint
+      Hint = 'Search Index: Movies'
       Alignment = taCenter
       AutoSize = False
       Caption = '0'
+      ParentShowHint = False
+      ShowHint = True
       Layout = tlCenter
     end
     object Label4: TLabel
@@ -532,9 +547,12 @@ object MainForm: TMainForm
       Width = 61
       Height = 25
       Cursor = crHandPoint
+      Hint = 'Search Index: TV Shows'
       Alignment = taCenter
       AutoSize = False
       Caption = '0'
+      ParentShowHint = False
+      ShowHint = True
       Layout = tlCenter
     end
     object progMonth: TEdit

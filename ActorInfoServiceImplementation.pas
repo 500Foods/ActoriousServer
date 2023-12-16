@@ -4201,6 +4201,7 @@ begin
       ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
       ActorData.RemovePair('ID');
       ActorData.AddPair(TJSONPair.Create('ID', TJSONNumber.Create(ActorCount+1)));
+      ActorData.AddPair(TJSONPair.Create('Count', TJSONNumber.Create(StrToIntDef(((data.items[i] as TJSONObject).getValue('Relevance') as TJSONString).Value,1000000))));
 
       if ActorCount = 0
       then Actors := Actors+ActorData.ToString
