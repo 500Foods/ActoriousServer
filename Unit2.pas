@@ -1032,17 +1032,42 @@ begin
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 
+    // Search term is a perfect match to name
     if (SearchKey1 = MatchName) or
        (SearchKey2 = MatchName) or
        (SearchKey3 = MatchName) or
-       (SearchKey1+SearchKey2 = MatchName) or
-       (SearchKey1+SearchKey3 = MatchName) or
-       (SearchKey2+SearchKey3 = MatchName)
+       (SearchKey4 = MatchName)
     then Relevance := Relevance * 1000
-    else if (Pos(SearchKey1 + SearchKey2, MatchName) > 0) or
-            (Pos(SearchKey1 + SearchKey3, MatchName) > 0) or
-            (Pos(SearchKey2 + SearchKey3, MatchName) > 0)
-         then Relevance := Relevance * 100;
+
+    // Search term combo is perfect match to name
+    else if (Search1OK and Search2OK) and
+            (SearchKey1 + SearchKey2 = MatchName)
+    then Relevance := Relevance * 1000
+
+    else if (Search1OK and Search2OK and Search3OK) and
+            (SearchKey1 + SearchKey2 + SearchKey3 = MatchName)
+    then Relevance := Relevance * 1000
+
+    else if (Search1OK and Search3OK) and
+            (SearchKey1 + SearchKey3 = MatchName)
+    then Relevance := Relevance * 1000
+
+    else if (Search2OK and Search3OK) and
+            (SearchKey2 + SearchKey3 = MatchName)
+    then Relevance := Relevance * 1000
+
+    // Search term is a perfect match to role
+    else if (Pos(':'+SearchKey1+':',MatchSearch) > 0) or
+            (Pos(':'+SearchKey2+':',MatchSearch) > 0) or
+            (Pos(':'+SearchKey3+':',MatchSearch) > 0)
+    then Relevance := Relevance * 100
+
+    // Search term combo is a perfect match to role
+    else if (Pos(':'+SearchKey1 + SearchKey2+':',MatchSearch) > 0) or
+            (Pos(':'+SearchKey1 + SearchKey2 + SearchKey3+':',MatchSearch) > 0) or
+            (Pos(':'+SearchKey1 + SearchKey3+':',MatchSearch) > 0) or
+            (Pos(':'+SearchKey2 + SearchKey3+':',MatchSearch) > 0)
+    then Relevance := Relevance * 100;
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 
@@ -1054,12 +1079,12 @@ begin
 
     // Otherwise, we want the relevance to increase if the name appears a lot.  For example, if the search is for Spok,
     // an index item where this appears many times should be ranked higher than if it appears just once. But we also
-    // have to factor in how long the search term is, and give a heigher weighting for longer terms.
+    // factor in how long the search term is, and give a heigher weighting for longer terms.
     // Successive terms are weighted slightly less as well
     if Search1OK and (Search1 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey1) * Occurrences(SearchKey1, MatchSearch) / 10));
-    if Search2OK and (Search2 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey2) * Occurrences(SearchKey2, MatchSearch) / 20));
-    if Search3OK and (Search3 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey3) * Occurrences(SearchKey3, MatchSearch) / 30));
-    if Search4OK and (Search4 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey4) * Occurrences(SearchKey4, MatchSearch) / 40));
+    if Search2OK and (Search2 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey2) * Occurrences(SearchKey2, MatchSearch) / 15));
+    if Search3OK and (Search3 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey3) * Occurrences(SearchKey3, MatchSearch) / 20));
+    if Search4OK and (Search4 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey4) * Occurrences(SearchKey4, MatchSearch) / 25));
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 //    LogEvent(' ');
@@ -1552,7 +1577,7 @@ begin
     AppCacheSkips := AppCacheSkips + 1;
     if AppCacheSkips >= 366 then
     begin
-      SendActivityLog('Cache update complete.');
+      SendActivityLog('Cache update complete');
       AppCacheSkips := 0;
 
       // Everything up to date, so we don't need to check as frequently
@@ -2188,7 +2213,7 @@ begin
     then LogEvent('NOTICE: '+Subject+' e-mail sent to '+MailServerName+' <'+MailServerFrom+'>')
     else
     begin
-      LogEvent('WARNING: '+Subject+' e-mail to '+MailServerName+' <'+MailServerFrom+'> FAILED.');
+      LogEvent('WARNING: '+Subject+' e-mail to '+MailServerName+' <'+MailServerFrom+'> FAILED');
       LogEvent('WARNING: SMTP Error: '+SMTPResult);
     end;
   end;
@@ -2243,7 +2268,7 @@ begin
   LogEvent('');
   LogEvent('______________________________________________________');
   LogEvent('');
-  LogEvent('SERVER STARTUP.');
+  LogEvent('SERVER STARTUP');
 
 
   // List of App Parameters
@@ -2253,7 +2278,7 @@ begin
 
   // Load JSON Configuration
   LogEvent('');
-  LogEvent('Loading Configuration.');
+  LogEvent('Loading Configuration');
   AppConfigFile := 'Actorious.json';
   i := 0;
   while i < AppParameters.Count do
@@ -2389,7 +2414,9 @@ begin
   if AppConfiguration.getValue('HA_URL') <> nil then
   begin
     AppHAURL := (AppConfiguration.getValue('HA_URL') as TJSONString).Value;
-    LogEvent('- Home Assistant configured at '+AppHAURL);
+    if AppHAURL <> ''
+    then LogEvent('- Home Assistant configured at '+AppHAURL)
+    else LogEvent('- Home Assistant not configured');
   end
   else
   begin
@@ -2430,7 +2457,7 @@ begin
     LogEvent('- SMTP Mail Server: Unavailable');
   end;
 
-  LogEvent('Configuration Loaded.');
+  LogEvent('Configuration Loaded');
   LogEvent('');
 
   Application.ProcessMessages;
@@ -2575,12 +2602,12 @@ begin
   SetProgressStep('16 of 17');
 
   // Display the progress at start
-  LogEvent('Updating Progress');
+  LogEvent('Updating Statistics');
   btRecentProgressClick(Sender);
   SetProgressStep('17 of 17');
 
   LogEvent('');
-  LogEvent('SERVER STARTUP COMPLETE ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms).');
+  LogEvent('SERVER STARTUP COMPLETE ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)');
   LogEvent('______________________________________________________');
   LogEvent('');
 
