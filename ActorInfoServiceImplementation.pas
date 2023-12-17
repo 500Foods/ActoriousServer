@@ -2584,7 +2584,7 @@ begin
   SearchData := SearchData + RightStr('000000'+IntToStr(Trunc(ActorScore*1000.0)),6);
 
   // All Done !!!
-  if ActorRoles = 0 then Actor := '';
+//  if ActorRoles = 0 then Actor := '';
 
   MainForm.UpdateSearch(SearchPerson, SearchData);
 
