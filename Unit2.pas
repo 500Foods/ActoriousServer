@@ -1163,11 +1163,11 @@ var
                (Trim(CheckFile.Text) = '{}') or
                (Pos(Uppercase(Copy(Trim(CheckFile.Text),1,20)),'HTML') > 0) or
                (Pos(Uppercase(Copy(Trim(CheckFile.Text),1,20)),'ERROR') > 0) or
-               (Pos('.working', FileName) > 0) or
-               ((Pos('.br',FileName) > 0) and (Trim(CheckFile.Text) = '') and (FileSize < 130)) then
+               (Pos('.working', FileName) > 0)  then
+
              begin
                // Curious when this condition is met, unless it is just an old file
-               if (TFile.GetLastWriteTime(FileName) >= OlderThan)
+               if (TFile.GetLastWriteTime(FileName) >= OlderThan) and (Pos('.br', Filename) = 0)
                then LogEvent('    - Small File Detected: '+StringReplace(Filename,'\','/',[rfReplaceAll])+ ' [ '+IntToStr(Filesize)+' bytes ]');
 
                Result := Result + 1;
