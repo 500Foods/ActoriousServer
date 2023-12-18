@@ -142,6 +142,12 @@ type
     ProgressStepF: TLabel;
     ProgressDetailF: TLabel;
     CurrentProgressF: TLabel;
+    Label2: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
     procedure GetAppVersionString;
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
@@ -557,6 +563,7 @@ begin
   SearchFormat := StringReplace(SearchFormat,'SELF:',':',[rfReplaceAll]);
   SearchFormat := StringReplace(SearchFormat,'GUEST:',':',[rfReplaceAll]);
   SearchFormat := StringReplace(SearchFormat,'VOICE:',':',[rfReplaceAll]);
+  SearchFormat := StringReplace(SearchFormat,'VOICES:',':',[rfReplaceAll]);
   SearchFormat := StringReplace(SearchFormat,'UNCREDITED:',':',[rfReplaceAll]);
   SearchFormat := StringReplace(SearchFormat,'ARCHIVALFOOTAGE:',':',[rfReplaceAll]);
   SearchFormat := StringReplace(SearchFormat,'ARCHIVEFOOTAGE:',':',[rfReplaceAll]);
@@ -640,13 +647,6 @@ var
   mem1: UInt64;
   mem2: UInt64;
 begin
-  if (Sender is TButton) then
-  begin
-    if tmrProgress.Interval = 1000
-    then tmrProgress.Interval := 10000
-    else tmrProgress.Interval := 1000;
-  end;
-
   mmStats.Lines.BeginUpdate;
   mmStats.Clear;
 
@@ -695,7 +695,6 @@ begin
 
   mmStats.Lines.Add('');
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  PERSON CACHE INFORMATION');
   mmStats.Lines.Add('  ========================================');
@@ -709,7 +708,6 @@ begin
     mmStats.Lines.Add('  Person Cache Force:   '+FloatToStrF(PersonCacheForce,ffNumber,9,0).PadLeft(9)+FloatToStrF(100.0*PersonCacheForce/PersonCacheRequests,ffNumber,6,1).Padleft(6)+' %');
   end;
 
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
@@ -727,7 +725,6 @@ begin
 
   mmStats.Lines.Add('');
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  TVSHOW CACHE INFORMATION');
   mmStats.Lines.Add('  ========================================');
@@ -743,14 +740,12 @@ begin
 
   mmStats.Lines.Add('');
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  SEARCH INDEX INFORMATION');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('  Person Cache Size:    '+FloatToStrF(IndexPeopleSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
+  mmStats.Lines.Add('  Person Index Size:    '+FloatToStrF(IndexPeopleSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
 
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
@@ -925,6 +920,8 @@ var
   Search4OK: Boolean;
 
   MatchName: String;
+
+  MatchList: TStringList;
 //  ElapsedTime: TDateTime;
 
 begin
@@ -1045,10 +1042,18 @@ begin
     // These are the points assigned by the Actorious ranking algorithm (as opposed to the TMDb ranking)
     Points := StrToIntDef(RightStr(Matches[i],6),0);
 
+    // Get the list - 1st is id, 2nd is name, then all the roles, and last is points
+    MatchList := TStringLIst.Create;
+    MatchList.Delimiter := ':';
+    MatchList.DelimitedText := Matches[i];
+
+    if MatchList.Count < 3
+    then MatchList.DelimitedText := 'N0:DoNotMatchName:DoNotMatchRole0';
+
     // We don't need to search the whole thing technically, but most of it
     // Here we're just removing the ranking at the end as we don't want it to be matched
     // We could do the same for the ref# in the beginning, but it might be fun to match that in some cases
-    MatchSearch := LeftStr(Matches[i], Length(Matches[i]) - 6);
+//    MatchSearch := LeftStr(Matches[i], Length(Matches[i]) - 6);
 //    MatchSearch := Copy(Matches[i], 10, Length(Matches[i]));    // Remove the Ref# at the beginning of the searched string
 
     // To start with, the relevance will be the points from the Actorious algorithm
@@ -1057,8 +1062,7 @@ begin
     // If the search terms appear early in the search (starting within the name),
     // we want the relevance to be much higher (as in, if it is the name and not a role)
     // and a super-bonus if the name matches exactly.
-    MatchName := Copy(MatchSearch,11,Length(MatchSearch));
-    MatchName := Copy(MatchName,1,Pos(':', MatchName) - 1);
+    MatchName := MatchList[1];
     if Trim(MatchName) = '' then Relevance := 0;
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
@@ -1068,57 +1072,80 @@ begin
        (SearchKey2 = MatchName) or
        (SearchKey3 = MatchName) or
        (SearchKey4 = MatchName)
-    then Relevance := Relevance * 1000
+    then Relevance := Relevance + 1000
 
     // Search term combo is perfect match to name
     else if (Search1OK and Search2OK) and
             (SearchKey1 + SearchKey2 = MatchName)
-    then Relevance := Relevance * 1000
+    then Relevance := Relevance + 1000
 
     else if (Search1OK and Search2OK and Search3OK) and
             (SearchKey1 + SearchKey2 + SearchKey3 = MatchName)
-    then Relevance := Relevance * 1000
+    then Relevance := Relevance + 1000
 
     else if (Search1OK and Search3OK) and
             (SearchKey1 + SearchKey3 = MatchName)
-    then Relevance := Relevance * 1000
+    then Relevance := Relevance + 1000
 
     else if (Search2OK and Search3OK) and
             (SearchKey2 + SearchKey3 = MatchName)
-    then Relevance := Relevance * 1000
+    then Relevance := Relevance + 1000;
 
-    // Search term is a perfect match to role
-    else if (Pos(':'+SearchKey1+':',MatchSearch) > 0) or
-            (Pos(':'+SearchKey2+':',MatchSearch) > 0) or
-            (Pos(':'+SearchKey3+':',MatchSearch) > 0)
-    then Relevance := Relevance * 100
+    for j := 2 to MatchList.Count - 2 do // Skip the id, name and points
+    begin
 
-    // Search term combo is a perfect match to role
-    else if (Pos(':'+SearchKey1 + SearchKey2+':',MatchSearch) > 0) or
-            (Pos(':'+SearchKey1 + SearchKey2 + SearchKey3+':',MatchSearch) > 0) or
-            (Pos(':'+SearchKey1 + SearchKey3+':',MatchSearch) > 0) or
-            (Pos(':'+SearchKey2 + SearchKey3+':',MatchSearch) > 0)
-    then Relevance := Relevance * 100;
+      // Search term is a perfect match to role
+      if (SearchKey1 = MatchList[j]) or
+         (SearchKey2 = MatchList[j]) or
+         (SearchKey3 = MatchList[j]) or
+         (SearchKey4 = MatchList[j])
+      then Relevance := Relevance + 100
+
+      // Search term combo is a perfect match to role
+      else if (SearchKey1 + SearchKey2 = MatchList[j]) or
+              (SearchKey1 + SearchKey2 + SearchKey3 = MatchList[j]) or
+              (SearchKey1 + SearchKey3 = MatchList[j]) or
+              (SearchKey2 + SearchKey3 = MatchList[j])
+      then Relevance := Relevance + 100;
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 
-    // Does the search appear in a role?
-    Search1 := Pos(SearchKey1, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
-    Search2 := Pos(SearchKey2, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
-    Search3 := Pos(SearchKey3, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
-    Search4 := Pos(SearchKey4, Copy(MatchSearch, 12 + Length(MatchName), Length(MatchSearch)));
+      // Does the search appear in a role?
+      Search1 := Pos(SearchKey1, MatchList[j]);
+      Search2 := Pos(SearchKey2, MatchList[j]);
+      Search3 := Pos(SearchKey3, MatchList[j]);
+      Search4 := Pos(SearchKey4, MatchList[j]);
 
-    // Otherwise, we want the relevance to increase if the name appears a lot.  For example, if the search is for Spok,
-    // an index item where this appears many times should be ranked higher than if it appears just once. But we also
-    // factor in how long the search term is, and give a heigher weighting for longer terms.
-    // Successive terms are weighted slightly less as well
-    if Search1OK and (Search1 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey1) * Occurrences(SearchKey1, MatchSearch) / 10));
-    if Search2OK and (Search2 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey2) * Occurrences(SearchKey2, MatchSearch) / 15));
-    if Search3OK and (Search3 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey3) * Occurrences(SearchKey3, MatchSearch) / 20));
-    if Search4OK and (Search4 > 0) then Relevance := Relevance * (1.0 + (Length(SearchKey4) * Occurrences(SearchKey4, MatchSearch) / 25));
+      // Otherwise, we want the relevance to increase if the name appears a lot.  For example, if the search is for Spok,
+      // an index item where this appears many times should be ranked higher than if it appears just once. But we also
+      // factor in how long the search term is, and give a heigher weighting for longer terms.
+      // Successive terms are weighted slightly less as well
+      if (Search1OK and (Search1 = 0)) or
+         (Search2OK and (Search2 = 0)) or
+         (Search3OK and (Search3 = 0)) or
+         (Search4OK and (Search4 = 0))
+      then
+      begin
+        // We've got an initial match based on a crude search, but here we see it isn't
+        // really a match, so nothing needs to be done. If no matches are found, then
+        // the relevance will not be improved, and thus will be eliminated
+      end
+      else
+      begin
+        if Search1OK and (Search1 > 0) then Relevance := Relevance + 8;
+        if Search2OK and (Search2 > 0) then Relevance := Relevance + 6;
+        if Search3OK and (Search3 > 0) then Relevance := Relevance + 4;
+        if Search4OK and (Search4 > 0) then Relevance := Relevance + 2;
+      end;
+
+    end;
+    MatchList.Free;
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 //    LogEvent(' ');
+
+    if Relevance = Points / 1000
+    then Relevance := 0;
 
     // Relevance is added to beginning of term
     Matches[i] := RightStr('0000000000'+IntToStr(Trunc(Relevance)),10)+Copy(Matches[i],1,10);
@@ -1689,7 +1716,7 @@ begin
       begin
         // If already processed, let's check the next one
         CacheTimer.Tag := CacheTimer.Tag + 1;
-//        CacheTimer.Interval := 1000;
+//        CacheTimer.Intervalf := 1000;
         CacheTimer.Enabled := True;
         CurrentProgressA.Caption := 'Scanning';
       end
@@ -2438,16 +2465,13 @@ begin
   end;
 
   // HomeAssistant Token
+  AppHAToken := '';
   if AppConfiguration.getValue('HA_Token') <> nil then
   begin
     AppHAToken := (AppConfiguration.getValue('HA_Token') as TJSONString).Value;
-    LogEvent('- Home Assistant Token loaded');
-  end
-  else
-  begin
-    AppHAToken := '';
+    if Trim(AppHAToken) <> ''
+    then LogEvent('- Home Assistant Token loaded ');
   end;
-
 
   // Get Mail Configuration
   UpdateProgress(1, 'Configuring Mail Services','Server Startup', '10 of 17');
@@ -2638,6 +2662,7 @@ procedure TMainForm.UpdateProgress(PNum: Integer; PInfo: String; PDetail:String;
 var
   PValue: Integer;
   PMax: Integer;
+  PDesc: String;
 begin
   PValue := 0;
   PMax := 1;
@@ -2662,44 +2687,50 @@ begin
     PMax := 1;
   end;
 
+  PDesc := StringReplace(PInfo, '"DY":"', 'Day: ', [rfReplaceAll]);
+  PDesc := StringReplace(PDesc, '"DT":"', 'Date: ', [rfReplaceAll]);
+  PDesc := StringReplace(PDesc,',',' ', [rfReplaceAll]);
+  PDesc := StringReplace(PDesc,'"',' ', [rfReplaceAll]);
+  PDesc := StringReplace(PDesc,':',' ', [rfReplaceAll]);
+
   if PNum = 1 then
   begin
-    CurrentProgressA.Caption := PInfo;
+    CurrentProgressA.Caption := PDesc;
     ProgressDetailA.Caption := PDetail;
     ProgressStepA.Caption := PStep;
     ShapeProgressFGA.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 2 then
   begin
-    CurrentProgressB.Caption := PInfo;
+    CurrentProgressB.Caption := PDesc;
     ProgressDetailB.Caption := PDetail;
     ProgressStepB.Caption := PStep;
     ShapeProgressFGB.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 3 then
   begin
-    CurrentProgressC.Caption := PInfo;
+    CurrentProgressC.Caption := PDesc;
     ProgressDetailC.Caption := PDetail;
     ProgressStepC.Caption := PStep;
     ShapeProgressFGC.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 4 then
   begin
-    CurrentProgressD.Caption := PInfo;
+    CurrentProgressD.Caption := PDesc;
     ProgressDetailD.Caption := PDetail;
     ProgressStepD.Caption := PStep;
     ShapeProgressFGD.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 5 then
   begin
-    CurrentProgressE.Caption := PInfo;
+    CurrentProgressE.Caption := PDesc;
     ProgressDetailE.Caption := PDetail;
     ProgressStepE.Caption := PStep;
     ShapeProgressFGE.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 6 then
   begin
-    CurrentProgressF.Caption := PInfo;
+    CurrentProgressF.Caption := PDesc;
     ProgressDetailF.Caption := PDetail;
     ProgressStepF.Caption := PStep;
     ShapeProgressFGF.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
@@ -2758,6 +2789,11 @@ begin
   if ProgNum > 1 then
   begin
     tmrProgress.Interval := 1000;
+    tmrProgress.Tag := tmrProgress.Tag + 1;
+
+    // We still want to update the statistics periodically
+    if (tmrProgress.tag mod 10) = 0
+    then btRecentProgressClick(Sender);
   end
   else
   begin

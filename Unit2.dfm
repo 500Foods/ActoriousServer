@@ -247,7 +247,7 @@ object MainForm: TMainForm
       1087
       149)
     object Shape1: TShape
-      Left = 356
+      Left = 406
       Top = 3
       Width = 70
       Height = 70
@@ -256,37 +256,55 @@ object MainForm: TMainForm
       Pen.Color = clGray
     end
     object lbSecret: TLabel
-      Left = 80
+      Left = 135
       Top = 2
-      Width = 36
+      Width = 41
       Height = 24
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Secret'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
       Layout = tlCenter
     end
     object Label1: TLabel
-      Left = 80
+      Left = 135
       Top = 26
-      Width = 36
+      Width = 41
       Height = 23
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Base64'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
       Layout = tlCenter
     end
     object lbTMDbAPI: TLabel
-      Left = 80
+      Left = 135
       Top = 50
-      Width = 36
+      Width = 41
       Height = 24
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'TMDb'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
       Layout = tlCenter
     end
     object lblBirthDays: TLabel
-      Left = 323
+      Left = 258
       Top = 74
       Width = 30
       Height = 24
@@ -299,7 +317,7 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object lblDeathDays: TLabel
-      Left = 323
+      Left = 258
       Top = 98
       Width = 30
       Height = 24
@@ -312,7 +330,7 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object lblReleaseDays: TLabel
-      Left = 323
+      Left = 258
       Top = 122
       Width = 30
       Height = 24
@@ -325,13 +343,13 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object lblSearchPeople: TLabel
-      Left = 166
+      Left = 336
       Top = 74
       Width = 64
       Height = 24
       Cursor = crHandPoint
       Hint = 'Search Index: People'
-      Alignment = taCenter
+      Alignment = taRightJustify
       AutoSize = False
       Caption = '0'
       ParentShowHint = False
@@ -340,13 +358,13 @@ object MainForm: TMainForm
       OnClick = lblSearchPeopleClick
     end
     object Label3: TLabel
-      Left = 166
+      Left = 336
       Top = 98
       Width = 64
       Height = 24
       Cursor = crHandPoint
       Hint = 'Search Index: Movies'
-      Alignment = taCenter
+      Alignment = taRightJustify
       AutoSize = False
       Caption = '0'
       ParentShowHint = False
@@ -354,21 +372,117 @@ object MainForm: TMainForm
       Layout = tlCenter
     end
     object Label4: TLabel
-      Left = 166
+      Left = 336
       Top = 122
       Width = 64
       Height = 24
       Cursor = crHandPoint
       Hint = 'Search Index: TV Shows'
-      Alignment = taCenter
+      Alignment = taRightJustify
       AutoSize = False
       Caption = '0'
       ParentShowHint = False
       ShowHint = True
       Layout = tlCenter
     end
+    object Label2: TLabel
+      Left = 135
+      Top = 74
+      Width = 41
+      Height = 24
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'Birth'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+    end
+    object Label5: TLabel
+      Left = 135
+      Top = 98
+      Width = 41
+      Height = 24
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'Death'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+    end
+    object Label6: TLabel
+      Left = 135
+      Top = 122
+      Width = 41
+      Height = 24
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'Release'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+    end
+    object Label7: TLabel
+      Left = 294
+      Top = 74
+      Width = 48
+      Height = 24
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'People'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+    end
+    object Label8: TLabel
+      Left = 294
+      Top = 98
+      Width = 48
+      Height = 24
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'Movies'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+    end
+    object Label9: TLabel
+      Left = 294
+      Top = 122
+      Width = 48
+      Height = 24
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'TV Shows'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Segoe UI Semilight'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+    end
     object progDay: TEdit
-      Left = 357
+      Left = 407
       Top = 31
       Width = 68
       Height = 41
@@ -387,11 +501,11 @@ object MainForm: TMainForm
       ParentCtl3D = False
       ParentFont = False
       ReadOnly = True
-      TabOrder = 9
+      TabOrder = 22
       Text = '25'
     end
     object progMonth: TEdit
-      Left = 357
+      Left = 407
       Top = 4
       Width = 68
       Height = 27
@@ -408,13 +522,13 @@ object MainForm: TMainForm
       ParentCtl3D = False
       ParentFont = False
       ReadOnly = True
-      TabOrder = 10
+      TabOrder = 23
       Text = 'May'
     end
     object btStart: TButton
       Left = 2
       Top = 2
-      Width = 64
+      Width = 52
       Height = 25
       Caption = 'Start'
       TabOrder = 0
@@ -423,7 +537,7 @@ object MainForm: TMainForm
     object btStop: TButton
       Left = 2
       Top = 26
-      Width = 64
+      Width = 52
       Height = 25
       Caption = 'Stop'
       Enabled = False
@@ -433,7 +547,7 @@ object MainForm: TMainForm
     object btSwagger: TButton
       Left = 2
       Top = 50
-      Width = 64
+      Width = 52
       Height = 25
       Caption = 'Swagger'
       Enabled = False
@@ -442,64 +556,63 @@ object MainForm: TMainForm
       OnClick = btSwaggerClick
     end
     object edSecret: TEdit
-      Left = 120
+      Left = 180
       Top = 4
       Width = 125
       Height = 21
       AutoSize = False
       BevelInner = bvNone
       BevelOuter = bvNone
-      TabOrder = 3
+      TabOrder = 12
       OnChange = edSecretChange
     end
     object edSecretBase64: TEdit
-      Left = 120
+      Left = 180
       Top = 28
-      Width = 230
+      Width = 220
       Height = 21
       AutoSize = False
-      TabOrder = 4
+      TabOrder = 13
     end
     object edTMDbAPI: TEdit
-      Left = 120
+      Left = 180
       Top = 52
-      Width = 230
+      Width = 220
       Height = 21
       AutoSize = False
-      TabOrder = 5
+      TabOrder = 14
     end
     object btTimer: TButton
       Tag = 1
-      Left = 72
-      Top = 74
-      Width = 94
+      Left = 54
+      Top = 2
+      Width = 77
       Height = 25
       Caption = 'Disable Timer'
-      Default = True
       TabOrder = 6
       OnClick = btTimerClick
     end
     object btRecentProgress: TButton
-      Left = 72
-      Top = 98
-      Width = 42
+      Left = 54
+      Top = 26
+      Width = 77
       Height = 25
-      Caption = 'Stats'
+      Caption = 'Statistics'
       TabOrder = 7
       OnClick = btRecentProgressClick
     end
     object btClear: TButton
-      Left = 72
-      Top = 122
-      Width = 42
+      Left = 2
+      Top = 98
+      Width = 52
       Height = 25
       Caption = 'Clear'
-      TabOrder = 8
+      TabOrder = 4
       OnClick = btClearClick
     end
     object DateTimePickerBirthday: TDateTimePicker
       Tag = 1
-      Left = 244
+      Left = 180
       Top = 76
       Width = 77
       Height = 21
@@ -511,12 +624,12 @@ object MainForm: TMainForm
       MinDate = 43831.000000000000000000
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 11
+      TabOrder = 15
       OnCloseUp = DateTimePickerBirthdayCloseUp
     end
     object DateTimePickerDeathDay: TDateTimePicker
       Tag = 1
-      Left = 244
+      Left = 180
       Top = 100
       Width = 77
       Height = 21
@@ -527,12 +640,12 @@ object MainForm: TMainForm
       MinDate = 43831.000000000000000000
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 12
+      TabOrder = 16
       OnCloseUp = DateTimePickerDeathDayCloseUp
     end
     object DateTimePickerReleaseDay: TDateTimePicker
       Tag = 1
-      Left = 244
+      Left = 180
       Top = 124
       Width = 77
       Height = 21
@@ -543,41 +656,41 @@ object MainForm: TMainForm
       MinDate = 43831.000000000000000000
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 13
+      TabOrder = 17
       OnCloseUp = DateTimePickerReleaseDayCloseUp
     end
     object btTop1000: TButton
       Tag = 1
-      Left = 2
+      Left = 54
       Top = 98
-      Width = 64
+      Width = 77
       Height = 25
       Caption = 'Top 1000'
-      TabOrder = 14
+      TabOrder = 10
       OnClick = btTop1000Click
     end
     object btTop5000: TButton
       Tag = 1
-      Left = 2
+      Left = 54
       Top = 122
-      Width = 64
+      Width = 77
       Height = 25
       Caption = 'Top 5000'
-      TabOrder = 15
+      TabOrder = 11
       OnClick = btTop5000Click
     end
     object btAll: TButton
-      Left = 140
-      Top = 98
-      Width = 26
+      Left = 54
+      Top = 74
+      Width = 77
       Height = 25
-      Caption = 'Ext'
-      TabOrder = 16
+      Caption = 'External'
+      TabOrder = 9
       OnClick = btAllClick
     end
     object edtClientVersion: TEdit
       AlignWithMargins = True
-      Left = 357
+      Left = 407
       Top = 100
       Width = 68
       Height = 21
@@ -594,72 +707,72 @@ object MainForm: TMainForm
       Font.Style = []
       ParentCtl3D = False
       ParentFont = False
-      TabOrder = 17
+      TabOrder = 20
       Text = '1.0.3000'
       OnChange = edtClientVersionChange
     end
     object btUpdateVersion: TButton
-      Left = 356
+      Left = 406
       Top = 74
       Width = 70
       Height = 25
       Caption = 'Client Check'
-      TabOrder = 18
+      TabOrder = 19
       OnClick = btUpdateVersionClick
     end
     object btInternal: TButton
-      Left = 114
-      Top = 98
-      Width = 26
+      Left = 54
+      Top = 50
+      Width = 77
       Height = 25
-      Caption = 'Int'
-      TabOrder = 19
+      Caption = 'Internal'
+      TabOrder = 8
       OnClick = btInternalClick
     end
     object btClean: TButton
-      Left = 356
+      Left = 2
       Top = 122
-      Width = 70
+      Width = 52
       Height = 25
       Caption = 'Clean'
-      TabOrder = 20
+      TabOrder = 5
       OnClick = btCleanClick
     end
     object ckRegenerate: TCheckBox
-      Left = 260
+      Left = 320
       Top = 6
       Width = 77
       Height = 17
       Caption = 'Regenerate'
       Checked = True
       State = cbChecked
-      TabOrder = 21
+      TabOrder = 18
     end
     object btRedoc: TButton
       Left = 2
       Top = 74
-      Width = 64
+      Width = 52
       Height = 25
       Caption = 'Redoc'
       Enabled = False
-      TabOrder = 22
+      TabOrder = 3
       WordWrap = True
       OnClick = btRedocClick
     end
     object btEmail: TButton
-      Left = 114
+      Left = 406
       Top = 122
-      Width = 52
+      Width = 70
       Height = 25
       Caption = 'E-Mail'
       Enabled = False
-      TabOrder = 23
+      TabOrder = 21
       OnClick = btEmailClick
     end
     object PanelA: TPanel
-      Left = 431
+      Left = 481
       Top = 3
-      Width = 652
+      Width = 602
       Height = 23
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelEdges = []
@@ -667,12 +780,12 @@ object MainForm: TMainForm
       Caption = 'PanelA'
       TabOrder = 24
       DesignSize = (
-        652
+        602
         23)
       object shapeProgressBG: TShape
         Left = 0
         Top = 0
-        Width = 652
+        Width = 602
         Height = 23
         Align = alClient
         Brush.Color = clBtnFace
@@ -692,7 +805,7 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepA: TLabel
-        Left = 494
+        Left = 444
         Top = 1
         Width = 150
         Height = 19
@@ -713,8 +826,8 @@ object MainForm: TMainForm
       end
       object CurrentProgressA: TLabel
         Left = 50
-        Top = 1
-        Width = 550
+        Top = 0
+        Width = 450
         Height = 19
         Alignment = taCenter
         Anchors = [akLeft, akTop, akRight]
@@ -726,9 +839,9 @@ object MainForm: TMainForm
       end
     end
     object PanelB: TPanel
-      Left = 431
+      Left = 481
       Top = 27
-      Width = 652
+      Width = 602
       Height = 23
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelEdges = []
@@ -736,12 +849,12 @@ object MainForm: TMainForm
       Caption = 'PanelA'
       TabOrder = 25
       DesignSize = (
-        652
+        602
         23)
       object Shape2: TShape
         Left = 0
         Top = 0
-        Width = 652
+        Width = 602
         Height = 23
         Align = alClient
         Brush.Color = clBtnFace
@@ -761,7 +874,7 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepB: TLabel
-        Left = 494
+        Left = 444
         Top = 1
         Width = 150
         Height = 19
@@ -783,7 +896,7 @@ object MainForm: TMainForm
       object CurrentProgressB: TLabel
         Left = 50
         Top = 1
-        Width = 550
+        Width = 450
         Height = 19
         Alignment = taCenter
         Anchors = [akLeft, akTop, akRight]
@@ -792,12 +905,13 @@ object MainForm: TMainForm
         Color = clSilver
         ParentColor = False
         Layout = tlCenter
+        ExplicitWidth = 500
       end
     end
     object PanelC: TPanel
-      Left = 431
+      Left = 481
       Top = 51
-      Width = 652
+      Width = 602
       Height = 23
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelEdges = []
@@ -805,12 +919,12 @@ object MainForm: TMainForm
       Caption = 'PanelA'
       TabOrder = 26
       DesignSize = (
-        652
+        602
         23)
       object Shape4: TShape
         Left = 0
         Top = 0
-        Width = 652
+        Width = 602
         Height = 23
         Align = alClient
         Brush.Color = clBtnFace
@@ -830,7 +944,7 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepC: TLabel
-        Left = 494
+        Left = 444
         Top = 1
         Width = 150
         Height = 19
@@ -852,7 +966,7 @@ object MainForm: TMainForm
       object CurrentProgressC: TLabel
         Left = 50
         Top = 1
-        Width = 550
+        Width = 450
         Height = 19
         Alignment = taCenter
         Anchors = [akLeft, akTop, akRight]
@@ -861,12 +975,13 @@ object MainForm: TMainForm
         Color = clSilver
         ParentColor = False
         Layout = tlCenter
+        ExplicitWidth = 500
       end
     end
     object PanelD: TPanel
-      Left = 431
+      Left = 481
       Top = 75
-      Width = 652
+      Width = 602
       Height = 23
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelEdges = []
@@ -874,12 +989,12 @@ object MainForm: TMainForm
       Caption = 'PanelA'
       TabOrder = 27
       DesignSize = (
-        652
+        602
         23)
       object Shape6: TShape
         Left = 0
         Top = 0
-        Width = 652
+        Width = 602
         Height = 23
         Align = alClient
         Brush.Color = clBtnFace
@@ -899,7 +1014,7 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepD: TLabel
-        Left = 494
+        Left = 444
         Top = 1
         Width = 150
         Height = 19
@@ -921,7 +1036,7 @@ object MainForm: TMainForm
       object CurrentProgressD: TLabel
         Left = 50
         Top = 1
-        Width = 550
+        Width = 450
         Height = 19
         Alignment = taCenter
         Anchors = [akLeft, akTop, akRight]
@@ -930,12 +1045,13 @@ object MainForm: TMainForm
         Color = clSilver
         ParentColor = False
         Layout = tlCenter
+        ExplicitWidth = 500
       end
     end
     object PanelE: TPanel
-      Left = 431
+      Left = 481
       Top = 99
-      Width = 652
+      Width = 602
       Height = 23
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelEdges = []
@@ -943,12 +1059,12 @@ object MainForm: TMainForm
       Caption = 'PanelA'
       TabOrder = 28
       DesignSize = (
-        652
+        602
         23)
       object Shape8: TShape
         Left = 0
         Top = 0
-        Width = 652
+        Width = 602
         Height = 23
         Align = alClient
         Brush.Color = clBtnFace
@@ -968,7 +1084,7 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepE: TLabel
-        Left = 494
+        Left = 444
         Top = 1
         Width = 150
         Height = 19
@@ -990,7 +1106,7 @@ object MainForm: TMainForm
       object CurrentProgressE: TLabel
         Left = 50
         Top = 1
-        Width = 550
+        Width = 450
         Height = 19
         Alignment = taCenter
         Anchors = [akLeft, akTop, akRight]
@@ -999,12 +1115,13 @@ object MainForm: TMainForm
         Color = clSilver
         ParentColor = False
         Layout = tlCenter
+        ExplicitWidth = 500
       end
     end
     object PanelF: TPanel
-      Left = 431
+      Left = 481
       Top = 123
-      Width = 652
+      Width = 602
       Height = 23
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelEdges = []
@@ -1012,12 +1129,12 @@ object MainForm: TMainForm
       Caption = 'PanelA'
       TabOrder = 29
       DesignSize = (
-        652
+        602
         23)
       object Shape10: TShape
         Left = 0
         Top = 0
-        Width = 652
+        Width = 602
         Height = 23
         Align = alClient
         Brush.Color = clBtnFace
@@ -1037,7 +1154,7 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepF: TLabel
-        Left = 494
+        Left = 444
         Top = 1
         Width = 150
         Height = 19
@@ -1059,7 +1176,7 @@ object MainForm: TMainForm
       object CurrentProgressF: TLabel
         Left = 50
         Top = 1
-        Width = 550
+        Width = 450
         Height = 19
         Alignment = taCenter
         Anchors = [akLeft, akTop, akRight]
@@ -1068,6 +1185,7 @@ object MainForm: TMainForm
         Color = clSilver
         ParentColor = False
         Layout = tlCenter
+        ExplicitWidth = 500
       end
     end
   end
@@ -1233,7 +1351,6 @@ object MainForm: TMainForm
     Top = 480
   end
   object tmrProgress: TTimer
-    Interval = 10000
     OnTimer = tmrProgressTimer
     Left = 1008
     Top = 480
