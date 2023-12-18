@@ -79,7 +79,6 @@ type
     btClear: TButton;
     progDay: TEdit;
     progMonth: TEdit;
-    CurrentProgress: TLabel;
     DateTimePickerBirthday: TDateTimePicker;
     DateTimePickerDeathDay: TDateTimePicker;
     DateTimePickerReleaseDay: TDateTimePicker;
@@ -90,27 +89,59 @@ type
     btUpdateVersion: TButton;
     tmrVersionCheck: TTimer;
     tmrTopUpdate: TTimer;
-    Image1: TImage;
     sparqlRelatives: TMemo;
     tmrWaiting: TTimer;
     btInternal: TButton;
     tmrProgress: TTimer;
-    ProgressStep: TLabel;
-    ProgressDetail: TLabel;
     mmStats: TMemo;
     btClean: TButton;
     ckRegenerate: TCheckBox;
     btRedoc: TButton;
     mmInfo: TMemo;
     btEmail: TButton;
-    shapeProgressBG: TShape;
-    shapeProgressFG: TShape;
     lblBirthDays: TLabel;
     lblDeathDays: TLabel;
     lblReleaseDays: TLabel;
     lblSearchPeople: TLabel;
     Label3: TLabel;
     Label4: TLabel;
+    Shape1: TShape;
+    PanelA: TPanel;
+    ProgressDetailA: TLabel;
+    CurrentProgressA: TLabel;
+    shapeProgressFGA: TShape;
+    shapeProgressBG: TShape;
+    ProgressStepA: TLabel;
+    PanelB: TPanel;
+    Shape2: TShape;
+    shapeProgressFGB: TShape;
+    ProgressStepB: TLabel;
+    ProgressDetailB: TLabel;
+    CurrentProgressB: TLabel;
+    PanelC: TPanel;
+    Shape4: TShape;
+    shapeProgressFGC: TShape;
+    ProgressStepC: TLabel;
+    ProgressDetailC: TLabel;
+    CurrentProgressC: TLabel;
+    PanelD: TPanel;
+    Shape6: TShape;
+    shapeProgressFGD: TShape;
+    ProgressStepD: TLabel;
+    ProgressDetailD: TLabel;
+    CurrentProgressD: TLabel;
+    PanelE: TPanel;
+    Shape8: TShape;
+    shapeProgressFGE: TShape;
+    ProgressStepE: TLabel;
+    ProgressDetailE: TLabel;
+    CurrentProgressE: TLabel;
+    PanelF: TPanel;
+    Shape10: TShape;
+    shapeProgressFGF: TShape;
+    ProgressStepF: TLabel;
+    ProgressDetailF: TLabel;
+    CurrentProgressF: TLabel;
     procedure GetAppVersionString;
     procedure btStartClick(ASender: TObject);
     procedure btStopClick(ASender: TObject);
@@ -150,7 +181,6 @@ type
     procedure LogException(Source: String; EClass: String; EMessage: String; Data: String);
     procedure SendActivityLog(Subject: String);
     procedure btEmailClick(Sender: TObject);
-    procedure SetProgressStep(Progress: String);
     procedure GetAppParameters(List: TStringList);
     function SearchPeople(ActorID: Integer):Integer;
     procedure UpdateSearch(SearchIndex: Integer; SearchData: String);
@@ -159,6 +189,7 @@ type
     function Occurrences(const Substring, Text: string): integer;
     procedure SaveSearchIndexes;
     procedure LoadSearchIndexes;
+    procedure UpdateProgress(PNum: Integer; PInfo: String; PDetail:String; PStep:String);
   public
     Progress: TStringList;
     WaitingMessage: String;
@@ -306,7 +337,7 @@ var
 begin
   LogEvent('');
   LogEvent('Regenerating Top1000 Data');
-  CurrentProgress.Caption := 'ManReGenTop1000: '+TGUID.NewGUID.ToString;
+  CurrentProgressA.Caption := 'ManReGenTop1000: '+TGUID.NewGUID.ToString;
   CacheTimer.Enabled := False;
 
   URL := AppURL+'/ActorInfoService/TopOneThousand';
@@ -314,7 +345,7 @@ begin
   // Setup the Request
   URL := URL+'?Secret='+edSecret.Text;
   URL := URL+'&Segment=A';
-  URL := URL+'&Progress='+CurrentProgress.Caption;
+  URL := URL+'&Progress='+CurrentProgressA.Caption;
 
   // Submit the request (asynchronously)
   Client := TFancyNetHTTPClient.Create(nil);
@@ -344,7 +375,7 @@ var
 begin
   LogEvent('');
   LogEvent('Regenerating Top5000 Data');
-  CurrentProgress.Caption := 'ManReGenTop5000: '+TGUID.NewGUID.ToString;
+  CurrentProgressA.Caption := 'ManReGenTop5000: '+TGUID.NewGUID.ToString;
   CacheTimer.Enabled := False;
 
   URL := AppURL+'/ActorInfoService/TopFiveThousand';
@@ -352,7 +383,7 @@ begin
   // Setup the Request
   URL := URL+'?Secret='+edSecret.Text;
   URL := URL+'&Segment=A';
-  URL := URL+'&Progress='+CurrentProgress.Caption;
+  URL := URL+'&Progress='+CurrentProgressA.Caption;
 
   // Submit the request (asynchronously)
   Client := TFancyNetHTTPClient.Create(nil);
@@ -1478,9 +1509,9 @@ begin
     // let the Clean, Top1000, and Top5000 functions operate without interferenece
     QuietWindow := TimeOf(Now);
     if ((QuietWindow >= EncodeTime( 4, 50, 0, 0)) and (QuietWindow <= EncodeTime( 5, 59, 59, 0))  or
-        (QuietWindow >= EncodeTime(17, 00, 0, 0)) and (QuietWindow <= EncodeTime(18, 29, 59, 0))) then
+        (QuietWindow >= EncodeTime(17, 00, 0, 0)) and (QuietWindow <= EncodeTime(17, 59, 59, 0))) then
     begin
-      CurrentProgress.Caption := 'Waiting for Top Refresh to Complete (Retry in 60s)';
+      CurrentProgressA.Caption := 'Waiting for Top Refresh to Complete (Retry in 60s)';
       CacheTimer.Interval := 60000; // Wait 1 minute and check again
       CacheTimer.Enabled := True;
 
@@ -1595,7 +1626,7 @@ begin
       CacheTimer.Interval := 5000;
 
       // Set a timer so we can track how long it is taking
-      CurrentProgress.Caption := Update+': '+TGUID.NewGUID.ToString;
+      CurrentProgressA.Caption := Update+': '+TGUID.NewGUID.ToString;
 
       // Enable as indication we're working
       progMonth.Enabled := True;
@@ -1620,7 +1651,7 @@ begin
       URL := URL+'?Secret='+edSecret.Text;
       URL := URL+'&aMonth='+IntToStr(MonthOf(CacheDate));
       URL := URL+'&aDay='+IntToStr(DayOf(CacheDate));
-      URL := URL+'&Progress='+CurrentProgress.Caption;
+      URL := URL+'&Progress='+CurrentProgressA.Caption;
 
       // sometiems we can get in a loop if a date isn't working, in which case we want to skip
       // this and move on to the next date.
@@ -1660,7 +1691,7 @@ begin
         CacheTimer.Tag := CacheTimer.Tag + 1;
 //        CacheTimer.Interval := 1000;
         CacheTimer.Enabled := True;
-        CurrentProgress.Caption := 'Scanning';
+        CurrentProgressA.Caption := 'Scanning';
       end
     end
     else
@@ -1669,13 +1700,13 @@ begin
       CacheTimer.Tag := CacheTimer.Tag + 1;
 //      CacheTimer.Interval := 1000;
       CacheTimer.Enabled := True;
-      CurrentProgress.Caption := 'Scanning';
+      CurrentProgressA.Caption := 'Scanning';
     end
   end
   else
   begin
     // Disabled, so wait 30s and check again
-    CurrentProgress.Caption := 'Timer Disabled (Retry in 30s)';
+    CurrentProgressA.Caption := 'Timer Disabled (Retry in 30s)';
     CacheTimer.Interval := 30000;
     CacheTimer.Enabled := True;
 
@@ -1697,7 +1728,7 @@ begin
     CacheTimer.Tag := DateTimePickerBirthDay.Tag;
     LogEvent('');
     LogEvent('Regenerating BirthDay Data [ '+FormatDateTime('mmmdd',DateTimePickerBirthDay.Date)+' / d'+IntToStr(DateTimePickerBirthDay.Tag)+' ]');
-    CurrentProgress.Caption := 'ManReGenBirthDay['+FormatDateTime('mmmdd',DateTimePickerBirthDay.Date)+'/d'+IntToStr(DateTimePickerBirthDay.Tag)+']: '+TGUID.NewGUID.ToString;
+    CurrentProgressA.Caption := 'ManReGenBirthDay['+FormatDateTime('mmmdd',DateTimePickerBirthDay.Date)+'/d'+IntToStr(DateTimePickerBirthDay.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
     progMonth.Text := FormatDateTime('mmm', DateTimePickerBirthDay.date);
@@ -1712,7 +1743,7 @@ begin
     URL := URL+'?Secret='+edSecret.Text;
     URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePickerBirthDay.Date));
     URL := URL+'&aDay='+IntToStr(DayOf(DateTimePickerBirthDay.Date));
-    URL := URL+'&Progress='+CurrentProgress.Caption;
+    URL := URL+'&Progress='+CurrentProgressA.Caption;
 
     // Submit the request (asynchronously)
     Client := TFancyNetHTTPClient.Create(nil);
@@ -1748,7 +1779,7 @@ begin
     CacheTimer.Tag := DateTimePickerDeathDay.Tag;
     LogEvent('');
     LogEvent('Regenerating DeathDay Data [ '+FormatDateTime('mmmdd',DateTimePickerDeathDay.Date)+' / d'+IntToStr(DateTimePickerDeathDay.Tag)+' ]');
-    CurrentProgress.Caption := 'ManReGenDeathDay['+FormatDateTime('mmmdd',DateTimePickerDeathDay.Date)+'/d'+IntToStr(DateTimePickerDeathDay.Tag)+']: '+TGUID.NewGUID.ToString;
+    CurrentProgressA.Caption := 'ManReGenDeathDay['+FormatDateTime('mmmdd',DateTimePickerDeathDay.Date)+'/d'+IntToStr(DateTimePickerDeathDay.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
     progMonth.Text := FormatDateTime('mmm', DateTimePickerDeathDay.date);
@@ -1763,7 +1794,7 @@ begin
     URL := URL+'?Secret='+edSecret.Text;
     URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePickerDeathDay.Date));
     URL := URL+'&aDay='+IntToStr(DayOf(DateTimePickerDeathDay.Date));
-    URL := URL+'&Progress='+CurrentProgress.Caption;
+    URL := URL+'&Progress='+CurrentProgressA.Caption;
 
     // Submit the request (asynchronously)
     Client := TFancyNetHTTPClient.Create(nil);
@@ -1799,7 +1830,7 @@ begin
     CacheTimer.Tag := DateTimePickerReleaseDay.Tag;
     LogEvent('');
     LogEvent('Regenerating Releases Data [ '+FormatDateTime('mmmdd',DateTimePickerReleaseDay.Date)+' / d'+IntToStr(DateTimePickerReleaseDay.Tag)+' ]');
-    CurrentProgress.Caption := 'ManReGenReleases['+FormatDateTime('mmmdd',DateTimePickerReleaseDay.Date)+'/d'+IntToStr(DateTimePickerReleaseDay.Tag)+']: '+TGUID.NewGUID.ToString;
+    CurrentProgressA.Caption := 'ManReGenReleases['+FormatDateTime('mmmdd',DateTimePickerReleaseDay.Date)+'/d'+IntToStr(DateTimePickerReleaseDay.Tag)+']: '+TGUID.NewGUID.ToString;
     CacheTimer.Enabled := False;
 
     progMonth.Text := FormatDateTime('mmm', DateTimePickerReleaseDay.date);
@@ -1814,7 +1845,7 @@ begin
     URL := URL+'?Secret='+edSecret.Text;
     URL := URL+'&aMonth='+IntToStr(MonthOf(DateTimePickerReleaseDay.Date));
     URL := URL+'&aDay='+IntToStr(DayOf(DateTimePickerReleaseDay.Date));
-    URL := URL+'&Progress='+CurrentProgress.Caption;
+    URL := URL+'&Progress='+CurrentProgressA.Caption;
 
     // Submit the request (asynchronously)
     Client := TFancyNetHTTPClient.Create(nil);
@@ -1854,7 +1885,7 @@ var
   MainHandle : THandle;
 begin
   LogEvent('Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-  CurrentProgress.Caption := 'Waiting';
+  CurrentProgressA.Caption := 'Waiting';
   CacheTimer.Enabled := True;
   Sender.Free;
 
@@ -1879,7 +1910,7 @@ begin
   LogEvent('| ');
 
   CacheTimer.Enabled := True;
-  CurrentProgress.Caption := 'Waiting';
+  CurrentProgressA.Caption := 'Waiting';
   Sender.Free;
 end;
 
@@ -1893,7 +1924,7 @@ begin
     Handling := 'Birthday';
     LogEvent('');
     LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-    CurrentProgress.Caption := 'Short API Delay (Continue in 90s)';
+    CurrentProgressA.Caption := 'Short API Delay (Continue in 90s)';
     CacheTimer.Interval := 90000; // 90 seconds
     CacheTimer.Enabled := True;
 
@@ -1912,7 +1943,7 @@ begin
   begin
     Handling := 'DeathDay';
     LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-    CurrentProgress.Caption := 'Short API Delay (Continue in 90s)';
+    CurrentProgressA.Caption := 'Short API Delay (Continue in 90s)';
     CacheTimer.Interval := 90000; // 90 seconds
     CacheTimer.Enabled := True;
 
@@ -1930,7 +1961,7 @@ begin
   begin
     Handling := 'Releases';
     LogEvent('Releases Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-    CurrentProgress.Caption := 'Long API Delay (Continue in 300s)';
+    CurrentProgressA.Caption := 'Long API Delay (Continue in 300s)';
     CacheTimer.Interval := 300000;  // 5 minutes
     CacheTimer.Enabled := True;
 
@@ -1950,7 +1981,7 @@ begin
   begin
     LogException('Processing Delay (15m)', 'PROCESSING',Handling, (Sender as TFancyNetHTTPClient).Description);
 
-    CurrentProgress.Caption := 'ERROR DELAY (Continue in 15m)';
+    CurrentProgressA.Caption := 'ERROR DELAY (Continue in 15m)';
     CacheTimer.Interval := 900000; // 900 seconds = 15m
     CacheTimer.Enabled := False;
     CacheTimer.Enabled := True;
@@ -2012,7 +2043,7 @@ begin
   // Got an error, so let's skip this date and continue on
   CacheTimer.Tag := CacheTimer.Tag + 1;
 
-  CurrentProgress.Caption := 'Short API Delay (Continue in 10s)';
+  CurrentProgressA.Caption := 'Short API Delay (Continue in 10s)';
   CacheTimer.Interval := 90000; // 90 seconds
   CacheTimer.Enabled := True;
 
@@ -2219,33 +2250,6 @@ begin
   end;
 end;
 
-procedure TMainForm.SetProgressStep(Progress: String);
-var
-  ProgCur: Integer;
-  ProgTot: Integer;
-begin
-  ProgressStep.Caption := Progress;
-  if Pos(' of ', Progress) > 0 then
-  begin
-    ProgCur := StrToIntDef(Trim(Copy(Progress,1, Pos(' of ', Progress) -1)),0);
-    ProgTot := StrToIntDef(Trim(Copy(Progress, Pos(' of ', Progress)+4,Length(Progress))),10001);
-    if (ProgCur = 0) or (ProgTot = 10001) or (ProgTot = 0) then
-    begin
-      ShapeProgressFG.Visible := False;
-    end
-    else
-    begin
-      if ProgCur > ProgTot then ProgCur := ProgTot;
-      shapeProgressFG.Width := Trunc((ProgCur / ProgTot) * 799.0);
-      shapeProgressFG.Visible := True;
-    end;
-  end
-  else
-  begin
-    shapeProgressFG.Visible := False;
-  end;
-end;
-
 procedure TMainForm.StartTimerTimer(Sender: TObject);
 var
   i: integer;
@@ -2262,9 +2266,7 @@ var
 begin
   StartTimer.Enabled := False;
 
-  ProgressDetail.Caption := 'Startup';
-  SetProgressStep('0 of 17');
-
+  UpdateProgress(1, 'Welcome to Actorious','Server Startup', '0 of 17');
   LogEvent('');
   LogEvent('______________________________________________________');
   LogEvent('');
@@ -2277,8 +2279,10 @@ begin
   GetAppParameters(AppParameters);
 
   // Load JSON Configuration
+  UpdateProgress(1, 'Loading Configuration','Server Startup', '1 of 17');
   LogEvent('');
   LogEvent('Loading Configuration');
+
   AppConfigFile := 'Actorious.json';
   i := 0;
   while i < AppParameters.Count do
@@ -2307,7 +2311,6 @@ begin
   end;
   ConfigFile.Free;
   Application.ProcessMessages;
-  SetProgressStep('1 of 17');
 
   if Appconfiguration = nil then
   begin
@@ -2317,6 +2320,8 @@ begin
   end;
 
   // Used to access this Actorious REST API
+  UpdateProgress(1, 'Retrieving Actorious API Secret','Server Startup', '2 of 17');
+
   if AppConfiguration.getValue('Actorious API Secret') <> nil then
   begin
     edSecret.Text := (AppConfiguration.getValue('Actorious API Secret') as TJSONString).Value;
@@ -2326,9 +2331,11 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [Actorious API Secret]');
   end;
-  SetProgressStep('2 of 17');
+  edSecretChange(nil);
 
   // Used to access The Movie Database API
+  UpdateProgress(1, 'Retrieving TMDb API Key','Server Startup', '3 of 17');
+
   if AppConfiguration.getValue('TMDb API Key') <> nil then
   begin
     edTMDbAPI.Text := (AppConfiguration.getValue('TMDb API Key') as TJSONString).Value;
@@ -2338,9 +2345,10 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [TMDb API Key]');
   end;
-  SetProgressStep('3 of 17');
 
   // BaseURL
+  UpdateProgress(1, 'Retrieving BaseURL','Server Startup', '4 of 17');
+
   if AppConfiguration.getValue('BaseURL') <> nil then
   begin
     AppBaseURL := (AppConfiguration.getValue('BaseURL') as TJSONString).Value;
@@ -2350,9 +2358,10 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [BaseURL]');
   end;
-  SetProgressStep('4 of 17');
 
   // AppURL
+  UpdateProgress(1, 'Retrieving AppURL','Server Startup', '5 of 17');
+
   if AppConfiguration.getValue('AppURL') <> nil then
   begin
     AppURL := (AppConfiguration.getValue('AppURL') as TJSONString).Value;
@@ -2362,9 +2371,10 @@ begin
   begin
     LogEvent('- ERROR: Missing Required Entry For [AppURL]');
   end;
-  SetProgressStep('5 of 17');
 
   // AppCacheDir
+  UpdateProgress(1, 'Retrieving AppCacheDir','Server Startup', '6 of 17');
+
   if AppConfiguration.getValue('AppCacheDir') <> nil then
   begin
     AppCacheDir := StringReplace(Trim((AppConfiguration.getValue('AppCacheDir') as TJSONString).Value),'\','/',[rfReplaceAll]);
@@ -2380,9 +2390,10 @@ begin
   ForceDirectories(AppCacheDir+'cache/days/actorious-births');
   BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache/days/actorious-births', '*')) div 4)+'d';
   LogEvent('- Available Cache History: '+BirthDaysCount);
-  SetProgressStep('5 of 17');
 
   // Swagger Support
+  UpdateProgress(1, 'Configuring SwaggerUI Support','Server Startup', '7 of 17');
+
   if AppConfiguration.getValue('Swagger') <> nil then
   begin
     AppSwagger := (AppConfiguration.getValue('Swagger') as TJSONString).Value;
@@ -2394,9 +2405,10 @@ begin
     btSwagger.Enabled := False;
     LogEvent('- Swagger not configured');
   end;
-  SetProgressStep('6 of 17');
 
   // Redoc Support
+  UpdateProgress(1, 'Configuring Redoc Support','Server Startup', '8 of 17');
+
   if AppConfiguration.getValue('Redoc') <> nil then
   begin
     AppRedoc := (AppConfiguration.getValue('Redoc') as TJSONString).Value;
@@ -2408,9 +2420,10 @@ begin
     btRedoc.Enabled := False;
     LogEvent('- Redoc not configured');
   end;
-  SetProgressStep('7 of 17');
 
   // HomeAssistant Support
+  UpdateProgress(1, 'Configuring Home Assistant Support','Server Startup', '9 of 17');
+
   if AppConfiguration.getValue('HA_URL') <> nil then
   begin
     AppHAURL := (AppConfiguration.getValue('HA_URL') as TJSONString).Value;
@@ -2423,7 +2436,6 @@ begin
     AppHAURL := '';
     LogEvent(' - HomeAssistant not configured');
   end;
-  SetProgressStep('8 of 17');
 
   // HomeAssistant Token
   if AppConfiguration.getValue('HA_Token') <> nil then
@@ -2435,10 +2447,11 @@ begin
   begin
     AppHAToken := '';
   end;
-  SetProgressStep('9 of 17');
 
 
   // Get Mail Configuration
+  UpdateProgress(1, 'Configuring Mail Services','Server Startup', '10 of 17');
+
   MailServerAvailable := False;
   if AppConfiguration.GetValue('Mail Services') <> nil then
   begin
@@ -2463,25 +2476,26 @@ begin
   Application.ProcessMessages;
 
   // Kick off Cache Populator
-  CurrentProgress.Caption := 'Startup Delay (Continue in 30s)';
+  UpdateProgress(1, 'Enabling Cache Timer','Server Startup', '11 of 17');
+
   CacheTimer.Interval := 30000;
   CacheTimer.Enabled := True;
-  SetProgressStep('10 of 17');
 
   WaitingMessage := 'Startup Delay (Continue in %s)';
   tmrWaiting.Tag := 30;
   tmrWaiting.Enabled := True;
-  SetProgressStep('11 of 17');
 
   // Change URL of server depending on machine it is running on
+  UpdateProgress(1, 'Starting Server','Server Startup', '12 of 17');
+
   if AppBaseURL <> '' then
   begin
     ServerContainer.XDataServer.BaseURL := AppBaseURL;
     ServerContainer.SparkleHttpSysDispatcher.Active := True;
   end;
-  SetProgressStep('12 of 17');
 
   // Create Cache directory structure
+  UpdateProgress(1, 'Creating Cache Directories','Server Startup', '13 of 17');
   LogEvent('Creating Cache Directories');
 
   ForceDirectories(AppCacheDir+'cache'); // Cache Root
@@ -2515,15 +2529,16 @@ begin
   CreateDir(AppCacheDir+'cache/tvshows/top5000');
 
   CreateDir(AppCacheDir+'cache/search');
-  SetProgressStep('13 of 17');
 
   // Loading Search Indexes
+  UpdateProgress(1, 'Loading Search Indexes','Server Startup', '14 of 17');
   LogEvent('Loading Search Indexes');
+
   LoadSearchIndexes;
   LogEvent('- People Search Index Loaded: '+IntToStr(Length(IndexPeople))+' entries');
-  SetProgressStep('14 of 17');
 
   // Find oldest file to start on
+  UpdateProgress(1, 'Determining Cache Start Date','Server Startup', '15 of 17');
 
   oldestdate := DayOfTheYear(EncodeDate(2020, MonthOf(Now), DayOftheMonth(Now)));
   oldesttime := Now;
@@ -2591,20 +2606,16 @@ begin
   progDay.Text   := FormatDateTime('dd',EncodeDate(2020, 1, 1) + (oldestdate - 1));
   CacheTimer.Tag := oldestdate;
 
-  // Show encoded Base64 version of secret
-  LogEvent('Encoding Actorious API Secret');
-  edSecretChange(nil);
-  SetProgressStep('15 of 17');
-
   // Check for new ActoriousClient Version right away
+  UpdateProgress(1, 'Retrieving Current Client Version','Server Startup', '16 of 17');
   LogEvent('Updating Client Version');
+
   btUpdateVersionClick(nil);
-  SetProgressStep('16 of 17');
 
   // Display the progress at start
+  UpdateProgress(1, 'Updating Statistics','Server Startup', '17 of 17');
   LogEvent('Updating Statistics');
   btRecentProgressClick(Sender);
-  SetProgressStep('17 of 17');
 
   LogEvent('');
   LogEvent('SERVER STARTUP COMPLETE ('+IntToStr(MillisecondsBetween(Now, AppStartup))+'ms)');
@@ -2614,10 +2625,85 @@ begin
   // Send an email if so configured
   SendActivityLog('Startup Confirmation');
 
-  ProgressDetail.Caption := 'Startup Complete';
+  ProgressDetailA.Caption := 'Startup Complete';
 
   // Default XData UpdateGUI call
   UpdateGUI;
+
+  UpdateProgress(1, '', '', '');
+
+end;
+
+procedure TMainForm.UpdateProgress(PNum: Integer; PInfo: String; PDetail:String; PStep:String);
+var
+  PValue: Integer;
+  PMax: Integer;
+begin
+  PValue := 0;
+  PMax := 1;
+
+  if PStep <> '' then
+  begin
+    if Pos(' of ', PStep) > 0 then
+    begin
+      PValue := StrToIntDef(Trim(Copy(PStep,1, Pos(' of ', PStep) - 1)),0);
+      PMax := StrToIntDef(Trim(Copy(PStep, Pos(' of ', PStep)+4,Length(PStep))),10001);
+      if (PValue = 0) or (PMax = 10001) or (PMax = 0) then
+      begin
+        PValue := 0;
+        PMax := 1;
+      end
+    end;
+  end;
+
+  if PValue > PMax then
+  begin
+    PValue := 1;
+    PMax := 1;
+  end;
+
+  if PNum = 1 then
+  begin
+    CurrentProgressA.Caption := PInfo;
+    ProgressDetailA.Caption := PDetail;
+    ProgressStepA.Caption := PStep;
+    ShapeProgressFGA.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
+  end
+  else if PNum = 2 then
+  begin
+    CurrentProgressB.Caption := PInfo;
+    ProgressDetailB.Caption := PDetail;
+    ProgressStepB.Caption := PStep;
+    ShapeProgressFGB.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
+  end
+  else if PNum = 3 then
+  begin
+    CurrentProgressC.Caption := PInfo;
+    ProgressDetailC.Caption := PDetail;
+    ProgressStepC.Caption := PStep;
+    ShapeProgressFGC.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
+  end
+  else if PNum = 4 then
+  begin
+    CurrentProgressD.Caption := PInfo;
+    ProgressDetailD.Caption := PDetail;
+    ProgressStepD.Caption := PStep;
+    ShapeProgressFGD.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
+  end
+  else if PNum = 5 then
+  begin
+    CurrentProgressE.Caption := PInfo;
+    ProgressDetailE.Caption := PDetail;
+    ProgressStepE.Caption := PStep;
+    ShapeProgressFGE.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
+  end
+  else if PNum = 6 then
+  begin
+    CurrentProgressF.Caption := PInfo;
+    ProgressDetailF.Caption := PDetail;
+    ProgressStepF.Caption := PStep;
+    ShapeProgressFGF.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
+  end
 
 end;
 
@@ -2625,52 +2711,70 @@ procedure TMainForm.tmrProgressTimer(Sender: TObject);
 var
   i: Integer;
   PReport: String;
+  ProgNum: Integer;
+  ProgDetail: String;
+  ProgStep: String;
+  ProgFunction: String;
+
 begin
-  btRecentProgressClick(Sender);
+  ProgNum := 1;
 
-  // We're only going to do this if something is going on
-  if Length(CurrentProgress.Caption) > 30 then
+  // If the server has been running for awhile. Progress.Count will be large
+  // So only check the most recent entries.  How far back?  Well, that will
+  // depend somewhat on how much activity is going on.
+
+  i := Progress.Count-1;
+  while (i >= Max(0, Progress.Count-25)) and (ProgNum < 7) do
   begin
-
-    // If the server has been running for awhile. Progress.Count will be large
-    // So only check the most recent entries.  How far back?  Well, that will
-    // depend somewhat on how much activity is going on.
-
-    i := Progress.Count-1;
-    while i >= Max(0, Progress.Count-25) do
+    if (Pos('"PR":"Complete', Progress[i]) = 0)  then
     begin
+      ProgNum := ProgNum + 1;
 
-      // Just want the non-complete record that is currently running
-      if (Pos(CurrentProgress.Caption, Progress[i]) > 0) and
-         (Pos('"PR":"Complete', Progress[i]) = 0)  then
+      // Get the PR element
+      PReport := Copy(Progress[i], Pos('"PR":', Progress[i])+6, 999);
+      PReport := Copy(PReport,1,Pos('"TP":', PReport)-3);
+      ProgFunction := Copy(Progress[i], Pos('"RQ":', Progress[i])+6, 999);
+      ProgFunction := Copy(ProgFunction,1,Pos('"PR":', ProgFunction)-3);
+
+      // Does this have any detail
+      if Pos('(', PReport) > 0 then
       begin
-
-        // Just want the PR element
-        PReport := Copy(Progress[i], Pos('"PR":', Progress[i])+6, 999);
-        PReport := Copy(PReport,1,Pos('"TP":', PReport)-3);
-
-        // Show extra data if it is available
-        if (Pos('(', PReport) > 0) then
-        begin
-          ProgressDetail.Caption := Copy(PReport,1,Pos('(',PReport)-2);
-          SetProgressStep(Trim(StringReplace(StringReplace(Copy(PReport,Pos('(',PReport),99),'(','',[rfReplaceAll]),')','',[rfReplaceAll])));
-        end
-
-        // Otherwise, just the PR
-        else
-        begin
-          ProgressDetail.Caption := PReport;
-          SetProgressStep('');
-        end;
-
-        // And we don't need to do much else
-        exit;
+        ProgDetail := Copy(PReport,1,Pos('(',PReport)-2);
+        ProgStep := Trim(StringReplace(StringReplace(Copy(PReport,Pos('(',PReport),99),'(','',[rfReplaceAll]),')','',[rfReplaceAll]));
+      end
+      else
+      begin
+        ProgDetail := PReport;
+        ProgStep := '';
       end;
-      i := i - 1;
+      UpdateProgress(ProgNum, ProgFunction, ProgDetail, ProgStep);
+
     end;
+
+    i := i - 1;
   end;
-  ProgressDetail.Caption := '';
-  SetProgressStep('');
+
+  // How soon do we want to do this again?
+  if ProgNum > 1 then
+  begin
+    tmrProgress.Interval := 1000;
+  end
+  else
+  begin
+    tmrProgress.Interval := 10000;
+    btRecentProgressClick(Sender);
+  end;
+
+  // Clear out any empty slots
+  while ProgNum < 7 do
+  begin
+    ProgNum := ProgNum + 1;
+    UpdateProgress(ProgNum, '', '', '');
+  end;
+
+
+
+
 end;
 
 procedure TMainForm.tmrTopUpdateTimer(Sender: TObject);
@@ -2737,12 +2841,13 @@ end;
 
 procedure TMainForm.tmrWaitingTimer(Sender: TObject);
 begin
-  if (Pos('Waiting', CurrentProgress.Caption) > 0) or
-     (Pos('Delay',   CurrentProgress.Caption) > 0) or
-     (Pos('Retry',   CurrentProgress.Caption) > 0) then
+  if (Pos('Waiting', CurrentProgressA.Caption) > 0) or
+     (Pos('Delay',   CurrentProgressA.Caption) > 0) or
+     (Pos('Retry',   CurrentProgressA.Caption) > 0) or
+     ((CurrentProgressA.Caption = '') and (WaitingMessage <> '')) then
   begin
     tmrWaiting.Tag := tmrWaiting.Tag - 1;
-    CurrentProgress.Caption := StringReplace(WaitingMessage, '%s', IntToStr(tmrWaiting.Tag)+'s',[]);
+    CurrentProgressA.Caption := StringReplace(WaitingMessage, '%s', IntToStr(tmrWaiting.Tag)+'s',[]);
     if tmrWaiting.Tag = 0 then tmrWaiting.Enabled := False;
   end
   else
@@ -2788,9 +2893,35 @@ begin
 
   // Initialize Progress History
   Progress := TStringList.Create;
-  CurrentProgress.Caption := '';
-  ProgressDetail.Caption := '';
-  SetProgressStep('');
+
+  // Initialize Progress UI
+  CurrentProgressA.Caption := '';
+  CurrentProgressB.Caption := '';
+  CurrentProgressC.Caption := '';
+  CurrentProgressD.Caption := '';
+  CurrentProgressE.Caption := '';
+  CurrentProgressF.Caption := '';
+
+  ShapeProgressFGA.Width := 0;
+  ShapeProgressFGB.Width := 0;
+  ShapeProgressFGC.Width := 0;
+  ShapeProgressFGD.Width := 0;
+  ShapeProgressFGE.Width := 0;
+  ShapeProgressFGF.Width := 0;
+
+  ProgressDetailA.Caption := '';
+  ProgressDetailB.Caption := '';
+  ProgressDetailC.Caption := '';
+  ProgressDetailD.Caption := '';
+  ProgressDetailE.Caption := '';
+  ProgressDetailF.Caption := '';
+
+  ProgressStepA.Caption := '';
+  ProgressStepB.Caption := '';
+  ProgressStepC.Caption := '';
+  ProgressStepD.Caption := '';
+  ProgressStepE.Caption := '';
+  ProgressStepF.Caption := '';
 
   // Avoid divide by zero errors
   PersonCacheRequests := 0;
@@ -2806,7 +2937,7 @@ end;
 
 procedure TMainForm.FormResize(Sender: TObject);
 begin
-  Panel1.Left := Max(((MainForm.Width - Panel1.Width) div 2),0);
+  Panel1.Width := mmStats.Width + mmInfo.Width + 2;
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);

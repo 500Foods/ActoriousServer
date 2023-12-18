@@ -2882,7 +2882,8 @@ begin
     end;
   end;
 
-  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+//  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+  if (CacheBRResponse.Size > 0) then
   begin
     // We've got data, so just return it and be done
     Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
@@ -3037,7 +3038,8 @@ begin
     end;
   end;
 
-  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+//  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+  if (CacheBRResponse.Size > 0) then
   begin
     // We've got data, so just return it and be done
     Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
@@ -3857,7 +3859,8 @@ begin
     end;
   end;
 
-  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+//  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+  if (CacheBRResponse.Size > 0) then
   begin
     // We've got data, so just return it and be done
     Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
@@ -5323,7 +5326,8 @@ begin
     end;
   end;
 
-  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+//  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+  if (CacheBRResponse.Size > 0) then
   begin
     // We've got data, so just return it and be done
     Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
@@ -5346,7 +5350,8 @@ begin
     // We need a list of TMDb IDs that comes from that last to generate a new extended list.
     SLLoadJSON(CacheResponse, CacheFileBirths);
 
-    if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+//    if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+    if (CacheResponse.Text = '') then
     begin
       // Get Updated Birthday Data
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata","TP":'+FloatToStr(Now)+'}';
@@ -5414,7 +5419,8 @@ begin
         SLLoadJSON(CacheResponse, CacheFilePerson);
 
         // If we can't, or we're regenerating this data, then lets go and get it again
-        if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+//        if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+        if (CacheResponse.Text = '') then
         begin
           CacheFilePerson := MainForm.AppCacheDir+'cache/people/tmdb/'+ActorRefShort+'/person-'+ActorRef+'.json';
 
@@ -5695,7 +5701,8 @@ begin
     end;
   end;
 
-  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+//  if (CacheBRResponse.Size > 0) and (Progress <> MainForm.CurrentProgress.Caption) then
+  if (CacheBRResponse.Size > 0) then
   begin
     // We've got data, so just return it and be done
     Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
@@ -5717,7 +5724,8 @@ begin
     // We need a list of TMDb IDs that comes from that last to generate a new extended list.
     SLLoadJSON(CacheResponse, CacheFileDeaths);
 
-    if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+//    if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+    if (CacheResponse.Text = '') then
     begin
       // Get Updated Deathday Data
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Wikidata","TP":'+FloatToStr(Now)+'}';
@@ -5785,7 +5793,8 @@ begin
         SLLoadJSON(CacheResponse, CacheFilePerson);
 
         // If we can't, or we're regenerating this data, then lets go and get it again
-        if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+//        if (CacheResponse.Text = '') or (Progress = MainForm.CurrentProgress.Caption) then
+        if (CacheResponse.Text = '') then
         begin
           CacheFilePerson := MainForm.AppCacheDir+'cache/people/tmdb/'+ActorRefShort+'/person-'+ActorRef+'.json';
 
