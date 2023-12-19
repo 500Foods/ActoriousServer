@@ -1118,7 +1118,7 @@ end;
 // on actor selections.  We'll need to go back for data if a different role is selected though.  //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function ProcessActor(ActorID: Integer; ActorRef: String; TMDB_Data_String: String; WikiIndex: Integer; Wikidata_String: String; ProgressPrefix: String; ProgressKey: Integer; ForceUpdate: Boolean):String;
+function ProcessActor(ActorID: Integer; ActorRef: String; TMDB_Data_String: String; WikiIndex: Integer; Wikidata_String: String; ProgressPrefix: String; ProgressKey: Integer; ForceUpdate: Boolean; ActorCount: Integer):String;
 var
   Actor: String;  // This is the result set we're building up
 
@@ -1244,6 +1244,7 @@ begin
     begin
       Actor := Actor+'"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('name') as TJSONString)+',';
       SearchData := SearchData + (TMDB_Data.getValue('name') as TJSONString).Value + ':';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing TMDb# '+ActorRef+': '+(TMDB_Data.getValue('name') as TJSONString).Value+' ( '+IntToStr(ActorID)+' of '+IntToStr(ActorCount)+' )","TP":'+FloatToStr(Now)+'}';
     end;
 
     // TMDb ID
@@ -2785,8 +2786,8 @@ begin
     begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing TMDb# '+ActorRef+' ( '+IntToStr(ActorID)+' of '+IntToStr(ActorCount)+' )","TP":'+FloatToStr(Now)+'}';
       if Wiki = ''
-      then Result := ProcessActor(ActorID, ActorRef, TMDB, -1, '[]', ProgressPrefix, ProgressKey, ForceUpdate)
-      else Result := ProcessActor(ActorID, ActorRef, TMDB, 0, '['+Wiki+']', ProgressPrefix, ProgressKey, ForceUpdate);
+      then Result := ProcessActor(ActorID, ActorRef, TMDB, -1, '[]', ProgressPrefix, ProgressKey, ForceUpdate, ActorCount)
+      else Result := ProcessActor(ActorID, ActorRef, TMDB, 0, '['+Wiki+']', ProgressPrefix, ProgressKey, ForceUpdate, ActorCount);
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Returning TMDb# '+ActorRef+' ( '+IntToStr(ActorID)+' of '+IntToStr(ActorCount)+' )","TP":'+FloatToStr(Now)+'}';
     end;
   end
@@ -3228,7 +3229,7 @@ begin
       begin
         Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
-        ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
+        ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False, Data.Count-1);
         ActorData.Free;
         SLLoadJSON(Response, MainForm.AppCacheDir+'cache/people/actorious/'+
           RightStr(ActorNum,3)+
@@ -3743,7 +3744,7 @@ begin
       begin
         Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
         ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
-        ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
+        ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False, Data.Count - 1);
         ActorData.Free;
         SLLoadJSON(Response, MainForm.AppCacheDir+'cache/people/actorious/'+
           RightStr(ActorNum,3)+
@@ -4364,7 +4365,7 @@ begin
           Response.Text := GetPersonfromTMDb(StrToInt(ActorNum), False, i, Data.Count - 1);
           try
             ActorData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
-            ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False);
+            ProcessActor(ActorCount, ActorNum, ActorData.ToString, -1, '[]', ProgressPrefix, ProgressKey, False, Data.Count -1);
             ActorData.Free;
             SLLoadJSON(Response, MainForm.AppCacheDir+'cache/people/actorious/'+
               RightStr(ActorNum,3)+
@@ -5084,7 +5085,7 @@ begin
             begin
 //              MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data","TP":'+FloatToStr(Now)+'}';
 //              ActorNew := ProcessActor(ActorID, ActorRef, Data.ToString, j, Actors.ToString, ProgressPrefix, ProgressKey, Regenerate);
-              ActorNew := ProcessActor(ActorID, ActorRef, Data.ToString, j, Actors.ToString, ProgressPrefix, ProgressKey, False);
+              ActorNew := ProcessActor(ActorID, ActorRef, Data.ToString, j, Actors.ToString, ProgressPrefix, ProgressKey, False, Actors.Count - 1);
             end;
             Data.Free;
           end;
@@ -5464,7 +5465,7 @@ begin
             then
             begin
               MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data ('+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+')","TP":'+FloatToStr(Now)+'}';
-              ActorNew := ProcessActor(ActorID, ActorRef, Data.ToString, j, Actors.ToString, ProgressPrefix, ProgressKey, false);
+              ActorNew := ProcessActor(ActorID, ActorRef, Data.ToString, j, Actors.ToString, ProgressPrefix, ProgressKey, false, Actors.Count - 1);
             end;
             Data.Free;
           end;
@@ -5837,7 +5838,7 @@ begin
             then
             begin
               MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data ('+IntToStr(j+1)+' of '+IntToStr(Actors.Count)+')","TP":'+FloatToStr(Now)+'}';
-              ActorNew := ProcessActor(ActorID, ActorRef, Data.ToString, j, Actors.ToString, ProgressPrefix, ProgressKey, false);
+              ActorNew := ProcessActor(ActorID, ActorRef, Data.ToString, j, Actors.ToString, ProgressPrefix, ProgressKey, false, Actors.Count -1);
             end;
             Data.Free;
           end;

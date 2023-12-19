@@ -195,7 +195,7 @@ type
     function Occurrences(const Substring, Text: string): integer;
     procedure SaveSearchIndexes;
     procedure LoadSearchIndexes;
-    procedure UpdateProgress(PNum: Integer; PInfo: String; PDetail:String; PStep:String);
+    procedure UpdateProgress(PNum: Integer; PInfo: String; PDetail:String; PStep:String; PReport: String);
   public
     Progress: TStringList;
     WaitingMessage: String;
@@ -2291,7 +2291,7 @@ var
 begin
   StartTimer.Enabled := False;
 
-  UpdateProgress(1, 'Welcome to Actorious','Server Startup', '0 of 17');
+  UpdateProgress(1, 'Welcome to Actorious','Server Startup', '0 of 17','');
   LogEvent('');
   LogEvent('______________________________________________________');
   LogEvent('');
@@ -2304,7 +2304,7 @@ begin
   GetAppParameters(AppParameters);
 
   // Load JSON Configuration
-  UpdateProgress(1, 'Loading Configuration','Server Startup', '1 of 17');
+  UpdateProgress(1, 'Loading Configuration','Server Startup', '1 of 17','');
   LogEvent('');
   LogEvent('Loading Configuration');
 
@@ -2345,7 +2345,7 @@ begin
   end;
 
   // Used to access this Actorious REST API
-  UpdateProgress(1, 'Retrieving Actorious API Secret','Server Startup', '2 of 17');
+  UpdateProgress(1, 'Retrieving Actorious API Secret','Server Startup', '2 of 17','');
 
   if AppConfiguration.getValue('Actorious API Secret') <> nil then
   begin
@@ -2359,7 +2359,7 @@ begin
   edSecretChange(nil);
 
   // Used to access The Movie Database API
-  UpdateProgress(1, 'Retrieving TMDb API Key','Server Startup', '3 of 17');
+  UpdateProgress(1, 'Retrieving TMDb API Key','Server Startup', '3 of 17','');
 
   if AppConfiguration.getValue('TMDb API Key') <> nil then
   begin
@@ -2372,7 +2372,7 @@ begin
   end;
 
   // BaseURL
-  UpdateProgress(1, 'Retrieving BaseURL','Server Startup', '4 of 17');
+  UpdateProgress(1, 'Retrieving BaseURL','Server Startup', '4 of 17','');
 
   if AppConfiguration.getValue('BaseURL') <> nil then
   begin
@@ -2385,7 +2385,7 @@ begin
   end;
 
   // AppURL
-  UpdateProgress(1, 'Retrieving AppURL','Server Startup', '5 of 17');
+  UpdateProgress(1, 'Retrieving AppURL','Server Startup', '5 of 17','');
 
   if AppConfiguration.getValue('AppURL') <> nil then
   begin
@@ -2398,7 +2398,7 @@ begin
   end;
 
   // AppCacheDir
-  UpdateProgress(1, 'Retrieving AppCacheDir','Server Startup', '6 of 17');
+  UpdateProgress(1, 'Retrieving AppCacheDir','Server Startup', '6 of 17','');
 
   if AppConfiguration.getValue('AppCacheDir') <> nil then
   begin
@@ -2417,7 +2417,7 @@ begin
   LogEvent('- Available Cache History: '+BirthDaysCount);
 
   // Swagger Support
-  UpdateProgress(1, 'Configuring SwaggerUI Support','Server Startup', '7 of 17');
+  UpdateProgress(1, 'Configuring SwaggerUI Support','Server Startup', '7 of 17','');
 
   if AppConfiguration.getValue('Swagger') <> nil then
   begin
@@ -2432,7 +2432,7 @@ begin
   end;
 
   // Redoc Support
-  UpdateProgress(1, 'Configuring Redoc Support','Server Startup', '8 of 17');
+  UpdateProgress(1, 'Configuring Redoc Support','Server Startup', '8 of 17','');
 
   if AppConfiguration.getValue('Redoc') <> nil then
   begin
@@ -2447,7 +2447,7 @@ begin
   end;
 
   // HomeAssistant Support
-  UpdateProgress(1, 'Configuring Home Assistant Support','Server Startup', '9 of 17');
+  UpdateProgress(1, 'Configuring Home Assistant Support','Server Startup', '9 of 17','');
 
   if AppConfiguration.getValue('HA_URL') <> nil then
   begin
@@ -2472,7 +2472,7 @@ begin
   end;
 
   // Get Mail Configuration
-  UpdateProgress(1, 'Configuring Mail Services','Server Startup', '10 of 17');
+  UpdateProgress(1, 'Configuring Mail Services','Server Startup', '10 of 17','');
 
   MailServerAvailable := False;
   if AppConfiguration.GetValue('Mail Services') <> nil then
@@ -2498,7 +2498,7 @@ begin
   Application.ProcessMessages;
 
   // Kick off Cache Populator
-  UpdateProgress(1, 'Enabling Cache Timer','Server Startup', '11 of 17');
+  UpdateProgress(1, 'Enabling Cache Timer','Server Startup', '11 of 17','');
 
   CacheTimer.Interval := 30000;
   CacheTimer.Enabled := True;
@@ -2508,7 +2508,7 @@ begin
   tmrWaiting.Enabled := True;
 
   // Change URL of server depending on machine it is running on
-  UpdateProgress(1, 'Starting Server','Server Startup', '12 of 17');
+  UpdateProgress(1, 'Starting Server','Server Startup', '12 of 17','');
 
   if AppBaseURL <> '' then
   begin
@@ -2517,7 +2517,7 @@ begin
   end;
 
   // Create Cache directory structure
-  UpdateProgress(1, 'Creating Cache Directories','Server Startup', '13 of 17');
+  UpdateProgress(1, 'Creating Cache Directories','Server Startup', '13 of 17','');
   LogEvent('Creating Cache Directories');
 
   ForceDirectories(AppCacheDir+'cache'); // Cache Root
@@ -2553,14 +2553,14 @@ begin
   CreateDir(AppCacheDir+'cache/search');
 
   // Loading Search Indexes
-  UpdateProgress(1, 'Loading Search Indexes','Server Startup', '14 of 17');
+  UpdateProgress(1, 'Loading Search Indexes','Server Startup', '14 of 17','');
   LogEvent('Loading Search Indexes');
 
   LoadSearchIndexes;
   LogEvent('- People Search Index Loaded: '+IntToStr(Length(IndexPeople))+' entries');
 
   // Find oldest file to start on
-  UpdateProgress(1, 'Determining Cache Start Date','Server Startup', '15 of 17');
+  UpdateProgress(1, 'Determining Cache Start Date','Server Startup', '15 of 17','');
 
   oldestdate := DayOfTheYear(EncodeDate(2020, MonthOf(Now), DayOftheMonth(Now)));
   oldesttime := Now;
@@ -2629,13 +2629,13 @@ begin
   CacheTimer.Tag := oldestdate;
 
   // Check for new ActoriousClient Version right away
-  UpdateProgress(1, 'Retrieving Current Client Version','Server Startup', '16 of 17');
+  UpdateProgress(1, 'Retrieving Current Client Version','Server Startup', '16 of 17','');
   LogEvent('Updating Client Version');
 
   btUpdateVersionClick(nil);
 
   // Display the progress at start
-  UpdateProgress(1, 'Updating Statistics','Server Startup', '17 of 17');
+  UpdateProgress(1, 'Updating Statistics','Server Startup', '17 of 17','');
   LogEvent('Updating Statistics');
   btRecentProgressClick(Sender);
 
@@ -2652,25 +2652,43 @@ begin
   // Default XData UpdateGUI call
   UpdateGUI;
 
-  UpdateProgress(1, '', '', '');
+  UpdateProgress(1, '', '', '','');
 
 end;
 
-procedure TMainForm.UpdateProgress(PNum: Integer; PInfo: String; PDetail:String; PStep:String);
+procedure TMainForm.UpdateProgress(PNum: Integer; PInfo: String; PDetail:String; PStep:String; PReport: String);
 var
   PValue: Integer;
   PMax: Integer;
   PDesc: String;
+  PDuration: String;
+  PStart: TDateTime;
 begin
   PValue := 0;
   PMax := 1;
+  PDuration := '';
+  PStart := Now;
 
   if PStep <> '' then
   begin
     if Pos(' of ', PStep) > 0 then
     begin
+      if Pos('"TS":', PReport) > 0 then
+      begin
+        PStart := EncodeDateTime(
+          StrToInt(Copy(PReport, Pos('"ST":',PReport)+6, 4)),
+          StrToInt(Copy(PReport, Pos('"ST":',PReport)+11,2)),
+          StrToInt(Copy(PReport, Pos('"ST":',PReport)+14,2)),
+          StrToInt(Copy(PReport, Pos('"ST":',PReport)+17,2)),
+          StrToInt(Copy(PReport, Pos('"ST":',PReport)+20,2)),
+          StrToInt(Copy(PReport, Pos('"ST":',PReport)+23,2)),
+          StrToInt(Copy(PReport, Pos('"ST":',PReport)+26,3))
+        );
+      end;
+
       PValue := StrToIntDef(Trim(Copy(PStep,1, Pos(' of ', PStep) - 1)),0);
       PMax := StrToIntDef(Trim(Copy(PStep, Pos(' of ', PStep)+4,Length(PStep))),10001);
+
       if (PValue = 0) or (PMax = 10001) or (PMax = 0) then
       begin
         PValue := 0;
@@ -2685,52 +2703,59 @@ begin
     PMax := 1;
   end;
 
-  PDesc := StringReplace(PInfo, '"DY":"', 'Day: ', [rfReplaceAll]);
-  PDesc := StringReplace(PDesc, '"DT":"', 'Date: ', [rfReplaceAll]);
+  if (PValue > 0) and (PMax > 1)  and (PValue < PMax) then
+  begin
+    PDuration := FormatDateTime('nn:ss" Elapsed / "', Now - PStart)+FormatDateTime('nn:ss" Remaining: "',(Trunc(SecondsBetween(Now, PStart) * PMax / PValue) - SecondsBetween(Now, Pstart))/86400.0);
+  end;
+
+  PDesc := StringReplace(PInfo, '"DY":"', 'Day! ', [rfReplaceAll]);
+  PDesc := StringReplace(PDesc, '"DT":"', 'Date! ', [rfReplaceAll]);
   PDesc := StringReplace(PDesc,',',' ', [rfReplaceAll]);
   PDesc := StringReplace(PDesc,'"',' ', [rfReplaceAll]);
   PDesc := StringReplace(PDesc,':',' ', [rfReplaceAll]);
+  PDesc := StringReplace(PDesc, 'Day!', 'Day:', [rfReplaceAll]);
+  PDesc := StringReplace(PDesc, 'Date!', 'Date:', [rfReplaceAll]);
 
   if PNum = 1 then
   begin
     CurrentProgressA.Caption := PDesc;
     ProgressDetailA.Caption := PDetail;
-    ProgressStepA.Caption := PStep;
+    ProgressStepA.Caption := PDuration + PStep;
     ShapeProgressFGA.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 2 then
   begin
     CurrentProgressB.Caption := PDesc;
     ProgressDetailB.Caption := PDetail;
-    ProgressStepB.Caption := PStep;
+    ProgressStepB.Caption := PDuration + PStep;
     ShapeProgressFGB.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 3 then
   begin
     CurrentProgressC.Caption := PDesc;
     ProgressDetailC.Caption := PDetail;
-    ProgressStepC.Caption := PStep;
+    ProgressStepC.Caption := PDuration + PStep;
     ShapeProgressFGC.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 4 then
   begin
     CurrentProgressD.Caption := PDesc;
     ProgressDetailD.Caption := PDetail;
-    ProgressStepD.Caption := PStep;
+    ProgressStepD.Caption := PDuration + PStep;
     ShapeProgressFGD.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 5 then
   begin
     CurrentProgressE.Caption := PDesc;
     ProgressDetailE.Caption := PDetail;
-    ProgressStepE.Caption := PStep;
+    ProgressStepE.Caption := PDuration + PStep;
     ShapeProgressFGE.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
   else if PNum = 6 then
   begin
     CurrentProgressF.Caption := PDesc;
     ProgressDetailF.Caption := PDetail;
-    ProgressStepF.Caption := PStep;
+    ProgressStepF.Caption := PDuration + PStep;
     ShapeProgressFGF.Width := Trunc((PValue / PMax) * (ShapeProgressBG.Width));
   end
 
@@ -2776,7 +2801,7 @@ begin
         ProgDetail := PReport;
         ProgStep := '';
       end;
-      UpdateProgress(ProgNum, ProgFunction, ProgDetail, ProgStep);
+      UpdateProgress(ProgNum, ProgFunction, ProgDetail, ProgStep, Progress[i]);
 
     end;
 
@@ -2803,7 +2828,7 @@ begin
   while ProgNum < 7 do
   begin
     ProgNum := ProgNum + 1;
-    UpdateProgress(ProgNum, '', '', '');
+    UpdateProgress(ProgNum, '', '', '', '');
   end;
 
 
@@ -2971,7 +2996,8 @@ end;
 
 procedure TMainForm.FormResize(Sender: TObject);
 begin
-  Panel1.Width := mmStats.Width + mmInfo.Width + 2;
+//  Panel1.Width := Max(mmStats.Width + mmInfo.Width + 2,1699);
+//  mmInfo.Width := 1920-mmStats.Width - 6;
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);

@@ -3,7 +3,7 @@ object MainForm: TMainForm
   Top = 0
   Caption = 'Actorious XData Server'
   ClientHeight = 812
-  ClientWidth = 1484
+  ClientWidth = 1092
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,14 +17,14 @@ object MainForm: TMainForm
   OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
-    1484
+    1092
     812)
   PixelsPerInch = 96
   TextHeight = 13
   object mmInfo: TMemo
     Left = 308
     Top = 153
-    Width = 1173
+    Width = 781
     Height = 656
     Anchors = [akLeft, akTop, akRight, akBottom]
     BorderStyle = bsNone
@@ -40,6 +40,7 @@ object MainForm: TMainForm
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 6
+    ExplicitWidth = 1173
   end
   object mmStats: TMemo
     Left = 2
@@ -238,6 +239,7 @@ object MainForm: TMainForm
     Top = 2
     Width = 1087
     Height = 149
+    Anchors = [akLeft, akTop, akRight]
     BevelOuter = bvNone
     BorderWidth = 1
     Color = clSilver
@@ -805,28 +807,40 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepA: TLabel
-        Left = 444
-        Top = 1
-        Width = 150
+        Left = 300
+        Top = 2
+        Width = 294
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = '0 of 0'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object ProgressDetailA: TLabel
         Left = 8
-        Top = 1
-        Width = 263
+        Top = 2
+        Width = 400
         Height = 19
         AutoSize = False
         Caption = 'Detail'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object CurrentProgressA: TLabel
         Left = 50
-        Top = 0
+        Top = 2
         Width = 450
         Height = 19
         Alignment = taCenter
@@ -834,7 +848,13 @@ object MainForm: TMainForm
         AutoSize = False
         Caption = 'Waiting'
         Color = clSilver
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
         ParentColor = False
+        ParentFont = False
         Layout = tlCenter
       end
     end
@@ -874,28 +894,40 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepB: TLabel
-        Left = 444
-        Top = 1
-        Width = 150
+        Left = 300
+        Top = 2
+        Width = 294
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = '0 of 0'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object ProgressDetailB: TLabel
         Left = 8
-        Top = 1
-        Width = 263
+        Top = 2
+        Width = 400
         Height = 19
         AutoSize = False
         Caption = 'Detail'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object CurrentProgressB: TLabel
         Left = 50
-        Top = 1
+        Top = 2
         Width = 450
         Height = 19
         Alignment = taCenter
@@ -903,9 +935,14 @@ object MainForm: TMainForm
         AutoSize = False
         Caption = 'Waiting'
         Color = clSilver
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
         ParentColor = False
+        ParentFont = False
         Layout = tlCenter
-        ExplicitWidth = 500
       end
     end
     object PanelC: TPanel
@@ -944,28 +981,40 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepC: TLabel
-        Left = 444
-        Top = 1
-        Width = 150
+        Left = 300
+        Top = 2
+        Width = 294
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = '0 of 0'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object ProgressDetailC: TLabel
         Left = 8
-        Top = 1
-        Width = 263
+        Top = 2
+        Width = 400
         Height = 19
         AutoSize = False
         Caption = 'Detail'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object CurrentProgressC: TLabel
         Left = 50
-        Top = 1
+        Top = 2
         Width = 450
         Height = 19
         Alignment = taCenter
@@ -973,9 +1022,14 @@ object MainForm: TMainForm
         AutoSize = False
         Caption = 'Waiting'
         Color = clSilver
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
         ParentColor = False
+        ParentFont = False
         Layout = tlCenter
-        ExplicitWidth = 500
       end
     end
     object PanelD: TPanel
@@ -1014,28 +1068,40 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepD: TLabel
-        Left = 444
-        Top = 1
-        Width = 150
+        Left = 300
+        Top = 2
+        Width = 294
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = '0 of 0'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object ProgressDetailD: TLabel
         Left = 8
-        Top = 1
-        Width = 263
+        Top = 2
+        Width = 400
         Height = 19
         AutoSize = False
         Caption = 'Detail'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object CurrentProgressD: TLabel
         Left = 50
-        Top = 1
+        Top = 2
         Width = 450
         Height = 19
         Alignment = taCenter
@@ -1043,9 +1109,14 @@ object MainForm: TMainForm
         AutoSize = False
         Caption = 'Waiting'
         Color = clSilver
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
         ParentColor = False
+        ParentFont = False
         Layout = tlCenter
-        ExplicitWidth = 500
       end
     end
     object PanelE: TPanel
@@ -1084,28 +1155,40 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepE: TLabel
-        Left = 444
-        Top = 1
-        Width = 150
+        Left = 300
+        Top = 2
+        Width = 294
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = '0 of 0'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object ProgressDetailE: TLabel
         Left = 8
-        Top = 1
-        Width = 263
+        Top = 2
+        Width = 400
         Height = 19
         AutoSize = False
         Caption = 'Detail'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object CurrentProgressE: TLabel
         Left = 50
-        Top = 1
+        Top = 2
         Width = 450
         Height = 19
         Alignment = taCenter
@@ -1113,9 +1196,14 @@ object MainForm: TMainForm
         AutoSize = False
         Caption = 'Waiting'
         Color = clSilver
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
         ParentColor = False
+        ParentFont = False
         Layout = tlCenter
-        ExplicitWidth = 500
       end
     end
     object PanelF: TPanel
@@ -1154,28 +1242,40 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepF: TLabel
-        Left = 444
-        Top = 1
-        Width = 150
+        Left = 300
+        Top = 2
+        Width = 294
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = '0 of 0'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object ProgressDetailF: TLabel
         Left = 8
-        Top = 1
-        Width = 263
+        Top = 2
+        Width = 400
         Height = 19
         AutoSize = False
         Caption = 'Detail'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
+        ParentFont = False
         Layout = tlCenter
       end
       object CurrentProgressF: TLabel
         Left = 50
-        Top = 1
+        Top = 2
         Width = 450
         Height = 19
         Alignment = taCenter
@@ -1183,9 +1283,14 @@ object MainForm: TMainForm
         AutoSize = False
         Caption = 'Waiting'
         Color = clSilver
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
         ParentColor = False
+        ParentFont = False
         Layout = tlCenter
-        ExplicitWidth = 500
       end
     end
   end
