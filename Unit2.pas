@@ -907,7 +907,6 @@ var
   Matched: Boolean;
   Points: Integer;
   Relevance: Double;
-  MatchSearch: String;
 
   Search1: Integer;
   Search2: Integer;
@@ -1072,24 +1071,24 @@ begin
        (SearchKey2 = MatchName) or
        (SearchKey3 = MatchName) or
        (SearchKey4 = MatchName)
-    then Relevance := Relevance + 1000
+    then Relevance := Relevance + 10000
 
     // Search term combo is perfect match to name
     else if (Search1OK and Search2OK) and
             (SearchKey1 + SearchKey2 = MatchName)
-    then Relevance := Relevance + 1000
+    then Relevance := Relevance + 10000
 
     else if (Search1OK and Search2OK and Search3OK) and
             (SearchKey1 + SearchKey2 + SearchKey3 = MatchName)
-    then Relevance := Relevance + 1000
+    then Relevance := Relevance + 10000
 
     else if (Search1OK and Search3OK) and
             (SearchKey1 + SearchKey3 = MatchName)
-    then Relevance := Relevance + 1000
+    then Relevance := Relevance + 10000
 
     else if (Search2OK and Search3OK) and
             (SearchKey2 + SearchKey3 = MatchName)
-    then Relevance := Relevance + 1000;
+    then Relevance := Relevance + 10000;
 
     for j := 2 to MatchList.Count - 2 do // Skip the id, name and points
     begin
@@ -1099,14 +1098,14 @@ begin
          (SearchKey2 = MatchList[j]) or
          (SearchKey3 = MatchList[j]) or
          (SearchKey4 = MatchList[j])
-      then Relevance := Relevance + 100
+      then Relevance := Relevance + 1000
 
       // Search term combo is a perfect match to role
       else if (SearchKey1 + SearchKey2 = MatchList[j]) or
               (SearchKey1 + SearchKey2 + SearchKey3 = MatchList[j]) or
               (SearchKey1 + SearchKey3 = MatchList[j]) or
               (SearchKey2 + SearchKey3 = MatchList[j])
-      then Relevance := Relevance + 100;
+      then Relevance := Relevance + 1000;
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 
@@ -1132,10 +1131,10 @@ begin
       end
       else
       begin
-        if Search1OK and (Search1 > 0) then Relevance := Relevance + 8;
-        if Search2OK and (Search2 > 0) then Relevance := Relevance + 6;
-        if Search3OK and (Search3 > 0) then Relevance := Relevance + 4;
-        if Search4OK and (Search4 > 0) then Relevance := Relevance + 2;
+        if Search1OK and (Search1 > 0) then Relevance := Relevance + Points/1000;
+        if Search2OK and (Search2 > 0) then Relevance := Relevance + Points/2000;
+        if Search3OK and (Search3 > 0) then Relevance := Relevance + Points/3000;
+        if Search4OK and (Search4 > 0) then Relevance := Relevance + Points/4000;
       end;
 
     end;
@@ -1236,9 +1235,9 @@ var
         CleanRequests := CleanRequests + 1;
         FileSize := FileSizeByName(FileName);
         
-        if (TFile.GetLastWriteTime(FileName) < OlderThan) or (Pos('json.working',Filename) > 0) or (FileSize < 250) then
+        if (TFile.GetLastWriteTime(FileName) < OlderThan) or (Pos('json.working',Filename) > 0) or (FileSize < 130) then
         begin
-          if FileSize < 250 then
+          if FileSize < 130 then
           begin
             CheckFile := TStringList.Create;
             CheckFile.LoadFromFile(FileName);
@@ -1247,7 +1246,6 @@ var
                (Pos(Uppercase(Copy(Trim(CheckFile.Text),1,20)),'HTML') > 0) or
                (Pos(Uppercase(Copy(Trim(CheckFile.Text),1,20)),'ERROR') > 0) or
                (Pos('.working', FileName) > 0)  then
-
              begin
                // Curious when this condition is met, unless it is just an old file
                if (TFile.GetLastWriteTime(FileName) >= OlderThan) and (Pos('.br', Filename) = 0)
