@@ -3181,6 +3181,7 @@ var
   NotBrotli: TMemoryStream;
   Brotli: TMemoryStream;
   LookupData: TJSONObject;
+  LookupName: String;
 
 begin
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
@@ -3212,6 +3213,7 @@ begin
 
   Actors := '{"PPL":[';
   ActorCount := 1;
+  LookupName := '';
   Data := (LookupData as TJSONObject).getValue('PPL') as TJSONArray;
 
   for i := 0 to Data.Count - 1 do
@@ -3248,19 +3250,26 @@ begin
       if ActorCount = 1
       then Actors := Actors+ActorData.ToString
       else Actors := Actors+','+ActorData.ToString;
+
+      if (ActorCount = 1) and (ActorData.GetValue('NAM') <> nil)
+      then LookupName := LookupName + (ActorData.GetValue('NAM') as TJSONString).Value;
+
       ActorCount := ActorCount + 1;
 
       ActorData.Free;
     end;
   end;
+
   Actors := Actors +']}';
   ActorCount := ActorCount - 1;
+
+  if Data.Count > 1 then LookupName := LookupName + ' + '+IntToStr(Data.Count-1)+' More';
 
   Response.Text := Actors;
 //  MainForm.LogEvent(Response.Text);
 
 //  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+QuotedStr(StringReplace(Lookup,'"','',[rfReplaceAll]))+' ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup for '+IntToStr(Data.Count)+' Request(s) ( '+IntToStr(ActorCount)+' Match(es) Found )","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup Requests: '+IntToStr(Data.Count)+' / '+LookupName+' ( Matches Found: '+IntToStr(ActorCount)+' )","TP":'+FloatToStr(Now)+'}';
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
@@ -3277,10 +3286,14 @@ begin
   TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length',IntToStr(Brotli.Size));
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
 
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Completed Lookup Requests: '+IntToStr(Data.Count)+' / '+LookupName+' ( Matches Found: '+IntToStr(ActorCount)+' )","TP":'+FloatToStr(Now)+'}';
+
   NotBrotli.Free;
   Brotli.Free;
   Response.Free;
   LookupData.Free;
+
+
 end;
 
 function TActorInfoService.MovieReleaseDay(Secret: String; aMonth, aDay: Integer; Progress: String): TStream;

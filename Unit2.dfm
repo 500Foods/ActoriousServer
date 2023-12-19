@@ -40,7 +40,6 @@ object MainForm: TMainForm
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 6
-    ExplicitWidth = 1173
   end
   object mmStats: TMemo
     Left = 2
@@ -807,29 +806,14 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepA: TLabel
-        Left = 300
+        Left = 100
         Top = 2
-        Width = 294
+        Width = 494
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
         AutoSize = False
         Caption = '0 of 0'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Inconsolata'
-        Font.Style = []
-        ParentFont = False
-        Layout = tlCenter
-      end
-      object ProgressDetailA: TLabel
-        Left = 8
-        Top = 2
-        Width = 400
-        Height = 19
-        AutoSize = False
-        Caption = 'Detail'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -12
@@ -854,6 +838,21 @@ object MainForm: TMainForm
         Font.Name = 'Inconsolata'
         Font.Style = []
         ParentColor = False
+        ParentFont = False
+        Layout = tlCenter
+      end
+      object ProgressDetailA: TLabel
+        Left = 8
+        Top = 2
+        Width = 600
+        Height = 19
+        AutoSize = False
+        Caption = 'Detail'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Inconsolata'
+        Font.Style = []
         ParentFont = False
         Layout = tlCenter
       end
@@ -894,9 +893,9 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepB: TLabel
-        Left = 300
+        Left = 100
         Top = 2
-        Width = 294
+        Width = 494
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
@@ -913,7 +912,7 @@ object MainForm: TMainForm
       object ProgressDetailB: TLabel
         Left = 8
         Top = 2
-        Width = 400
+        Width = 600
         Height = 19
         AutoSize = False
         Caption = 'Detail'
@@ -981,9 +980,9 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepC: TLabel
-        Left = 300
+        Left = 100
         Top = 2
-        Width = 294
+        Width = 494
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
@@ -1000,7 +999,7 @@ object MainForm: TMainForm
       object ProgressDetailC: TLabel
         Left = 8
         Top = 2
-        Width = 400
+        Width = 600
         Height = 19
         AutoSize = False
         Caption = 'Detail'
@@ -1068,9 +1067,9 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepD: TLabel
-        Left = 300
+        Left = 100
         Top = 2
-        Width = 294
+        Width = 494
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
@@ -1087,7 +1086,7 @@ object MainForm: TMainForm
       object ProgressDetailD: TLabel
         Left = 8
         Top = 2
-        Width = 400
+        Width = 600
         Height = 19
         AutoSize = False
         Caption = 'Detail'
@@ -1155,9 +1154,9 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepE: TLabel
-        Left = 300
+        Left = 100
         Top = 2
-        Width = 294
+        Width = 494
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
@@ -1174,7 +1173,7 @@ object MainForm: TMainForm
       object ProgressDetailE: TLabel
         Left = 8
         Top = 2
-        Width = 400
+        Width = 600
         Height = 19
         AutoSize = False
         Caption = 'Detail'
@@ -1242,9 +1241,9 @@ object MainForm: TMainForm
         Pen.Style = psClear
       end
       object ProgressStepF: TLabel
-        Left = 300
+        Left = 100
         Top = 2
-        Width = 294
+        Width = 494
         Height = 19
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
@@ -1261,7 +1260,7 @@ object MainForm: TMainForm
       object ProgressDetailF: TLabel
         Left = 8
         Top = 2
-        Width = 400
+        Width = 600
         Height = 19
         AutoSize = False
         Caption = 'Detail'
