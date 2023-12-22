@@ -1910,6 +1910,7 @@ var
   MainHandle : THandle;
 begin
   LogEvent('Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
+  LogEvent('');
   CurrentProgressA.Caption := 'Waiting';
   CacheTimer.Enabled := True;
   Sender.Free;

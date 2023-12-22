@@ -360,11 +360,15 @@ type
     ///  <param name="RelatedTo">
     ///    Searches for people related to this person, a WikiData ID.
     ///  </param>
+    ///  <param name="RelatedName">
+    ///    The regular name of the person - saves us from having to look it up somewhere, but just used
+    ///    to add more context the logging, not for anything critical to the process
+    ///  </param>
     ///  <param name="Progress">
     ///    Key to lookup progress with the Progress endpoint.
     ///  </param>
 
-    [HttpGet] function Relatives(Secret: String; RelatedTo:Integer; Progress: String):TStream;
+    [HttpGet] function Relatives(Secret: String; RelatedTo: Integer; RelatedName: String; Progress: String):TStream;
 
     ///  <summary>
     ///    GetClientVersion

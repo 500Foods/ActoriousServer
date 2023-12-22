@@ -44,7 +44,7 @@ type
       function BirthDay(Secret: String; aMonth: Integer; aDay: Integer; Progress: String):TStream;
       function DeathDay(Secret: String; aMonth: Integer; aDay: Integer; Progress: String):TStream;
       function ReleaseDay(Secret: String; aMonth: Integer; aDay: Integer; Progress: String):TStream;
-      function Relatives(Secret: String; RelatedTo:Integer; Progress: String):TStream;
+      function Relatives(Secret: String; RelatedTo: Integer; RelatedName: String; Progress: String):TStream;
 
       // Get Actor information based on dates
       function ActorBirthDay(Secret: String; aMonth: Integer; aDay: Integer; Progress: String):TStream;
@@ -3658,7 +3658,7 @@ begin
 
 end;
 
-function TActorInfoService.Relatives(Secret: String; RelatedTo: Integer; Progress: String): TStream;
+function TActorInfoService.Relatives(Secret: String; RelatedTo: Integer; RelatedName: String; Progress: String): TStream;
 var
   ClientReq: TNetHTTPClient;
   URL: String;
@@ -3786,7 +3786,7 @@ begin
 
   Response.Text := Actors;
 
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Relatives Results for '+QuotedStr(IntToStr(RelatedTo))+': '+IntToStr(ActorCount)+' Matches Found","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Relatives for '+RelatedName+' [ '+IntToStr(RelatedTo)+']: '+IntToStr(ActorCount)+' Matches Found","TP":'+FloatToStr(Now)+'}';
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
@@ -3802,6 +3802,8 @@ begin
   TXDataOperationContext.Current.Response.Headers.SetValue('content-length',IntToSTr(Length(Response.Text)));
   TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length',IntToStr(Brotli.Size));
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Completed Relatives for '+RelatedName+' [ '+IntToStr(RelatedTo)+']: '+IntToStr(ActorCount)+' Matches Found","TP":'+FloatToStr(Now)+'}';
 
   NotBrotli.Free;
   Brotli.Free;
