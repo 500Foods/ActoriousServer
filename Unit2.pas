@@ -1950,12 +1950,12 @@ begin
     Handling := 'Birthday';
     LogEvent('');
     LogEvent('BirthDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-    CurrentProgressA.Caption := 'Short API Delay (Continue in 90s)';
-    CacheTimer.Interval := 90000; // 90 seconds
+    CurrentProgressA.Caption := 'Short API Delay (Continue in 120s)';
+    CacheTimer.Interval := 120000; // 120 seconds
     CacheTimer.Enabled := True;
 
     WaitingMessage := 'Short API Delay (Continue in %s)';
-    tmrWaiting.Tag := 90;
+    tmrWaiting.Tag := 120;
     tmrWaiting.Enabled := True;
 
     if FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00:00' then
@@ -1969,12 +1969,12 @@ begin
   begin
     Handling := 'DeathDay';
     LogEvent('DeathDay Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-    CurrentProgressA.Caption := 'Short API Delay (Continue in 90s)';
-    CacheTimer.Interval := 90000; // 90 seconds
+    CurrentProgressA.Caption := 'Short API Delay (Continue in 120s)';
+    CacheTimer.Interval := 120000; // 120 seconds
     CacheTimer.Enabled := True;
 
     WaitingMessage := 'Short API Delay (Continue in %s)';
-    tmrWaiting.Tag := 90;
+    tmrWaiting.Tag := 120;
     tmrWaiting.Enabled := True;
 
     if FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)) <> '00:00:00' then
