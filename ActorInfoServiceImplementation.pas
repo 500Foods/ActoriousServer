@@ -56,8 +56,8 @@ type
       function MovieReleaseDay(Secret: String; aMonth: Integer; aDay: Integer; Progress: String):TStream;
 
       // Get Actor information based on TMDb top 10,000 list
-      function TopOneThousand(Secret: String; Segment: String; Progress: String):TStream;
-      function TopFiveThousand(Secret: String; Segment: String; Progress: String):TStream;
+      function TopOneThousand(Secret: String; Progress: String):TStream;
+      function TopFiveThousand(Secret: String; Progress: String):TStream;
 
       // Get the top actors for today (or another day) - used by ActoriousToday, for example
       function TopToday(Secret: String; aMonth: Integer; aDay: Integer):TStream;
@@ -6002,7 +6002,7 @@ begin
   CacheResponse.Free;
 end;
 
-function TActorInfoService.TopOneThousand(Secret, Segment, Progress: String): TStream;
+function TActorInfoService.TopOneThousand(Secret, Progress: String): TStream;
 var
   Page: Integer;
   Popular: Integer;
@@ -6078,8 +6078,8 @@ begin
   // Is there a Cached Response on disk?
   try
     if Pos('[ADULT]',Progress) > 0
-    then CacheBRResponse.LoadFromFile(CacheFile+'-adult.json.br')
-    else CacheBRResponse.LoadFromFile(CacheFile+'.json.br');
+    then CacheBRResponse.LoadFromFile(CacheFile+'-adult-list.json.br')
+    else CacheBRResponse.LoadFromFile(CacheFile+'-list.json.br');
   except on E: Exception do
     begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Data Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -6092,8 +6092,8 @@ begin
     if Pos('[ADULT]',Progress) > 0
     then CacheFile := CacheFile+'-adult';
     Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
-    TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'.json.br')));
-    TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'.json')));
+    TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'-list.json.br')));
+    TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'-list.json')));
     TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Complete","TP":'+FloatToStr(Now)+'}';
     CacheBRResponse.Free;
@@ -6255,8 +6255,8 @@ begin
                         else AdActors := AdActors + ',' + ActorData.ToString;
 
                         if AdultActors = 0
-                        then ActorAdultList := ActorAdultList + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt)
-                        else ActorAdultList := ActorAdultList + ',' + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt);
+                        then ActorAdultList := ActorAdultList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
+                        else ActorAdultList := ActorAdultList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
 
                       except on E: Exception do
                         begin
@@ -6277,9 +6277,9 @@ begin
                         then Actors := Actors + ',' + ActorData.ToString;
 
                         if TotalActors = 0
-                        then ActorList := ActorList + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt)
+                        then ActorList := ActorList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
                         else if TotalActors < 1000
-                        then ActorList := ActorList + ',' + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt);
+                        then ActorList := ActorList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
 
                         if TotalActors = 1000 then MainForm.LogEvent('Top1000: Reached at Page '+IntToStr(Page));
 
@@ -6569,7 +6569,7 @@ begin
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Complete","TP":'+FloatToStr(Now)+'}';
 end;
 
-function TActorInfoService.TopFiveThousand(Secret, Segment, Progress: String): TStream;
+function TActorInfoService.TopFiveThousand(Secret, Progress: String): TStream;
 var
   Page: Integer;
   Popular: Integer;
@@ -6646,8 +6646,8 @@ begin
   // Is there a Cached Response on disk?
   try
     if Pos('[ADULT]',Progress) > 0
-    then CacheBRResponse.LoadFromFile(CacheFile+'-adult.json.br')
-    else CacheBRResponse.LoadFromFile(CacheFile+'-'+Segment+'.json.br');
+    then CacheBRResponse.LoadFromFile(CacheFile+'-adult-list.json.br')
+    else CacheBRResponse.LoadFromFile(CacheFile+'-list.json.br');
   except on E: Exception do
     begin
       MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Data Not Cached","TP":'+FloatToStr(Now)+'}';
@@ -6661,15 +6661,15 @@ begin
     begin
       CacheFile := CacheFile+'-adult';
       Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
-      TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'.json.br')));
-      TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'.json')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'-list.json.br')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'-list.json')));
       TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
     end
     else
     begin
       Result.CopyFrom(CacheBRResponse,CacheBRResponse.size);
-      TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'-'+Segment+'.json.br')));
-      TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'-'+Segment+'.json')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('content-length', IntToStr(FileSizeByName(CacheFile+'-list.json.br')));
+      TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length', IntToStr(FileSizeByName(CacheFile+'-list.json')));
       TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
     end;
 

@@ -240,15 +240,11 @@ type
     ///  <param name="Secret">
     ///    If I told you, it wouldn't be a secret.
     ///  </param>
-    ///  <param name="Segment">
-    ///    This is ignored in this endpoint, but is included to keep the same
-    ///    calling convention as TopFiveThousand, where it is not ignored.
-    ///  </param>
     ///  <param name="Progress">
     ///    Key to lookup progress with the Progress endpoint.
     ///  </param>
 
-    [HttpGet] function TopOneThousand(Secret: String; Segment: String; Progress: String):TStream;
+    [HttpGet] function TopOneThousand(Secret: String; Progress: String):TStream;
 
     ///  <summary>
     ///    TopFiveThousand
@@ -260,15 +256,11 @@ type
     ///  <param name="Secret">
     ///    If I told you, it wouldn't be a secret.
     ///  </param>
-    ///  <param name="Segment">
-    ///    This JSON is split into 5 segments. A separate request is need for each.
-    ///    Segment values should be one of [A, B, C, D, E].
-    ///  </param>
     ///  <param name="Progress">
     ///    Key to lookup progress with the Progress endpoint.
     ///  </param>
 
-    [HttpGet] function TopFiveThousand(Secret: String; Segment: String; Progress: String):TStream;
+    [HttpGet] function TopFiveThousand(Secret: String; Progress: String):TStream;
 
     ///  <summary>
     ///    TopToday
