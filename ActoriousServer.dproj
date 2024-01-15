@@ -129,9 +129,9 @@
         <Icon_MainIcon>Project1_Icon.ico</Icon_MainIcon>
         <DCC_OutputXMLDocumentation>true</DCC_OutputXMLDocumentation>
         <DCC_XmlOutput>Win64\Release\</DCC_XmlOutput>
-        <VerInfo_Build>129</VerInfo_Build>
+        <VerInfo_Build>130</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_Keys>CompanyName=500 Foods Corporation;FileDescription=ActoriousServer;FileVersion=1.0.0.129;InternalName=Actorious Server;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.1;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=500 Foods Corporation;FileDescription=ActoriousServer;FileVersion=1.0.0.130;InternalName=Actorious Server;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.1;Comments=</VerInfo_Keys>
         <UWP_DelphiLogo44>Project1_Icon.ico</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>Project1_Icon.ico</UWP_DelphiLogo150>
     </PropertyGroup>
