@@ -6033,6 +6033,9 @@ var
   Actor: String;
   Unique: String;
 
+  ActorList: String;
+  ActorAdultList: String;
+
   Regenerate: Boolean;
 
 begin
@@ -6106,8 +6109,13 @@ begin
     TotalActors := 0;
     AdultActors := 0;
     Unique := '';
+    ActorList := '[';
+    ActorAdultList := '[';
 
-    for Page := 0 to 70 do
+    // Normally we'd want to limit this to as few as necessary to generate the 1,000 people we're after. But there's a benefit
+    // here in that the rest of these people are cached and thus can be returned via searches and so on.
+//    for Page := 0 to 70 do
+    for Page := 0 to 100 do
     begin
 
       // Time to Regenerate this data
@@ -6243,8 +6251,13 @@ begin
 
                       try
                         if AdultActors = 0
-                        then AdActors := AdActors+ActorData.ToString
-                        else AdActors := AdActors+','+ActorData.ToString;
+                        then AdActors := AdActors + ActorData.ToString
+                        else AdActors := AdActors + ',' + ActorData.ToString;
+
+                        if AdultActors = 0
+                        then ActorAdultList := ActorAdultList + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt)
+                        else ActorAdultList := ActorAdultList + ',' + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt);
+
                       except on E: Exception do
                         begin
                           MainForm.LogException('Top5000/AddAnXActor', E.ClassName, E.Message,  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8));
@@ -6259,9 +6272,14 @@ begin
 
                       try
                         if TotalActors = 0
-                        then Actors := Actors+ActorData.ToString
+                        then Actors := Actors + ActorData.ToString
                         else if TotalActors < 1000
-                        then Actors := Actors+','+ActorData.ToString;
+                        then Actors := Actors + ',' + ActorData.ToString;
+
+                        if TotalActors = 0
+                        then ActorList := ActorList + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt)
+                        else if TotalActors < 1000
+                        then ActorList := ActorList + ',' + IntToStr((ActorData.getValue('NUM') as TJSONNumber).AsInt);
 
                         if TotalActors = 1000 then MainForm.LogEvent('Top1000: Reached at Page '+IntToStr(Page));
 
@@ -6302,6 +6320,8 @@ begin
     Actors := Actors + ']';
     AdActors := AdActors + ']';
     CacheResponse.Text := '';
+    ActorList := ActorList + ']';
+    ActorAdultList := ActorAdultList + ']';
 
 
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 1,000 Actors 1/2","TP":'+FloatToStr(Now)+'}';
@@ -6323,6 +6343,26 @@ begin
       end
     end;
     AdActors := '';
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 1,000 Actor List","TP":'+FloatToStr(Now)+'}';
+    try
+      TFile.WriteAllText(CacheFile+'-list.json', ActorList);
+    except on E: exception do
+      begin
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
+      end
+    end;
+    ActorList := '';
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 1,000 Actor Adult List","TP":'+FloatToStr(Now)+'}';
+    try
+      TFile.WriteAllText(CacheFile+'-adult-list.json', ActorList);
+    except on E: exception do
+      begin
+        MainForm.LogEvent(E.ClassName+': '+E.Message);
+      end
+    end;
+    ActorAdultList := '';
 
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 1,000 Actors 1/2","TP":'+FloatToStr(Now)+'}';
 
@@ -6356,10 +6396,42 @@ begin
     ResponseFile.Free;
     Brotli.Free;
 
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 1,000 Actor List","TP":'+FloatToStr(Now)+'}';
+
+    ResponseFile := TMemoryStream.Create;
+    ResponseFile.LoadFromFile(CacheFile+'-list.json');
+    ResponseFile.Seek(0, soFromBeginning);
+
+    // Compress the stream with Brotli
+    Brotli := TMemoryStream.Create;
+    BrotliCompressStream(ResponseFile, Brotli, bcBetter);
+    Brotli.Seek(0, soFromBeginning);
+
+    // Save the Brotli-compressed response to disk
+    Brotli.SaveToFile(CacheFile+'-list.json.br');
+    ResponseFile.Free;
+    Brotli.Free;
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Compressing Top 1,000 Actor Adult List","TP":'+FloatToStr(Now)+'}';
+
+    ResponseFile := TMemoryStream.Create;
+    ResponseFile.LoadFromFile(CacheFile+'-adult-list.json');
+    ResponseFile.Seek(0, soFromBeginning);
+
+    // Compress the stream with Brotli
+    Brotli := TMemoryStream.Create;
+    BrotliCompressStream(ResponseFile, Brotli, bcBetter);
+    Brotli.Seek(0, soFromBeginning);
+
+    // Save the Brotli-compressed response to disk
+    Brotli.SaveToFile(CacheFile+'-adult-list.json.br');
+    ResponseFile.Free;
+    Brotli.Free;
+
     try
       if Pos('[ADULT]',Progress) > 0
       then CacheFile := CacheFile+'-adult';
-      CacheBRResponse.LoadFromFile(CacheFile+'.json.br');
+      CacheBRResponse.LoadFromFile(CacheFile+'-list444.json.br');
     except on E: Exception do
       begin
 //      MainForm.LogEvent(E.ClassName+': '+E.Message);
