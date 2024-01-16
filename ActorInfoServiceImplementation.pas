@@ -6114,12 +6114,13 @@ begin
 
     // Normally we'd want to limit this to as few as necessary to generate the 1,000 people we're after. But there's a benefit
     // here in that the rest of these people are cached and thus can be returned via searches and so on.
-//    for Page := 0 to 70 do
-    for Page := 0 to 100 do
+    Page := 1;
+    while (Page >=1) and (Page <= 101) do
     begin
+      if Page = 101 then Page := 0;
 
       // Time to Regenerate this data
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 1,000 Actors ( Page '+InttoStr(Page)+' of 75 )","TP":'+FloatToStr(Now)+'}';
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 1,000 Actors ( Page '+InttoStr(Page)+' of 100 )","TP":'+FloatToStr(Now)+'}';
       Data := TJSONArray.Create;
 
       if (Page > 0) then
@@ -6315,6 +6316,8 @@ begin
         if Assigned(ActorData) then ActorData.Free;
       end;
       Data.Free;
+      if Page > 0
+      then Page := Page + 1;
     end;
 
     Actors := Actors + ']';
