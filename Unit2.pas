@@ -1431,12 +1431,17 @@ begin
     btRecentProgressClick(nil);
   end;
 
+  // Clean Lookup Cache
+  LogEvent('- Cleaning 11/11 Lookup Cache');
+  CacheDir := AppCacheDir+'cache/lookup';
+  CleanDir;
+
   // BirthdayCount is a count of the number of files in the cache/days/actorious-birthdays folder
   // This should be 366 * 4 = 1464. If the regen is slow, then the cleaning will delete files older
   // than 7 days that should have been regenerated after 5 days. We provide a count here so that
   // we can pass this info to Home Assistant and keep an eye on it there.
   BirthDaysCount := IntToStr(Length(TDirectory.GetFiles(AppCacheDir+'cache/days/actorious-births', '*')) div 4)+'d';
-  LogEvent('- Cleaning 11/11 Date Count: '+BirthDaysCount);
+  LogEvent('- Cleaning Total Date Count: '+BirthDaysCount);
 
   LogEvent('Cache Clean Completed: '+FloatToStrF(CleanFiles-CleanNum,ffNumber,8,0)+' Files, '+FloatToStrF((CleanSize - CleanData)/(1024*1024),ffNumber,8,0)+' MB ('+FormatDateTime('HH:nn:ss.zzz',Now-CleanTime)+')');
 
@@ -1479,7 +1484,7 @@ begin
             (Pos('23.111.75.19'  ,(d.getValue('IP') as TJSONString).Value) > 0)) then
         begin
           d1 := (d.getValue('ST') as TJSONString).Value;
-          if d.getValue('TP') <> nil 
+          if d.getValue('TP') <> nil
           then  d2 := FormatDateTime('HH:nn:ss.zzz',(d.getValue('TP') as TJSONNumber).AsDouble-(d.getValue('TS') as TJSONNumber).AsDouble)
           else  d2 := FormatDateTime('HH:nn:ss.zzz',Now-(d.getValue('TS') as TJSONNumber).AsDouble);
           
@@ -2085,6 +2090,8 @@ var
   i: Integer;
   IndexFileName: String;
   IndexFile: TStringList;
+  LookupJSON: TJSONArray;
+  LookupItem: TPair<string, string>;
 begin
   // Here we're just taking our search arrays and writing them out to disk.
 
@@ -2113,6 +2120,19 @@ begin
     end;
   end;
 
+  // Similarly, we'll save the Lookup Cache at the same time. This is much smaller, just a list of
+  // Lookup hashes and filenames, but still a bit tedious to get into a usable text file.
+  LookupJSON := TJSONArray.Create;
+  IndexFile := TStringList.Create;
+  for LookupItem in LookupCache do
+  begin
+    LookupJSON.Add( LookupItem.Key + ' : '+LookupItem.Value );
+  end;
+  IndexFile.Text := LookupJSON.toString;
+  IndexFile.SaveToFile(AppCacheDir+'cache/lookup/LookupIndex.json');
+  IndexFile.free;
+  LookupJSON.Free;
+
 end;
 
 procedure TMainForm.LoadSearchIndexes;
@@ -2120,6 +2140,7 @@ var
   i,j: Integer;
   IndexFileName: String;
   IndexFile: TStringList;
+  LookupJSON: TJSONArray;
 begin
   // Here we're just loading our search arrays from disk
 
@@ -2153,6 +2174,33 @@ begin
 
       btRecentProgressClick(nil);
     end;
+  end;
+
+  // Load Lookup Cache
+  if FileExists(AppCacheDir+'cache/lookup/LookupIndex.json') then
+  begin
+
+    LookupJSON := TJSONArray.Create;
+    IndexFile := TStringList.Create;
+    IndexFile.LoadFromFile(AppCacheDir+'cache/lookup/LookupIndex.json');
+    if IndexFile.Count > 0 then
+    begin
+      LookupJSON := TJSONObject.ParseJSONValue(IndexFile.Text) as TJSONArray;
+      if LookupJSON.Count > 0 then
+      begin
+        i := 0;
+        while i < LookupJSON.Count do
+        begin
+          if FileExists(Copy(LookupJSON.Items[i].Value,68,Length(LookupJSON.Items[i].Value))) then
+          begin
+            LookupCache.Add(Copy(LookupJSON.Items[i].Value,1,64), Copy(LookupJSON.Items[i].Value,68,Length(LookupJSON.Items[i].Value)));
+          end;
+          i := i + 1;
+        end;
+      end;
+    end;
+    LookupJSON.Free;
+    IndexFile.Free;
   end;
 
 end;
@@ -2554,6 +2602,7 @@ begin
   CreateDir(AppCacheDir+'cache/tvshows/top5000');
 
   CreateDir(AppCacheDir+'cache/search');
+  CreateDir(AppCacheDir+'cache/lookup');
 
   // Loading Search Indexes
   UpdateProgress(1, 'Loading Search Indexes','Server Startup', '14 of 17','');
@@ -2561,6 +2610,7 @@ begin
 
   LoadSearchIndexes;
   LogEvent('- People Search Index Loaded: '+IntToStr(Length(IndexPeople))+' entries');
+  LogEvent('- Lookup Index Loaded: '+IntToStr(LookupCache.Count)+' entries');
 
   // Find oldest file to start on
   UpdateProgress(1, 'Determining Cache Start Date','Server Startup', '15 of 17','');

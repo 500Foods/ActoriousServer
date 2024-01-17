@@ -3253,21 +3253,33 @@ begin
 
     // Compress the stream with Brotli
     Brotli := TMemoryStream.Create;
-    BrotliCompressStream(NotBrotli, Brotli, bcGood);
+    try
+      Brotli.LoadFromFile(LookupCacheValue);
+    except on E: Exception do
+      begin
+        MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Data Not Cached","TP":'+FloatToStr(Now)+'}';
+      end;
+    end;
     Brotli.Seek(0, soFromBeginning);
 
-    Result.CopyFrom(Brotli,Brotli.Size);
-    TXDataOperationContext.Current.Response.Headers.SetValue('content-length',IntToSTr(Length(Response.Text)));
-    TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length',IntToStr(Brotli.Size));
-    TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+    if (Brotli.Size > 0) then
+    begin
+      Result.CopyFrom(Brotli,Brotli.size);
 
-    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Completed Lookup (Cached) Requests)","TP":'+FloatToStr(Now)+'}';
+      TXDataOperationContext.Current.Response.Headers.SetValue('content-length',IntToSTr(Length(Response.Text)));
+      TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length',IntToStr(Brotli.Size));
+      TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
 
-    NotBrotli.Free;
-    Brotli.Free;
-    Response.Free;
-    LookupData.Free;
-    exit;
+      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Completed Lookup (Cached) Requests)","TP":'+FloatToStr(Now)+'}';
+
+      Brotli.Free;
+      LookupData.Free;
+      exit;
+    end
+    else
+    begin
+      Brotli.Free;
+    end;
   end;
 
   // Otherwise we go and find whatever is being requested
@@ -3327,7 +3339,8 @@ begin
   if Data.Count > 1 then LookupName := LookupName + ' + '+IntToStr(Data.Count-1)+' More';
 
   // Add this result to the Lookup Cache
-  MainForm.LookupCache.Add(LookupCacheKey, Actors);
+  LookupCacheValue := MainForm.AppCacheDir+'cache'+'/lookup/'+LookupCacheKey+'.br';
+  MainForm.LookupCache.Add(LookupCacheKey, LookupCacheValue);
 
   Response.Text := Actors;
 //  MainForm.LogEvent(Response.Text);
@@ -3346,6 +3359,9 @@ begin
   Brotli.Seek(0, soFromBeginning);
 
   Result.CopyFrom(Brotli,Brotli.Size);
+  Brotli.Seek(0, soFromBeginning);
+  Brotli.SaveToFile(LookupCacheValue);
+
   TXDataOperationContext.Current.Response.Headers.SetValue('content-length',IntToSTr(Length(Response.Text)));
   TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length',IntToStr(Brotli.Size));
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
