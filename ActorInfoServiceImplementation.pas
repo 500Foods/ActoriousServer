@@ -28,6 +28,9 @@ uses
   brotli,
   IdGlobalProtocols,
 
+  HashObj,
+  MiscObj,
+
   ActorInfoService;
 
 type
@@ -72,6 +75,8 @@ type
       // Return current progress of a request
       function Progress(Secret: String; Progress: String):String;
 
+      // Other Support Functions
+      function HashThis(InputText: String):String;
     end;
 
 implementation
@@ -79,6 +84,27 @@ implementation
 uses Unit2;
 
 { TActorInfoService }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  HashThis                                                                                                          //
+//                                                                                                                    //
+// Returns a SHA2 hash of the supplied string. This is used to create a lookup for the Lookup endpoint, which is in   //
+// turn used to populate a dictionary to cache the Lookup requests. The main rationale is to help speed up generating //
+// the data for the Top1000 requests, and to reduce the server overhead in responding to them.                        //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function TActorInfoService.HashThis(InputText: String):String;
+var
+  SHA2: TSHA2Hash;
+begin
+  SHA2 := TSHA2Hash.Create;
+  SHA2.HashSizeBits:= 256;
+  SHA2.OutputFormat:= hexa;
+  SHA2.Unicode:= noUni;
+  Result := LowerCase(SHA2.Hash(InputText));
+  SHA2.Free;
+end;
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LoadJSON                                                                                                           //
@@ -3183,6 +3209,8 @@ var
   LookupData: TJSONObject;
   LookupName: String;
 
+  LookupCacheKey: String;
+  LookupCacheValue: String;
 begin
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
 
@@ -3210,6 +3238,39 @@ begin
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
 
   Response := TStringList.Create;
+
+  // Check and see if this request has been recently cached, so we don't have to do it again
+  LookupCacheKey := HashThis(Lookup);
+  if MainForm.LookupCache.TryGetValue(LookupCacheKey, LookupCacheValue) then
+  begin
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Lookup (Cached) Requests","TP":'+FloatToStr(Now)+'}';
+
+    // This is what we're sending back
+    NotBrotli := TMemoryStream.Create;
+    Response.Text := LookupCacheValue;
+    Response.SaveToStream(NotBrotli, TEncoding.UTF8);
+    NotBrotli.Seek(0, soFromBeginning);
+
+    // Compress the stream with Brotli
+    Brotli := TMemoryStream.Create;
+    BrotliCompressStream(NotBrotli, Brotli, bcGood);
+    Brotli.Seek(0, soFromBeginning);
+
+    Result.CopyFrom(Brotli,Brotli.Size);
+    TXDataOperationContext.Current.Response.Headers.SetValue('content-length',IntToSTr(Length(Response.Text)));
+    TXDataOperationContext.Current.Response.Headers.SetValue('x-uncompressed-content-length',IntToStr(Brotli.Size));
+    TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
+
+    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Completed Lookup (Cached) Requests)","TP":'+FloatToStr(Now)+'}';
+
+    NotBrotli.Free;
+    Brotli.Free;
+    Response.Free;
+    LookupData.Free;
+    exit;
+  end;
+
+  // Otherwise we go and find whatever is being requested
 
   Actors := '{"PPL":[';
   ActorCount := 1;
@@ -3264,6 +3325,9 @@ begin
   ActorCount := ActorCount - 1;
 
   if Data.Count > 1 then LookupName := LookupName + ' + '+IntToStr(Data.Count-1)+' More';
+
+  // Add this result to the Lookup Cache
+  MainForm.LookupCache.Add(LookupCacheKey, Actors);
 
   Response.Text := Actors;
 //  MainForm.LogEvent(Response.Text);

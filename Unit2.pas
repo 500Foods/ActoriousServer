@@ -250,6 +250,8 @@ type
     MailServerFrom: String;
     MailServerName: String;
 
+    LookupCache: TDictionary<String,String>;
+
   strict private
     procedure UpdateGUI;
   end;
@@ -2947,6 +2949,9 @@ begin
 
   // Sort out the Server Version
   GetAppVersionString;
+
+  // Initialize lookup cache
+  LookupCache := TDictionary<String,String>.Create;
 
   // Having a dark form in the IDE makes it hard to read component names
   MainForm.Color := clBlack;
