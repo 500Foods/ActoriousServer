@@ -181,7 +181,8 @@ begin
   Result := StringReplace(Result, chr( 9),  '',    [rfReplaceAll]);   // Tab
   Result := StringReplace(Result, chr(10),  '',    [rfReplaceAll]);   // NL
   Result := StringReplace(Result, chr(13),  '',    [rfReplaceAll]);   // CR
-  Result := StringReplace(Result, '\u0013', '',    [rfReplaceAll]);
+  Result := StringReplace(Result, '\u0013', '',    [rfReplaceAll]);   // CR
+  Result := StringReplace(Result, '\u00A0', ' ',   [rfReplaceAll]);   // Non-breaking space
   Result := StringReplace(Result, '\S',     '/S',  [rfReplaceAll]);
   Result := StringReplace(Result, '\\',     ' ',   [rfReplaceAll]);
   Result := StringReplace(Result, ' \ ',    ' / ', [rfReplaceAll]);
@@ -200,7 +201,8 @@ begin
   Result := StringReplace(Result, chr( 9),  '',    [rfReplaceAll]);   // Tab
   Result := StringReplace(Result, chr(10),  '',    [rfReplaceAll]);   // NL
   Result := StringReplace(Result, chr(13),  '',    [rfReplaceAll]);   // CR
-  Result := StringReplace(Result, '\u0013', '',    [rfReplaceAll]);
+  Result := StringReplace(Result, '\u0013', '',    [rfReplaceAll]);   // CR
+  Result := StringReplace(Result, '\u00A0', ' ',   [rfReplaceAll]);   // Non-breaking space
   Result := StringReplace(Result, '\S',     '/S',  [rfReplaceAll]);
   Result := StringReplace(Result, '\\',     ' ',   [rfReplaceAll]);
   Result := StringReplace(Result, ' \ ',    ' / ', [rfReplaceAll]);
@@ -6195,12 +6197,12 @@ begin
     // Normally we'd want to limit this to as few as necessary to generate the 1,000 people we're after. But there's a benefit
     // here in that the rest of these people are cached and thus can be returned via searches and so on.
     Page := 1;
-    while (Page >=1) and (Page <= 101) do
+    while (Page >= 1) and (Page <= 100) do
     begin
-      if Page = 101 then Page := 0;
+      if Page = 100 then Page := 0;
 
       // Time to Regenerate this data
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 1,000 Actors ( Page '+InttoStr(Page)+' of 100 )","TP":'+FloatToStr(Now)+'}';
+//      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 1,000 Actors ( Page '+InttoStr(Page)+' of 100 )","TP":'+FloatToStr(Now)+'}';
       Data := TJSONArray.Create;
 
       if (Page > 0) then
@@ -6251,11 +6253,8 @@ begin
         end;
       end;
 
-
-//      Data := TJSONArray.Create;
       try
         SLLoadJSON(CacheResponse, CacheFile+'-'+IntToStr(Page)+'.json');
-//        CacheResponse.LoadFromFile(CacheFile+'-'+IntToStr(Page)+'.json', TEncoding.UTF8);
         Data := (TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONArray;
       except on E:Exception do
         begin
@@ -6263,7 +6262,7 @@ begin
           MainForm.LogEvent(E.Classname+': '+E.Message);
         end;
       end;
-
+      
       for Popular := 0 to Data.Count -1 do
       begin
         ActorData := TJSONObject.Create;
@@ -6279,7 +6278,7 @@ begin
             // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
             if Page = 0
             then Actor := GetPerson(Popular, Data.Count, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False)
-            else Actor := GetPerson(Popular + (Page*20), 1500, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
+            else Actor := GetPerson(Popular + (Page*20), 2000, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
 
           except on E: Exception do
             begin
@@ -6331,13 +6330,16 @@ begin
                     begin
 
                       try
-                        if AdultActors = 0
-                        then AdActors := AdActors + ActorData.ToString
-                        else AdActors := AdActors + ',' + ActorData.ToString;
+                        if (ActorData <> nil) and (ActorData.GetValue('TID') <> nil) then
+                        begin
+//                          if AdultActors = 0
+//                          then AdActors := AdActors + ActorData.ToString
+//                          else AdActors := AdActors + ',' + ActorData.ToString;
 
-                        if AdultActors = 0
-                        then ActorAdultList := ActorAdultList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
-                        else ActorAdultList := ActorAdultList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+                          if AdultActors = 0
+                          then ActorAdultList := ActorAdultList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
+                          else ActorAdultList := ActorAdultList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+                        end;
 
                       except on E: Exception do
                         begin
@@ -6352,15 +6354,19 @@ begin
                     begin
 
                       try
-                        if TotalActors = 0
-                        then Actors := Actors + ActorData.ToString
-                        else if TotalActors < 1000
-                        then Actors := Actors + ',' + ActorData.ToString;
+                        if (ActorData <> nil) and (ActorData.GetValue('TID') <> nil) then
+                        begin
 
-                        if TotalActors = 0
-                        then ActorList := ActorList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
-                        else if TotalActors < 1000
-                        then ActorList := ActorList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+//                          if TotalActors = 0
+//                          then Actors := Actors + ActorData.ToString
+//                          else if TotalActors < 1000
+//                          then Actors := Actors + ',' + ActorData.ToString;
+
+                          if TotalActors = 0
+                          then ActorList := ActorList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
+                          else if TotalActors < 1000
+                          then ActorList := ActorList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+                        end;
 
                         if TotalActors = 1000 then MainForm.LogEvent('Top1000: Reached at Page '+IntToStr(Page));
 
@@ -6439,7 +6445,7 @@ begin
 
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 1,000 Actor Adult List","TP":'+FloatToStr(Now)+'}';
     try
-      TFile.WriteAllText(CacheFile+'-adult-list.json', ActorList);
+      TFile.WriteAllText(CacheFile+'-adult-list.json', ActorAdultList);
     except on E: exception do
       begin
         MainForm.LogEvent(E.ClassName+': '+E.Message);
@@ -6765,12 +6771,12 @@ begin
     // Normally we'd want to limit this to as few as necessary to generate the 5,000 people we're after. But there's a benefit
     // here in that the rest of these people are cached and thus can be returned via searches and so on.
     Page := 1;
-    while (Page >=1) and (Page <= 501) do
+    while (Page >= 1) and (Page <= 500) do
     begin
-      if Page = 501 then Page := 0;
+      if Page = 500 then Page := 0;
 
       // Time to Regenerate this data
-      MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 5,000 Actors ( Page '+InttoStr(Page)+' of 500 )","TP":'+FloatToStr(Now)+'}';
+   //   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 5,000 Actors ( Page '+InttoStr(Page)+' of 500 )","TP":'+FloatToStr(Now)+'}';
       Data := TJSONArray.Create;
 
       if (Page > 0) then
@@ -6821,11 +6827,8 @@ begin
         end;
       end;
 
-
-//      Data := TJSONArray.Create;
       try
         SLLoadJSON(CacheResponse, CacheFile+'-'+IntToStr(Page)+'.json');
-//        CacheResponse.LoadFromFile(CacheFile+'-'+IntToStr(Page)+'.json', TEncoding.UTF8);
         Data := (TJSONObject.ParseJSONValue(CacheResponse.Text) as TJSONObject).getValue('results') as TJSONArray;
       except on E:Exception do
         begin
@@ -6849,7 +6852,7 @@ begin
             // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
             if Page = 0
             then Actor := GetPerson(Popular, Data.Count, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False)
-            else Actor := GetPerson(Popular + (Page*20), 7500, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
+            else Actor := GetPerson(Popular + (Page*20), 10000, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
 
           except on E: Exception do
             begin
@@ -6901,13 +6904,17 @@ begin
                     begin
 
                       try
-                        if AdultActors = 0
-                        then AdActors := AdActors + ActorData.ToString
-                        else AdActors := AdActors + ',' + ActorData.ToString;
+                        if (ActorData <> nil) and (ActorData.GetValue('TID') <> nil) then
+                        begin
+                      
+//                          if AdultActors = 0
+//                          then AdActors := AdActors + ActorData.ToString
+//                          else AdActors := AdActors + ',' + ActorData.ToString;
 
-                        if AdultActors = 0
-                        then ActorAdultList := ActorAdultList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
-                        else ActorAdultList := ActorAdultList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+                          if AdultActors = 0
+                          then ActorAdultList := ActorAdultList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
+                          else ActorAdultList := ActorAdultList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+                        end;
 
                       except on E: Exception do
                         begin
@@ -6922,15 +6929,18 @@ begin
                     begin
 
                       try
-                        if TotalActors = 0
-                        then Actors := Actors + ActorData.ToString
-                        else if TotalActors < 5000
-                        then Actors := Actors + ',' + ActorData.ToString;
-
-                        if TotalActors = 0
-                        then ActorList := ActorList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
-                        else if TotalActors < 5000
-                        then ActorList := ActorList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+                        if (ActorData <> nil) and (ActorData.GetValue('TID') <> nil) then
+                        begin
+//                          if TotalActors = 0
+//                          then Actors := Actors + ActorData.ToString
+//                          else if TotalActors < 5000
+//                          then Actors := Actors + ',' + ActorData.ToString;
+                
+                          if TotalActors = 0
+                          then ActorList := ActorList + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt)
+                          else if TotalActors < 5000
+                          then ActorList := ActorList + ',' + IntToStr((ActorData.getValue('TID') as TJSONNumber).AsInt);
+                        end;
 
                         if TotalActors = 5000 then MainForm.LogEvent('Top5000: Reached at Page '+IntToStr(Page));
 
@@ -7009,7 +7019,7 @@ begin
 
     MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Saving Top 5,000 Actor Adult List","TP":'+FloatToStr(Now)+'}';
     try
-      TFile.WriteAllText(CacheFile+'-adult-list.json', ActorList);
+      TFile.WriteAllText(CacheFile+'-adult-list.json', ActorAdultList);
     except on E: exception do
       begin
         MainForm.LogEvent(E.ClassName+': '+E.Message);
