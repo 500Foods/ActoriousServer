@@ -168,6 +168,7 @@ type
     procedure DateTimePickerBirthdayCloseUp(Sender: TObject);
     procedure DateTimePickerDeathDayCloseUp(Sender: TObject);
     procedure btTop1000Click(Sender: TObject);
+    procedure GetTopResults(TopURL: String; TopURLName: String);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     function GetProcessThreadCount(ProcessId: Cardinal): Integer;
     procedure btTop5000Click(Sender: TObject);
@@ -372,6 +373,39 @@ begin
   except on E: Exception do
     begin
       LogException('Regen Top1000', E.ClassName, E.Message, Client.URL);
+    end;
+  end;
+end;
+
+procedure TMainForm.GetTopResults(TopURL: String; TopURLName: String);
+var
+  URL: String;
+  Client: TFancyNetHTTPClient;
+begin
+  LogEvent('');
+  LogEvent('Caching '+TopURLName+' ['+TopURL+']');
+  CurrentProgressA.Caption := 'ManReGen'+TopURLName+': '+TGUID.NewGUID.ToString;
+  CacheTimer.Enabled := False;
+
+  URL := TopURL;
+
+  // Submit the request (asynchronously)
+  Client := TFancyNetHTTPClient.Create(nil);
+  Client.Tag := DateTimeToUnix(Now);
+  Client.Description := TopURLName;
+  Client.Asynchronous := True;
+  Client.ConnectionTimeout := 30000;  // 5 minutes
+  Client.ResponseTimeout := 30000;  // 5 minutes
+  Client.onRequestCompleted := ManualRequestCompleted;
+  Client.onRequestError := ManualRequestError;
+  Client.URL := TidURI.URLEncode(URL);
+  if Pos('https', URL) > 0
+  then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+  try
+    Client.Get(Client.URL);
+  except on E: Exception do
+    begin
+      LogException('Get '+TopURLName, E.ClassName, E.Message, Client.URL);
     end;
   end;
 end;
@@ -1918,6 +1952,12 @@ var
 begin
   LogEvent('Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
   LogEvent('');
+
+  if (Sender as TFancyNetHTTPClient).Description  = 'Top 1000'
+  then GetTopResults('https://www.actorious.com/?toponethousand=true','Top1000Cache');
+  if (Sender as TFancyNetHTTPClient).Description  = 'Top 5000'
+  then GetTopResults('https://www.actorious.com/?topfivethousand=true','Top5000Cache');
+
   CurrentProgressA.Caption := 'Waiting';
   CacheTimer.Enabled := True;
   Sender.Free;
