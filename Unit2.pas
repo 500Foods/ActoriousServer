@@ -380,34 +380,34 @@ end;
 procedure TMainForm.GetTopResults(TopURL: String; TopURLName: String);
 var
   URL: String;
-  Client: TFancyNetHTTPClient;
+//  Client: TFancyNetHTTPClient;
 begin
-  LogEvent('');
   LogEvent('Caching '+TopURLName+' ['+TopURL+']');
   CurrentProgressA.Caption := 'ManReGen'+TopURLName+': '+TGUID.NewGUID.ToString;
   CacheTimer.Enabled := False;
 
   URL := TopURL;
-
-  // Submit the request (asynchronously)
-  Client := TFancyNetHTTPClient.Create(nil);
-  Client.Tag := DateTimeToUnix(Now);
-  Client.Description := TopURLName;
-  Client.Asynchronous := True;
-  Client.ConnectionTimeout := 30000;  // 5 minutes
-  Client.ResponseTimeout := 30000;  // 5 minutes
-  Client.onRequestCompleted := ManualRequestCompleted;
-  Client.onRequestError := ManualRequestError;
-  Client.URL := TidURI.URLEncode(URL);
-  if Pos('https', URL) > 0
-  then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
-  try
-    Client.Get(Client.URL);
-  except on E: Exception do
-    begin
-      LogException('Get '+TopURLName, E.ClassName, E.Message, Client.URL);
-    end;
-  end;
+  ShellExecute(0, 'open', PChar(URL), nil, nil, SW_SHOWNORMAL);
+//
+//  // Submit the request (asynchronously)
+//  Client := TFancyNetHTTPClient.Create(nil);
+//  Client.Tag := DateTimeToUnix(Now);
+//  Client.Description := TopURLName;
+//  Client.Asynchronous := True;
+//  Client.ConnectionTimeout := 30000;  // 5 minutes
+//  Client.ResponseTimeout := 30000;  // 5 minutes
+//  Client.onRequestCompleted := ManualRequestCompleted;
+//  Client.onRequestError := ManualRequestError;
+//  Client.URL := TidURI.URLEncode(URL);
+//  if Pos('https', URL) > 0
+//  then Client.SecureProtocols := [THTTPSecureProtocol.SSL3, THTTPSecureProtocol.TLS12];
+//  try
+//    Client.Get(Client.URL);
+//  except on E: Exception do
+//    begin
+//      LogException('Get '+TopURLName, E.ClassName, E.Message, Client.URL);
+//    end;
+//  end;
 end;
 
 procedure TMainForm.btTop5000Click(Sender: TObject);
@@ -637,7 +637,7 @@ begin
       try
         d := TJSONObject.ParseJSONValue(Progress[i]) as TJSONObject;
         if ((Pos('::1'           ,(d.getValue('IP') as TJSONString).Value) = 0)  and
-            (Pos('174.7.120.10'  ,(d.getValue('IP') as TJSONString).Value) = 0)  and
+            (Pos('24.86.168.176' ,(d.getValue('IP') as TJSONString).Value) = 0)  and
             (Pos('23.111.75.19'  ,(d.getValue('IP') as TJSONString).Value) = 0)) then
         begin
           d1 := (d.getValue('ST') as TJSONString).Value;
@@ -1514,7 +1514,7 @@ begin
       try
         d := TJSONObject.ParseJSONValue(Progress[i]) as TJSONObject;
         if ((Pos('::1'           ,(d.getValue('IP') as TJSONString).Value) > 0)  or
-            (Pos('174.7.120.10'  ,(d.getValue('IP') as TJSONString).Value) > 0)  or
+            (Pos('24.86.168.176' ,(d.getValue('IP') as TJSONString).Value) > 0)  or
             (Pos('23.111.75.19'  ,(d.getValue('IP') as TJSONString).Value) > 0)) then
         begin
           d1 := (d.getValue('ST') as TJSONString).Value;
@@ -1951,13 +1951,13 @@ var
   MainHandle : THandle;
 begin
   LogEvent('Manual Cache Update [ '+(Sender as TFancyNetHTTPClient).Description+' ] Complete: '+FormatDateTime('HH:nn:ss',Now-UnixToDateTime((Sender as TFancyNetHTTPClient).Tag)));
-  LogEvent('');
 
   if (Sender as TFancyNetHTTPClient).Description  = 'Top 1000'
   then GetTopResults('https://www.actorious.com/?top-one-thousand=true','Top-1000-Cache');
   if (Sender as TFancyNetHTTPClient).Description  = 'Top 5000'
   then GetTopResults('https://www.actorious.com/?top-five-thousand=true','Top-5000-Cache');
 
+  LogEvent(' ');
   CurrentProgressA.Caption := 'Waiting';
   CacheTimer.Enabled := True;
   Sender.Free;

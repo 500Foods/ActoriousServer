@@ -2899,6 +2899,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+',"TP":'+FloatToStr(Now)+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   CacheBRResponse := TMemoryStream.Create;
@@ -3055,6 +3056,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   CacheBRResponse := TMemoryStream.Create;
@@ -3238,6 +3240,7 @@ begin
                     ',"RQ":"Lookup"'+
                     ',"TM":"'+QuotedStr(StringReplace(Lookup,'"','',[rfReplaceAll]))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   Response := TStringList.Create;
 
@@ -3465,7 +3468,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
-
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   CacheBRResponse := TMemoryStream.Create;
@@ -3782,6 +3785,7 @@ begin
                     ',"RQ":"Relatives"'+
                     ',"RT":"'+QuotedStr(IntToStr(RelatedTo))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Setup the client connection for TMDb
   ClientReq := TNetHTTPClient.Create(nil);
@@ -3945,6 +3949,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   CacheBRResponse := TMemoryStream.Create;
@@ -4091,6 +4096,7 @@ begin
                     ',"RQ":"SearchPeople"'+
                     ',"TM":"'+QuotedStr(SearchTerm)+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Setup the client connection for TMDb
   ClientReq := TNetHTTPClient.Create(nil);
@@ -4255,7 +4261,7 @@ begin
                     ',"RQ":"SearchLocal"'+
                     ',"TM":"'+QuotedStr(SearchTerm)+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
-
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Acquiring Local Search Results for '+QuotedStr(SearchTerm)+'","TP":'+FloatToStr(Now)+'}';
   Data := TJSONObject.ParseJSONValue(MainForm.LocalSearch(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
@@ -4385,6 +4391,7 @@ begin
                     ',"RQ":"SearchPeopleExt"'+
                     ',"TM":"'+QuotedStr(SearchTerm)+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   Page := 1;
   PagesAvail := 1;
@@ -4621,7 +4628,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}');
-
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   if FileExists(CacheFileDayBR)
@@ -5036,7 +5043,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
-
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   CacheBRResponse := TMemoryStream.Create;
@@ -5412,7 +5419,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
-
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   CacheBRResponse := TMemoryStream.Create;
@@ -5787,7 +5794,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
-
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   CacheBRResponse := TMemoryStream.Create;
@@ -6156,6 +6163,7 @@ begin
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
                     ',"RQ":"Top1000"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   try
@@ -6621,7 +6629,7 @@ begin
                     ',"DY":"'+IntToStr(cacheindex)+'"'+
                     ',"DT":"'+FormatDateTime('MMMdd',EncodeDate(2020, aMonth, aDay))+'"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}');
-
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   if FileExists(CacheFileDay)
@@ -6730,6 +6738,7 @@ begin
                     ',"IP":"'+TXDataOperationContext.Current.Request.RemoteIP+'"'+
                     ',"RQ":"Top5000"';
   ProgressKey := MainForm.Progress.Add(ProgressPrefix+'}');
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   // Is there a Cached Response on disk?
   try
