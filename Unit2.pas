@@ -1954,9 +1954,9 @@ begin
   LogEvent('');
 
   if (Sender as TFancyNetHTTPClient).Description  = 'Top 1000'
-  then GetTopResults('https://www.actorious.com/?toponethousand=true','Top1000Cache');
+  then GetTopResults('https://www.actorious.com/?top-one-thousand=true','Top-1000-Cache');
   if (Sender as TFancyNetHTTPClient).Description  = 'Top 5000'
-  then GetTopResults('https://www.actorious.com/?topfivethousand=true','Top5000Cache');
+  then GetTopResults('https://www.actorious.com/?top-five-thousand=true','Top-5000-Cache');
 
   CurrentProgressA.Caption := 'Waiting';
   CacheTimer.Enabled := True;
