@@ -6780,12 +6780,12 @@ begin
     // Normally we'd want to limit this to as few as necessary to generate the 5,000 people we're after. But there's a benefit
     // here in that the rest of these people are cached and thus can be returned via searches and so on.
     Page := 1;
-    while (Page >= 1) and (Page <= 500) do
+    while (Page >= 1) and (Page <= 375) do
     begin
-      if Page = 500 then Page := 0;
+      if Page = 375 then Page := 0;
 
       // Time to Regenerate this data
-   //   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 5,000 Actors ( Page '+InttoStr(Page)+' of 500 )","TP":'+FloatToStr(Now)+'}';
+   //   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Requesting Top 5,000 Actors ( Page '+InttoStr(Page)+' of 375 )","TP":'+FloatToStr(Now)+'}';
       Data := TJSONArray.Create;
 
       if (Page > 0) then
@@ -6816,7 +6816,7 @@ begin
           end;
 
           // One Page At A Time
-//          MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Top 5,000 Actors ( Page '+InttoStr(Page)+' of 500 )","TP":'+FloatToStr(Now)+'}';
+//          MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Top 5,000 Actors ( Page '+InttoStr(Page)+' of 375 )","TP":'+FloatToStr(Now)+'}';
 
           // Save the response to disk as-is
           ResponseFile := TMemoryStream.Create;
@@ -6861,7 +6861,7 @@ begin
             // If regenerating, we want to regenerate this file, not its contents as that will wipe out all the Wikidata content
             if Page = 0
             then Actor := GetPerson(Popular, Data.Count, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False)
-            else Actor := GetPerson(Popular + (Page*20), 10000, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
+            else Actor := GetPerson(Popular + (Page*20), 7500, RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),8),  RightStr('00000000'+IntToStr(((Data.Items[Popular] as TJSONObject).getValue('id') as TJSONNumber).AsInt),3), '', ProgressPrefix, ProgressKey, False);
 
           except on E: Exception do
             begin
