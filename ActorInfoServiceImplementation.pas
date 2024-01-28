@@ -6154,6 +6154,7 @@ begin
      and MainForm.ckRegenerate.Checked
   then Regenerate := True
   else Regenerate := False;
+  if Pos('-NOREGEN',Progress) > 0 then Regenerate := False;
 
 
   // Set up our progress system for this request
@@ -6729,7 +6730,7 @@ begin
      and MainForm.ckRegenerate.Checked
   then Regenerate := True
   else Regenerate := False;
-
+  if Pos('-NOREGEN',Progress) > 0 then Regenerate := False;
 
   // Set up our progress system for this request
   ProgressPrefix := '{"ST":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"'+
