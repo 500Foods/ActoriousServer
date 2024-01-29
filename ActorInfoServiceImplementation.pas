@@ -3626,8 +3626,8 @@ begin
         if Movienew <> '' then
         begin
           if Movieid = 1
-          then Reply := Reply + Movienew
-          else Reply := Reply+','+Movienew;
+          then Reply := Reply + MovieNew
+          else Reply := Reply+','+MovieNew;
           Movieid := Movieid + 1;
         end;
 
