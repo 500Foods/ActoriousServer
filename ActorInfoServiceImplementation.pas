@@ -2646,16 +2646,27 @@ end;
 
 function ProcessMovie(MovieID: Integer; MovieRef: String; TMDB_Data: TJSONObject; WikiIndex: Integer; Wikidata: TJSONArray; ProgressPrefix: String; ProgressKey: Integer):String;
 var
-  Movie: String;  // This is the result set we're building up
+  Movie: String;       // This is the result set we're building up
+  Step: String;        // What step are we at?
 
-//  MovieRoles: Integer; // Count of how many qualified Roles were found
+  ShowData: TJSONObject;
 
-//  RoleIndex: Integer; // Used to iterate through roles
-//  Images: TJSONArray;  // Images available for the person
-//  ImageIndex: Integer; // Used to index images
+  RoleIndex: Integer;         // Used to iterate through roles
+  Role: TJSONObject;          // One of the roles as JSON
+  Images: TJSONArray;         // Images available for the person
+  ImageIndex: Integer;        // Used to index images
+  TopMovieRoles: TStringList; // Used to sort the TV roles
+  TopTVRoles: TStringList;    // Used to sort the Movie roles
+
+  TopLimit: Integer;  // How many "top" items to include
+  TopCount: Integer;  // Keeping count of how many we have
+  DeDupe: Integer;    // Used to ensure we're not adding duplicate entries
 
   AdultMovie: Boolean;
 
+  SearchData: String;
+
+  i: Integer;
 begin
   TXDataOperationContext.Current.Response.Headers.SetValue('Access-Control-Expose-Headers','x-uncompressed-content-length');
   AdultMovie := False;
@@ -2748,6 +2759,424 @@ begin
       MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
+
+
+  // Top Roles /////////////////////////////////////////////////////////////////
+
+
+  TopMovieRoles := TStringList.Create;
+  TopTVRoles := TStringList.Create;
+  Step := 'ProcessActor: TopRoles';
+  try
+    // This is a bit of a mess as the popularity figure is completely different for TV vs. Movies.
+    // So we separate them out and sort them to get the top five of each.
+    Step := 'ProcessActor: TopRoles/Combined';
+    if (TMDB_Data.getValue('credits') <> nil) and ((TMDB_Data.getValue('credits') as TJSONObject).getValue('cast') <> nil) then
+    begin
+
+      // Lets iterate through every Role for this Actor where they are a member of the cast, if any
+      for RoleIndex := 0 to ((TMDB_Data.getValue('credits') as TJSONObject).getValue('cast') as TJSONArray).Count - 1 do
+      begin
+
+        Step := 'ProcessMovie: TopRoles/Combined/'+IntToStr(RoleIndex);
+        Role := (((TMDB_Data.getValue('credits') as TJSONObject).getValue('cast') as TJSONArray).Items[RoleIndex] as TJSONObject);
+
+        // Needs to have a popularity value.  Lots of stuff there that is not really Movie or TV roles that need to be skipped
+        Step := 'ProcessMovie: TopRoles/Popularity';
+        if (Role.getValue('popularity') <> nil) then
+        begin
+
+          // Needs to stipulate whether it is a Movie or TV role, so if no media type, we're not interested in it.
+          Step := 'ProcessMovie: TopRoles';
+//          if (Role.getValue('media_type') <> nil) then
+//          begin
+
+//              Step := 'ProcessMovie: TopRoles/MediaType';
+//              if ((Role.getValue('media_type') as TJSONString).Value = 'movie') then
+//              begin
+                Step := 'ProcessMovie: TopRoles/MediaType/Movie';
+                TopMovieRoles.Add(RightStr('00000000'+IntToStr(Trunc(100000000-(role.getValue('popularity') as TJSONNumber).AsDouble*1000.0)),8)+'/'+IntToStr(RoleIndex));
+//              end
+//              else if ((role.getValue('media_type') as TJSONString).Value = 'tv') then
+//              begin
+//                Step := 'ProcessMovie: TopRoles/MediaType/TV';
+//                TopTVRoles.Add(RightStr('00000000'+IntToStr(Trunc(100000000-(role.getValue('popularity') as TJSONNumber).AsDouble*1000.0)),8)+'/'+IntToStr(RoleIndex));
+//              end;
+
+//          end;
+        end;
+      end;
+    end;
+
+    // Sort the lists
+    TopMovieRoles.Sort;
+  except on E: Exception do
+    begin
+      MainForm.LogException(Step, E.ClassName, E.Message, MovieRef);
+//      MainForm.LogEvent(Movie);
+      MainForm.LogEvent(Copy(Movie,1,150));
+    end;
+  end;
+//  MainForm.LogEvent('Top Movie #'+MovieRef+' Roles: '+IntToStr(TopMovieRoles.Count));
+
+
+
+  Step := 'ProcessMovie: AllMovieRoles';
+  try
+    if (TopMovieRoles.Count > 0) then
+    begin
+
+      TopCount := 0;
+      DeDupe := 0;
+
+      for RoleIndex := 0 to TopMovieRoles.Count - 1 do
+      begin
+
+        Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex);
+        Role := (((TMDB_Data.getValue('credits') as TJSONOBject).getValue('cast') as TJSONArray).Items[StrToInt(Copy(TopMovieRoles[RoleIndex],Pos('/',TopMovieRoles[RoleIndex])+1,8))] as TJSONObject);
+
+        if ((Role.getValue('id') as TJSONNumber).AsInt <> DeDupe) then
+        begin
+
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/ID';
+
+          TopCount := TopCount + 1;
+          DeDupe := (Role.getValue('id') as TJSONNumber).AsInt;
+
+//          if (TopCount = 1)
+//          then Movie := Movie+'{"ID":'+IntToStr(TopCount)
+//          else Movie := Movie+',{"ID":'+IntToStr(TopCount);
+//
+//          // TMSDb ID
+//          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/TID';
+//          MainForm.LogEvent(Step);
+//          Movie := Movie+',"TID":'+IntToStr((Role.getValue('id') as TJSONNumber).AsInt);
+//
+//          // Moview or TV Show
+//          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/TYP';
+          Movie := Movie+',"TYP":"movie"';
+//
+//          // Family Friendly
+//          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/XXX';
+//          if  ((Role.getValue('adult') = nil) or (Role.getValue('adult') is TJSONNull) or ((role.getValue('adult') as TJSONBool).asBoolean = False))
+//          then Movie := Movie+',"XXX":false'
+//          else Movie := Movie+',"XXX":true';
+//
+//          // Title
+//          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/NAM';
+//          if not(Role.getValue('title') = nil) and not(Role.getValue('title') is TJSONNULL)
+//          then Movie := Movie+',"NAM":'+REST.JSON.TJSON.JSONEncode(Role.getValue('title') as TJSONString);
+//
+//          // Popularity
+//          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/POP';
+//          if not(role.getValue('popularity') = nil) and not (Role.getValue('popularity') is TJSONNULL)
+//          then Movie := Movie+',"POP":'+FloatToStr((Role.getValue('popularity') as TJSONNumber).AsDouble);
+//
+          // Character
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/CHR';
+//          if not(Role.getValue('character') = nil) and not(Role.getValue('character') is TJSONNULL) then
+//          begin
+//            Movie := Movie+',"CHR":'+REST.JSON.TJSON.JSONEncode(Role.getValue('character') as TJSONString);
+//            SearchData := SearchData + (Role.getValue('character') as TJSONString).Value + ':';
+//          end;
+          Movie := Movie + ',"CHR":""';
+
+          // Overview
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/OVR';
+          if not(TMDB_Data.getValue('overview') = nil) and not(TMDB_Data.getValue('overivew') is TJSONNULL)
+          then Movie := Movie+',"OVR":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('overview') as TJSONString);
+
+          // Release Date
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/REL';
+          if not(TMDB_Data.getValue('release_date') = nil) and not(TMDB_Data.getValue('release_date') is TJSONNULL)
+          then Movie := Movie+',"REL":"'+(TMDB_Data.getValue('release_date') as TJSONString).Value+'"';
+
+          // Poster
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/PIC';
+          if not(TMDB_Data.getValue('poster_path') = nil)
+          then if ((TMDB_Data.getValue('poster_path') is TJSONNULL))
+               then Movie := Movie+',"PIC":null'
+               else Movie := Movie+',"PIC":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('poster_path') as TJSONString);
+
+          // Get the extended version of the data for this title
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Extended';
+ //         ShowData := TJSONObject.ParseJSONValue(GetMovieFromTMDb((Role.getValue('id') as TJSONNumber).AsInt, False)) as TJSONObject;
+          ShowData := TMDB_Data;
+
+          // Budget
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/BUD';
+          if not(ShowData.getValue('budget') = nil) and not(ShowData.getValue('budget') is TJSONNull)
+          then Movie := Movie+',"BUD":'+FloatToStr((ShowData.getValue('budget') as TJSONNumber).AsDouble);
+
+          // Revenue
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/REV';
+          if not(ShowData.getValue('revenue') = nil) and not(ShowData.getValue('revenue') is TJSONNull)
+          then Movie := Movie+',"REV":'+FloatToStr((ShowData.getValue('revenue') as TJSONNumber).AsDouble);
+
+          // Runtime
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/RTM';
+          if not(ShowData.getValue('runtime') = nil) and not(ShowData.getValue('runtime') is TJSONNull)
+          then Movie := Movie+',"RTM":'+FloatToStr((ShowData.getValue('runtime') as TJSONNumber).AsDouble);
+
+          // Status
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/STS';
+          if not(ShowData.getValue('status') = nil) and not((ShowData.getValue('status') is TJSONNULL)) then
+          begin
+            if REST.JSON.TJSON.JSONEncode(ShowData.getValue('status') as TJSONString) <> '""' then
+            begin
+              Movie := Movie+',"STS":'+REST.JSON.TJSON.JSONEncode(ShowData.getValue('status') as TJSONString);
+            end;
+          end;
+
+          // Genres
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/GEN';
+          if not(ShowData.getValue('genres') = nil) and not((ShowData.getValue('genres') is TJSONNULL)) then
+          begin
+            if (ShowData.getValue('genres') is TJSONArray) then
+            begin
+              Movie := Movie+',"GEN":"';
+              for i := 0 to (ShowData.getValue('genres') as TJSONArray).Count -1 do
+              begin
+                Movie := Movie+(((ShowData.getValue('genres') as TJSONArray).Items[i] as TJSONObject).getValue('name') as TJSONString).Value;
+                if i < (ShowData.getValue('genres') as TJSONArray).Count -1
+                then Movie := Movie + ', ';
+              end;
+              Movie := Movie+'"';
+            end;
+          end;
+
+          // Tagline
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/TGL';
+          if not(ShowData.getValue('tagline') = nil) and not((ShowData.getValue('tagline') is TJSONNULL)) then
+          begin
+            if REST.JSON.TJSON.JSONEncode(ShowData.getValue('tagline') as TJSONString) <> '""' then
+            begin
+              Movie := Movie+',"TGL":'+REST.JSON.TJSON.JSONEncode(ShowData.getValue('tagline') as TJSONString);
+            end;
+          end;
+
+          // HomePage
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/WWW';
+          if not(ShowData.getValue('homepage') = nil) and not((ShowData.getValue('homepage') is TJSONNULL)) then
+          begin
+            if REST.JSON.TJSON.JSONEncode(ShowData.getValue('homepage') as TJSONString) <> '""' then
+            begin
+              Movie := Movie+',"WWW":'+REST.JSON.TJSON.JSONEncode(ShowData.getValue('homepage') as TJSONString);
+            end;
+          end;
+
+          // External IDs
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ExtIDs';
+          if not(ShowData.getValue('external_ids') = nil) then
+          begin
+
+            // IMDb ID
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/IID';
+            if not((ShowData.getValue('external_ids') as TJSONObject).getValue('imdb_id') = nil) and not((ShowData.getValue('external_ids') as TJSONObject).getValue('imdb_id') is TJSONNULL) then
+            begin
+              if (REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('imdb_id') as TJSONString)) <> '""' then
+              begin
+                Movie := Movie+',"IID":'+REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('imdb_id') as TJSONString);
+              end;
+            end;
+
+            // Facebook ID
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/FID';
+            if not((ShowData.getValue('external_ids') as TJSONObject).getValue('facebook_id') = nil) and not((ShowData.getValue('external_ids') as TJSONObject).getValue('facebook_id') is TJSONNULL) then
+            begin
+              if (REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('facebook_id') as TJSONString)) <> '""' then
+              begin
+                Movie := Movie+',"FID":'+REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('facebook_id') as TJSONString);
+              end;
+            end;
+
+            // Twitter ID
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/TWT';
+            if not((ShowData.getValue('external_ids') as TJSONObject).getValue('twitter_id') = nil) and not((ShowData.getValue('external_ids') as TJSONObject).getValue('twitter_id') is TJSONNULL) then
+            begin
+              if (REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('twitter_id') as TJSONString)) <> '""' then
+              begin
+                Movie := Movie+',"TWT":'+REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('twitter_id') as TJSONString);
+              end;
+            end;
+
+            // Instagram ID
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/INS';
+            if not((ShowData.getValue('external_ids') as TJSONObject).getValue('instagram_id') = nil) and not((ShowData.getValue('external_ids') as TJSONObject).getValue('instagram_id') is TJSONNULL) then
+            begin
+              if (REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('instagram_id') as TJSONString)) <> '""' then
+              begin
+                Movie := Movie+',"INS":'+REST.JSON.TJSON.JSONEncode((ShowData.getValue('external_ids') as TJSONOBJECT).getValue('instagram_id') as TJSONString);
+              end;
+            end;
+
+          end; // external_ids
+
+
+          // Production Countries
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Countries';
+          if not(ShowData.getValue('production_countries') = nil) then
+          begin
+            // we've got countries?
+            Images := ShowData.getValue('production_countries') as TJSONArray;
+            // Add country count
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/CTY';
+            Movie := Movie+',"CTY":'+IntToStr(Images.Count)+',"CTG":[';
+            for ImageIndex := 0 to Images.Count-1 do
+            begin
+              Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/CTG/'+IntToStr(ImageIndex);
+              if ImageIndex = 0
+              then Movie := Movie+'"'+((Images.Items[ImageIndex] as TJSONObject).getValue('iso_3166_1') as TJSONString).Value+'"'
+              else Movie := Movie+',"'+((Images.Items[ImageIndex] as TJSONObject).getValue('iso_3166_1') as TJSONString).Value+'"';
+            end;
+            Movie := Movie+']';
+          end; // Production Countries
+
+
+          // Posters
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Images';
+          if not(ShowData.getValue('images') = nil) then
+          begin
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Posters';
+            if not((ShowData.getValue('images') as TJSONObject).getValue('posters') = nil)  then
+            begin
+              // we've got images?
+              Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Images/PSG';
+              Images := (ShowData.getValue('images') as TJSONObject).getValue('posters') as TJSONArray;
+              // Add Image count
+              Movie := Movie+',"PSC":'+IntToStr(Images.Count)+',"PSG":[';
+              for ImageIndex := 0 to Images.Count-1 do
+              begin
+                Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/PSG/'+IntToStr(ImageIndex);
+                if ImageIndex = 0
+                then Movie := Movie+'"'+((Images.Items[ImageIndex] as TJSONObject).getValue('file_path') as TJSONString).Value+'"'
+                else Movie := Movie+',"'+((Images.Items[ImageIndex] as TJSONObject).getValue('file_path') as TJSONString).Value+'"';
+              end;
+              Movie := Movie+']';
+            end;
+          end; // Posters
+
+
+          // Backgrounds
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Backgrounds';
+          if not(ShowData.getValue('images') = nil) then
+          begin
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Backdrops';
+            if not((ShowData.getValue('images') as TJSONObject).getValue('backdrops') = nil)  then
+            begin
+              // we've got images?
+              Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/BDS';
+              Images := (ShowData.getValue('images') as TJSONObject).getValue('backdrops') as TJSONArray;
+              // Add Image count
+              Movie := Movie+',"BDC":'+IntToStr(Images.Count)+',"BDS":[';
+              for ImageIndex := 0 to Images.Count-1 do
+              begin
+                Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/BDS/'+IntToStr(ImageIndex);
+                if ImageIndex = 0
+                then Movie := Movie+'"'+((Images.Items[ImageIndex] as TJSONObject).getValue('file_path') as TJSONString).Value+'"'
+                else Movie := Movie+',"'+((Images.Items[ImageIndex] as TJSONObject).getValue('file_path') as TJSONString).Value+'"';
+              end;
+              Movie := Movie+']';
+            end;
+          end; // Backgrounds
+
+
+          // Videos
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Videos';
+          if not(ShowData.getValue('videos') = nil) then
+          begin
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/VideoResults';
+            if not((ShowData.getValue('videos') as TJSONObject).getValue('results') = nil)  then
+            begin
+              // we've got images?
+              Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/VDS';
+              Images := (ShowData.getValue('videos') as TJSONObject).getValue('results') as TJSONArray;
+              // Add Image count
+              Movie := Movie+',"VDC":'+IntToStr(Images.Count)+',"VDS":[';
+              for ImageIndex := 0 to Images.Count-1 do
+              begin
+                Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/VDS/'+IntToStr(ImageIndex);
+                if ImageIndex = 0
+                then Movie := Movie+'"'+((Images.Items[ImageIndex] as TJSONObject).getValue('site') as TJSONString).Value+':'+((Images.Items[ImageIndex] as TJSONObject).getValue('key') as TJSONString).Value+'"'
+                else Movie := Movie+',"'+((Images.Items[ImageIndex] as TJSONObject).getValue('site') as TJSONString).Value+':'+((Images.Items[ImageIndex] as TJSONObject).getValue('key') as TJSONString).Value+'"';
+              end;
+              Movie := Movie+']';
+            end;
+          end; // Videos
+
+
+          // Actors
+          Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Credits';
+          if not(ShowData.getValue('credits') = nil) then
+          begin
+            Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/Cast';
+            if not((ShowData.getValue('credits') as TJSONObject).getValue('cast') = nil)  then
+            begin
+              // we've got images?
+              Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACC';
+              Images := (ShowData.getValue('credits') as TJSONObject).getValue('cast') as TJSONArray;
+              // Add Image count
+              Movie := Movie+',"ACC":'+IntToStr(Images.Count)+',"ACA":[';
+              for ImageIndex := 0 to Min(Images.Count-1,50) do
+              begin
+                Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACA/'+IntToStr(ImageIndex);
+                if ImageIndex = 0
+                then Movie := Movie+'{'
+                else Movie := Movie+',{';
+
+                Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACA/'+IntToStr(ImageIndex)+'/ID';
+                if not((images.Items[ImageIndex] as TJSONObject).getValue('id') = nil)
+                then Movie := Movie+'"ID":'+IntToStr(((images.Items[ImageIndex] as TJSONObject).getValue('id') as TJSONNumber).asInt);
+
+                Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACA/'+IntToStr(ImageIndex)+'/CHR';
+                if not((images.Items[ImageIndex] as TJSONObject).getValue('character') = nil)
+                then if not((images.Items[ImageIndex] as TJSONObject).getValue('character') is TJSONNULL)
+                     then if Trim(((images.Items[ImageIndex] as TJSONObject).getValue('character') as TJSONSTring).Value) <> ''
+                          then Movie := Movie+',"CHR":'+REST.JSON.TJSON.JSONEncode(((images.Items[ImageIndex] as TJSONObject).getValue('character') as TJSONSTring));
+
+                if (ImageIndex < 10) then
+                begin
+                  // Family Friendly
+                  Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACA/'+IntToStr(ImageIndex)+'/XXX';
+                  if  (((images.Items[ImageIndex] as TJSONObject).getValue('adult') = nil) or ((images.Items[ImageIndex] as TJSONObject).getValue('adult') is TJSONNull) or (((images.Items[ImageIndex] as TJSONObject).getValue('adult') as TJSONBool).asBoolean = False))
+                  then Movie := Movie+',"XXX":false'
+                  else Movie := Movie+',"XXX":true';
+
+                  Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACA/'+IntToStr(ImageIndex)+'/NAM';
+                  if not((images.Items[ImageIndex] as TJSONObject).getValue('name') = nil)
+                  then Movie := Movie+',"NAM":'+REST.JSON.TJSON.JSONEncode(((images.Items[ImageIndex] as TJSONObject).getValue('name') as TJSONSTring));
+
+                  Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACA/'+IntToStr(ImageIndex)+'/PIC';
+                  if not((images.Items[ImageIndex] as TJSONObject).getValue('profile_path') = nil)
+                  then if ((images.Items[ImageIndex] as TJSONObject).getValue('profile_path') is TJSONNULL)
+                       then Movie := Movie+',"PIC":null'
+                       else Movie := Movie+',"PIC":"'+((images.Items[ImageIndex] as TJSONObject).getValue('profile_path') as TJSONSTring).Value+'"';
+
+                  Step := 'ProcessMovie: AllMovieRoles/'+IntToStr(RoleIndex)+'/'+IntToStr(DeDupe)+'/ACA/'+IntToStr(ImageIndex)+'/ORD';
+                  if not((images.Items[ImageIndex] as TJSONObject).getValue('order') = nil)
+                  then Movie := Movie+',"ORD":'+IntToStr(((images.Items[ImageIndex] as TJSONObject).getValue('order') as TJSONNumber).asInt);
+                end;
+                Movie := Movie+'}';
+              end;
+              Movie := Movie+']';
+            end;
+          end; // Actors
+
+//          ShowData.Free;
+
+//          Movie := Movie + '}';
+        end;
+      end;
+    end;
+
+  except on E: Exception do
+    begin
+      MainForm.LogException(Step, E.ClassName, E.Message, MovieRef);
+//      MainForm.LogEvent(Movie);
+      MainForm.LogEvent(Copy(Movie,1,150));
+    end;
+  end;
+
 
   // All Done !!!
   Movie := Movie+'}';
