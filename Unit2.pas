@@ -103,8 +103,8 @@ type
     lblDeathDays: TLabel;
     lblReleaseDays: TLabel;
     lblSearchPeople: TLabel;
-    Label3: TLabel;
-    Label4: TLabel;
+    lblSearchMovies: TLabel;
+    lblSearchTVShow: TLabel;
     Shape1: TShape;
     PanelA: TPanel;
     ProgressDetailA: TLabel;
@@ -190,6 +190,7 @@ type
     procedure btEmailClick(Sender: TObject);
     procedure GetAppParameters(List: TStringList);
     function SearchPeople(ActorID: Integer):Integer;
+    function SearchMovies(MovieID: Integer):Integer;
     procedure UpdateSearch(SearchIndex: Integer; SearchData: String);
     function LocalSearch(SearchTerm: String; Adult: Boolean):String;
     procedure lblSearchPeopleClick(Sender: TObject);
@@ -197,6 +198,8 @@ type
     procedure SaveSearchIndexes;
     procedure LoadSearchIndexes;
     procedure UpdateProgress(PNum: Integer; PInfo: String; PDetail:String; PStep:String; PReport: String);
+    procedure lblSearchMoviesClick(Sender: TObject);
+    procedure lblSearchTVShowClick(Sender: TObject);
   public
     Progress: TStringList;
     WaitingMessage: String;
@@ -612,7 +615,12 @@ begin
   SearchFormat := StringReplace(SearchFormat,'::',':',[rfReplaceAll]);
   SearchFormat := StringReplace(SearchFormat,'::',':',[rfReplaceAll]);
 
-  IndexPeople[SearchIndex] := SearchFormat;
+  if (Copy(SearchData,1,1) = 'Y') or (Copy(SearchData,1,1) = 'N')
+  then IndexPeople[SearchIndex] := SearchFormat;
+  if (Copy(SearchData,1,1) = 'X') or (Copy(SearchData,1,1) = 'M')
+  then IndexMovies[SearchIndex] := SearchFormat;
+  if (Copy(SearchData,1,1) = 'W') or (Copy(SearchData,1,1) = 'L')
+  then IndexTVShow[SearchIndex] := SearchFormat;
 end;
 
 procedure TMainForm.btAllClick(Sender: TObject);
@@ -781,6 +789,8 @@ begin
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('  Person Index Size:    '+FloatToStrF(IndexPeopleSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
+  mmStats.Lines.Add('  Movies Index Size:    '+FloatToStrF(IndexMoviesSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
+  mmStats.Lines.Add('  TVShow Index Size:    '+FloatToStrF(IndexTVShowSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
 
   mmStats.Lines.Add('');
   mmStats.Lines.Add('');
@@ -904,6 +914,31 @@ begin
     end;
 end;
 
+procedure TMainForm.lblSearchMoviesClick(Sender: TObject);
+var
+  i,j : Integer;
+begin
+
+  // Shows the most recent additions to the Movies search index
+  btClearClick(Sender);
+
+  i := Length(IndexMovies) - 1;
+  j := 0;
+  while i >= 0 do
+  begin
+    if Length(IndexMovies[i]) >= 150
+    then LogEvent(RightStr('00000'+IntToStr(i),5)+' '+LeftStr(IndexMovies[i],100)+' ... '+RightStr(IndexMovies[i],50))
+    else LogEvent(RightStr('00000'+IntToStr(i),5)+' '+IndexMovies[i]);
+    i := i - 1;
+
+    // Only want the most recent 50
+    j := j + 1;
+    if j = 50 then i := -1;
+  end;
+
+  SaveSearchIndexes;
+end;
+
 procedure TMainForm.lblSearchPeopleClick(Sender: TObject);
 var
   i,j : Integer;
@@ -919,6 +954,31 @@ begin
     if Length(IndexPeople[i]) >= 150
     then LogEvent(RightStr('00000'+IntToStr(i),5)+' '+LeftStr(IndexPeople[i],100)+' ... '+RightStr(IndexPeople[i],50))
     else LogEvent(RightStr('00000'+IntToStr(i),5)+' '+IndexPeople[i]);
+    i := i - 1;
+
+    // Only want the most recent 50
+    j := j + 1;
+    if j = 50 then i := -1;
+  end;
+
+  SaveSearchIndexes;
+end;
+
+procedure TMainForm.lblSearchTVShowClick(Sender: TObject);
+var
+  i,j : Integer;
+begin
+
+  // Shows the most recent additions to the TVShow search index
+  btClearClick(Sender);
+
+  i := Length(IndexTVShow) - 1;
+  j := 0;
+  while i >= 0 do
+  begin
+    if Length(IndexTVShow[i]) >= 150
+    then LogEvent(RightStr('00000'+IntToStr(i),5)+' '+LeftStr(IndexTVShow[i],100)+' ... '+RightStr(IndexTVShow[i],50))
+    else LogEvent(RightStr('00000'+IntToStr(i),5)+' '+IndexTVShow[i]);
     i := i - 1;
 
     // Only want the most recent 50
@@ -2160,6 +2220,56 @@ begin
     end;
   end;
 
+  // Movies
+  if Length(IndexMovies) > 0 then
+  begin
+    IndexFileName := AppCacheDir+'cache/search/IndexMovies.idx';
+    IndexFile := TStringList.Create;
+
+    i := 0;
+    while i < Length(IndexMovies) do
+    begin
+      IndexFile.Add(IndexMovies[i]);
+      i := i + 1;
+    end;
+
+    try
+      IndexFile.SaveToFile(IndexFileName, TEncoding.UTF8);
+      IndexFile.Free;
+      IndexMoviesSize := FileSizeByName(IndexFileName);
+      btRecentProgressClick(nil);
+    except on E: Exception do
+      begin
+        LogException('Search Index Update Failed',E.ClassName, E.Message, IndexFileName);
+      end;
+    end;
+  end;
+
+  // TVShow
+  if Length(IndexTVShow) > 0 then
+  begin
+    IndexFileName := AppCacheDir+'cache/search/IndexTVShow.idx';
+    IndexFile := TStringList.Create;
+
+    i := 0;
+    while i < Length(IndexTVShow) do
+    begin
+      IndexFile.Add(IndexTVShow[i]);
+      i := i + 1;
+    end;
+
+    try
+      IndexFile.SaveToFile(IndexFileName, TEncoding.UTF8);
+      IndexFile.Free;
+      IndexTVShowSize := FileSizeByName(IndexFileName);
+      btRecentProgressClick(nil);
+    except on E: Exception do
+      begin
+        LogException('Search Index Update Failed',E.ClassName, E.Message, IndexFileName);
+      end;
+    end;
+  end;
+
   // Similarly, we'll save the Lookup Cache at the same time. This is much smaller, just a list of
   // Lookup hashes and filenames, but still a bit tedious to get into a usable text file.
   LookupJSON := TJSONArray.Create;
@@ -2210,6 +2320,70 @@ begin
 
       lblSearchPeople.Caption := FloatToStrF(IndexFile.Count,ffNumber,6,0);
       IndexPeopleSize := FileSizeByName(IndexFileName);
+      IndexFile.Free;
+
+      btRecentProgressClick(nil);
+    end;
+  end;
+
+  // Movies
+  IndexFileName := AppCacheDir+'cache/search/IndexMovies.idx';
+  if FileExists(IndexFileName) then
+  begin
+    IndexFile := TStringList.Create;
+
+    IndexFile.LoadFromFile(IndexFileName);
+
+    if IndexFile.Count > 0 then
+    begin
+      i := 0;
+      j := 0;
+      while i < IndexFile.Count do
+      begin
+        if (Pos(' Pending', IndexFile[i]) = 0) and
+           (IndexFile[i] <> '') then
+        begin
+          SetLength(IndexMovies, j + 1);
+          IndexMovies[j] := IndexFile[i];
+          j := j + 1;
+        end;
+        i := i + 1;
+      end;
+
+      lblSearchMovies.Caption := FloatToStrF(IndexFile.Count,ffNumber,6,0);
+      IndexMoviesSize := FileSizeByName(IndexFileName);
+      IndexFile.Free;
+
+      btRecentProgressClick(nil);
+    end;
+  end;
+
+  // TVShow
+  IndexFileName := AppCacheDir+'cache/search/IndexTVShow.idx';
+  if FileExists(IndexFileName) then
+  begin
+    IndexFile := TStringList.Create;
+
+    IndexFile.LoadFromFile(IndexFileName);
+
+    if IndexFile.Count > 0 then
+    begin
+      i := 0;
+      j := 0;
+      while i < IndexFile.Count do
+      begin
+        if (Pos(' Pending', IndexFile[i]) = 0) and
+           (IndexFile[i] <> '') then
+        begin
+          SetLength(IndexTVShow, j + 1);
+          IndexTVShow[j] := IndexFile[i];
+          j := j + 1;
+        end;
+        i := i + 1;
+      end;
+
+      lblSearchTVShow.Caption := FloatToStrF(IndexFile.Count,ffNumber,6,0);
+      IndexTVShowSize := FileSizeByName(IndexFileName);
       IndexFile.Free;
 
       btRecentProgressClick(nil);
@@ -2281,6 +2455,44 @@ begin
   end;
 
 end;
+
+function TMainForm.SearchMovies(MovieID: Integer):Integer;
+var
+  i: Integer;
+  SearchTerm: String;
+  SearchEnd: Boolean;
+
+begin
+  i := 0;
+  Result := -1;
+  SearchTerm := RightStr('00000000'+IntToStr(MovieID),8);
+
+  SearchEnd := False;
+  while not(SearchEnd) do
+  begin
+    // Not found, so let's add it
+    if i = Length(IndexMovies)  then
+    begin
+      Result := i;
+      SetLength(IndexMovies,i+1);
+      lblSearchMovies.Caption := FloatToStrF(i+1,ffNumber,6,0);
+
+      IndexMovies[i] := 'Pending';
+      SearchEnd := True;
+    end;
+
+    // Found it
+    if Copy(IndexMovies[i],2,8) = SearchTerm then
+    begin
+      Result := i;
+      SearchEnd := True;
+    end;
+
+    i := i + 1;
+  end;
+
+end;
+
 
 procedure TMainForm.SendActivityLog(Subject: String);
 var
@@ -3034,7 +3246,7 @@ begin
 
   // Initialize Index Sizes
   IndexPeopleSize := 0;
-  IndexMoviesSize := 0;
+  IndexTVShowSize := 0;
   IndexTVShowSize := 0;
 
   // Sort out the Server Version

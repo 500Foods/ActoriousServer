@@ -2664,6 +2664,7 @@ var
 
   AdultMovie: Boolean;
 
+  SearchMovie: Integer;
   SearchData: String;
 
   i: Integer;
@@ -2672,6 +2673,7 @@ begin
   AdultMovie := False;
 
   // Check if we've got valid TMDb data?
+  Step := 'Processing TMDb Movie Validation Check';
   try
     if (not(TMDB_Data.getValue('success') = nil) and (TMDB_Data.getValue('success') is TJSONBool)) or
        (TMDB_Data.toString = '{}') or
@@ -2685,7 +2687,7 @@ begin
     end;
   except on E: Exception do
     begin
-      MainForm.LogException('Processing TMDb Movie Validation Check', E.ClassName, E.Message, MovieRef);
+      MainForm.LogException(Step, E.ClassName, E.Message, MovieRef);
       MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
@@ -2694,38 +2696,49 @@ begin
   // This is sort of the 'header' infromation
   try
     // ID is used by Tabulator as an index, so handy to just add it right here.
+    Step := 'Processing ID';
     Movie :='{"ID":'+IntToStr(MovieID);
 
     // Add a timestamp so that we know when this was generated
+    Step := 'Processing DAT';
     Movie := Movie+',"DAT":"'+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+'"';
 
-    // Name - Assume it is always present?
-//    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Name","TP":'+FloatToStr(Now)+'}';
-    Movie := Movie+',"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('title') as TJSONString);
-
     // TMDb ID
+    Step := 'Processing TID';
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: TMDb","TP":'+FloatToStr(Now)+'}';
     Movie := Movie+',"TID":'+IntToStr(StrToInt(MovieRef));
+    SearchMovie := MainForm.SearchMovies(StrToInt(MovieRef));
+    SearchData := RightStr('0000000'+MovieRef,8)+':';
+
+
+    // Name - Assume it is always present?
+    Step := 'Processing NAM';
+//    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Name","TP":'+FloatToStr(Now)+'}';
+    Movie := Movie+',"NAM":'+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('title') as TJSONString);
+    SearchData := SearchData+REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('title') as TJSONString)+':';
 
     // Wikidata ID
+    Step := 'Processing WID';
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Wikidata","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1)
     then Movie := Movie+',"WID":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('movie') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
-
     // Entries from Wikidata Query
 
     // Rotten Tomatoes ID
+    Step := 'Processing RID';
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: RT","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('RTID') <> nil)
     then Movie := Movie+',"RID":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('RTID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
     // MetaCritic ID
+    Step := 'Processing MET';
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: MetaCritic","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') <> nil)
     then Movie := Movie+',"MET":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('MetaCriticID') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
 
     // Wikipedia Link
+    Step := 'Processing WIK';
 //    MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Person Data: Wikipedia","TP":'+FloatToStr(Now)+'}';
     if (WikiIndex <> -1) and ((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') <> nil)
     then Movie := Movie+',"WIK":"'+(((Wikidata.Items[WikiIndex] as TJSONObject).getValue('Wikipedia') as TJSONObject).GetValue('value') as TJSONString).Value+'"';
@@ -2734,28 +2747,33 @@ begin
     // Entries from TMDb Query
 
     // Family Friendly... Or not?
+    Step := 'Processing Adult Check';
+
     AdultMovie := False;
     if not(TMDB_Data.getValue('adult') = nil) and not((TMDB_Data.getValue('adult') is TJSONNULL)) then
     begin
       if (TMDB_Data.getValue('adult') as TJSONBool).AsBoolean = false then
       begin
         Movie := Movie+',"XXX":false';
+        SearchData := 'M'+SearchData;
       end
       else
       begin
         Movie := Movie+',"XXX":true';
         AdultMovie := True;
+        SearchData := 'X'+SearchData;
       end;
     end
     else Movie := Movie+'",XXX":false';
 
+    Step := 'Processing POP';
     if not(TMDB_Data.getValue('popularity') = nil) and not((TMDB_Data.getValue('popularity') is TJSONNULL))
     then Movie := Movie+',"POP":'+FloatToStr((TMDB_Data.getValue('popularity') as TJSONNumber).AsDouble)
     else Movie := Movie+',"POP":0.0';
 
   except on E: Exception do
     begin
-      MainForm.LogException('Processing Movie Data', E.ClassName, E.Message, MovieRef);
+      MainForm.LogException(Step, E.ClassName, E.Message, MovieRef);
       MainForm.LogEvent(Copy(Movie,1,150));
     end;
   end;
@@ -2770,7 +2788,7 @@ begin
   try
     // This is a bit of a mess as the popularity figure is completely different for TV vs. Movies.
     // So we separate them out and sort them to get the top five of each.
-    Step := 'ProcessActor: TopRoles/Combined';
+    Step := 'ProcessMovie: TopRoles/Combined';
     if (TMDB_Data.getValue('credits') <> nil) and ((TMDB_Data.getValue('credits') as TJSONObject).getValue('cast') <> nil) then
     begin
 
@@ -3168,6 +3186,20 @@ begin
         end;
       end;
     end;
+
+    Step := 'Processing Search Data';
+    if not(TMDB_Data.getValue('tagline') = nil) and not((TMDB_Data.getValue('tagline') is TJSONNULL)) then
+    begin
+      if REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('tagline') as TJSONString) <> '""' then
+      begin
+        SearchData := SearchData + REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('tagline') as TJSONString)+':';
+      end;
+    end;
+    if not(TMDB_Data.getValue('popularity') = nil) and not((TMDB_Data.getValue('popularity') is TJSONNULL))
+    then SearchData := SearchData + RightStr('000000'+IntToStr(Trunc(100.0*((TMDB_Data.getValue('popularity') as TJSONNumber).AsDouble))),6)
+    else Searchdata := SearchData + '000000';
+    Step := 'Indexing Search Data';
+    MainForm.UpdateSearch(SearchMovie, SearchData);
 
   except on E: Exception do
     begin

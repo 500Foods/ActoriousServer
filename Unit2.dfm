@@ -358,7 +358,7 @@ object MainForm: TMainForm
       Layout = tlCenter
       OnClick = lblSearchPeopleClick
     end
-    object Label3: TLabel
+    object lblSearchMovies: TLabel
       Left = 336
       Top = 98
       Width = 64
@@ -371,10 +371,11 @@ object MainForm: TMainForm
       ParentShowHint = False
       ShowHint = True
       Layout = tlCenter
+      OnClick = lblSearchMoviesClick
     end
-    object Label4: TLabel
-      Left = 336
-      Top = 122
+    object lblSearchTVShow: TLabel
+      Left = 337
+      Top = 121
       Width = 64
       Height = 24
       Cursor = crHandPoint
@@ -385,6 +386,7 @@ object MainForm: TMainForm
       ParentShowHint = False
       ShowHint = True
       Layout = tlCenter
+      OnClick = lblSearchTVShowClick
     end
     object Label2: TLabel
       Left = 135
@@ -713,8 +715,8 @@ object MainForm: TMainForm
       OnChange = edtClientVersionChange
     end
     object btUpdateVersion: TButton
-      Left = 406
-      Top = 74
+      Left = 405
+      Top = 78
       Width = 70
       Height = 25
       Caption = 'Client Check'
