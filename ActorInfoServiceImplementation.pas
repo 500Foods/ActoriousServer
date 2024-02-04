@@ -2658,7 +2658,6 @@ var
   TopMovieRoles: TStringList; // Used to sort the TV roles
   TopTVRoles: TStringList;    // Used to sort the Movie roles
 
-  TopLimit: Integer;  // How many "top" items to include
   TopCount: Integer;  // Keeping count of how many we have
   DeDupe: Integer;    // Used to ensure we're not adding duplicate entries
 
@@ -4689,13 +4688,20 @@ var
   Data: TJSONArray;
   ProgressPrefix: String;
   ProgressKey: Integer;
-  Actors: String;
-  ActorCount: Integer;
   Response: TStringList;
   CacheFile: String;
   i : Integer;
+
+  SearchResults: String;
+
   ActorData: TJSONObject;
+  ActorCount: Integer;
   ActorNum: String;
+
+  MovieData: TJSONObject;
+  MovieCount: Integer;
+  MovieNum: String;
+
   NotBrotli: TMemoryStream;
   Brotli: TMemoryStream;
 
@@ -4725,12 +4731,13 @@ begin
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Initialized","TP":'+FloatToStr(Now)+'}';
 
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Acquiring Local Search Results for '+QuotedStr(SearchTerm)+'","TP":'+FloatToStr(Now)+'}';
-  Data := TJSONObject.ParseJSONValue(MainForm.LocalSearch(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
+
+  Data := TJSONObject.ParseJSONValue(MainForm.LocalSearchPeople(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Checking Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(Data.Count)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
 
   Response := TStringList.Create;
 
-  Actors := '[';
+  SearchResults := '{"Actors":[';
   ActorCount := 0;
   for i := 0 to Data.Count - 1 do
   begin
@@ -4772,16 +4779,70 @@ begin
       ActorData.AddPair(TJSONPair.Create('Count', TJSONNumber.Create(StrToIntDef(((data.items[i] as TJSONObject).getValue('Relevance') as TJSONString).Value,1000000))));
 
       if ActorCount = 0
-      then Actors := Actors+ActorData.ToString
-      else Actors := Actors+','+ActorData.ToString;
+      then SearchResults := SearchResults+ActorData.ToString
+      else SearchResults := SearchResults+','+ActorData.ToString;
       ActorCount := ActorCount + 1;
 
       ActorData.Free;
     end;
   end;
-  Actors := Actors +']';
+  SearchResults := SearchResults +'],"Movies":[';
 
-  Response.Text := Actors;
+  Data.Free;
+  Data := TJSONObject.ParseJSONValue(MainForm.LocalSearchMovies(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Checking Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(Data.Count)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
+
+  MovieCount := 0;
+  for i := 0 to Data.Count - 1 do
+  begin
+    MovieNum := ((data.items[i] as TJSONObject).getValue('Person') as TJSONString).Value;
+    CacheFile := MainForm.AppCacheDir+'cache/movies/actorious/'+
+      RightStr(MovieNum,3)+
+      '/movie-'+
+      MovieNum+
+      '.json';
+    try
+      SLLoadJSON(Response, CacheFile);
+    except on E: Exception do
+      begin
+        // In QuickSearch, we're just returning cached values so we won't do this step.
+        // That's what makes it Quick, after all, in addition to only searching one page
+        // of results from TMDb
+//        UpdatePersonfromTMDb(StrToInt(MovieNum), False);
+//        Response.LoadFromFile(MainForm.AppCacheDir+'cache/people/tmdb/'+
+//        RightStr(MovieNum,3)+
+//          '/person-'+
+//          MovieNum+
+//          '.json');
+//        MovieData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
+//        ProcessMovie(MovieCount, MovieNum, MovieData, -1, nil, ProgressPrefix, ProgressKey);
+//        MovieData.Free;
+//        Response.LoadFromFile(MainForm.AppCacheDir+'cache/people/actorious/'+
+//          RightStr(MovieNum,3)+
+//          '/person-'+
+//          MovieNum+
+//          '.json');
+      end;
+    end;
+
+    if (Response.Text <> '')  then
+    begin
+      MovieData := TJSONObject.ParseJSONValue(Response.Text) as TJSONObject;
+      MovieData.RemovePair('ID');
+      MovieData.AddPair(TJSONPair.Create('ID', TJSONNumber.Create(MovieCount+1)));
+      MovieData.AddPair(TJSONPair.Create('Count', TJSONNumber.Create(StrToIntDef(((data.items[i] as TJSONObject).getValue('Relevance') as TJSONString).Value,1000000))));
+
+      if MovieCount = 0
+      then SearchResults := SearchResults+MovieData.ToString
+      else SearchResults := SearchResults+','+MovieData.ToString;
+      MovieCount := MovieCount + 1;
+
+      MovieData.Free;
+    end;
+  end;
+  SearchResults := SearchResults+']}';
+
+  Response.Text := SearchResults;
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(ActorCount)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
 
   // This is what we're sending back

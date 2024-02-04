@@ -192,7 +192,8 @@ type
     function SearchPeople(ActorID: Integer):Integer;
     function SearchMovies(MovieID: Integer):Integer;
     procedure UpdateSearch(SearchIndex: Integer; SearchData: String);
-    function LocalSearch(SearchTerm: String; Adult: Boolean):String;
+    function LocalSearchPeople(SearchTerm: String; Adult: Boolean):String;
+    function LocalSearchMovies(SearchTerm: String; Adult: Boolean):String;
     procedure lblSearchPeopleClick(Sender: TObject);
     function Occurrences(const Substring, Text: string): integer;
     procedure SaveSearchIndexes;
@@ -989,7 +990,7 @@ begin
   SaveSearchIndexes;
 end;
 
-function TMainForm.LocalSearch(SearchTerm: String; Adult: Boolean): String;
+function TMainForm.LocalSearchPeople(SearchTerm: String; Adult: Boolean): String;
 var
   i, j: Integer;
   SearchEnd: Boolean;
@@ -1275,6 +1276,299 @@ begin
   Result := Result + ']';
 
 //  LogEvent('Second Matches '+IntToStr(Matches.Count)+' out of '+IntToStr(Length(IndexPeople)));
+//  LogEvent(Result);
+
+  Matches.Free;
+
+//  LogEvent('Search Time: '+IntToStr(MillisecondsBetween(Now, ElapsedTime))+'ms');
+end;
+
+function TMainForm.LocalSearchMovies(SearchTerm: String; Adult: Boolean): String;
+var
+  i, j: Integer;
+  SearchEnd: Boolean;
+  SearchAdult: String;
+  SearchKey: String;
+  SearchKey1: String;
+  SearchKey2: String;
+  SearchKey3: String;
+  SearchKey4: String;
+  Matches: TStringList;
+  Matched: Boolean;
+  Points: Integer;
+  Relevance: Double;
+
+  Search1: Integer;
+  Search2: Integer;
+  Search3: Integer;
+  Search4: Integer;
+
+  Search1OK: Boolean;
+  Search2OK: Boolean;
+  Search3OK: Boolean;
+  Search4OK: Boolean;
+
+  MatchName: String;
+
+  MatchList: TStringList;
+//  ElapsedTime: TDateTime;
+
+begin
+//  ElapsedTime := Now;
+  Result := '[';
+  Matches := TStringList.Create;
+
+  // Cleanup our search value so we don't accidentally hit every entry
+  // And so we don't also accidentally miss every entry
+  SearchKey := Uppercase(Trim(SearchTerm));
+  SearchKey := StringReplace(SearchKey,'.',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,':',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'''','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'"','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'(','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,')','',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'     ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'    ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'   ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
+  SearchKey := StringReplace(SearchKey,'  ',' ',[rfReplaceAll]);
+
+  // Want to separate out keys so they can be searched independently
+  SearchKey1 := SearchKey;
+  SearchKey2 := '';
+  SearchKey3 := '';
+  SearchKey4 := '';
+  if Pos(' ', SearchKey1) > 0 then
+  begin
+    SearchKey1 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
+    SearchKey := Copy(SearchKey,Length(SearchKey1)+2,Length(SearchKey));
+    SearchKey2 := SearchKey;
+  end;
+  if Pos(' ', SearchKey2) > 0 then
+  begin
+    SearchKey2 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
+    SearchKey := Copy(SearchKey,Length(SearchKey2)+2,Length(SearchKey));
+    SearchKey3 := SearchKey;
+  end;
+  if Pos(' ', SearchKey3) > 0 then
+  begin
+    SearchKey3 := Copy(SearchKey,1,Pos(' ',SearchKey)-1);
+    SearchKey := Copy(SearchKey,Length(SearchKey3)+2,Length(SearchKey));
+    SearchKey4 := SearchKey;
+  end;
+  if Pos(' ', SearchKey4) > 0 then
+  begin
+    SearchKey4 := StringReplace(SearchKey,' ','',[rfReplaceAll]);
+  end;
+
+//  LogEvent('Search1: ['+SearchKey1+']');
+//  LogEvent('Search2: ['+SearchKey2+']');
+//  LogEvent('Search3: ['+SearchKey3+']');
+//  LogEvent('Search4: ['+SearchKey4+']');
+  if Length(Trim(SearchKey1)) >= 3 then Search1OK := True else Search1OK := False;
+  if Length(Trim(SearchKey2)) >= 3 then Search2OK := True else Search2OK := False;
+  if Length(Trim(SearchKey3)) >= 3 then Search3OK := True else Search3OK := False;
+  if Length(Trim(SearchKey4)) >= 3 then Search4OK := True else Search4OK := False;
+
+
+  // The first character of the index is used to flag as Adult
+  if Adult
+  then SearchAdult := 'X'
+  else SearchAdult := 'M';
+
+  // Quick pass to get all the candidates. Might be a lot for a short search key
+  // If we don't have any decent-sized keys, then not much point in searching
+  SearchEnd := False;
+  if not(Search1OK or Search2OK or Search3OK or Search4OK)
+  then SearchEnd := True;
+
+  i := 0;
+  while not(SearchEnd) do
+  begin
+    Matched := False;
+    if i > Length(IndexMovies) - 1 then
+    begin
+      SearchEnd := True;
+    end
+    else
+    begin
+      // Filter for Adult content
+      if (Copy(IndexMovies[i],1,1) = SearchAdult) then
+      begin
+        // Include if something matches
+        if Search1OK then Search1 := Pos(SearchKey1, IndexMovies[i]) else Search1 := 0;
+        if Search2OK then Search2 := Pos(SearchKey2, IndexMovies[i]) else Search2 := 0;
+        if Search3OK then Search3 := Pos(SearchKey3, IndexMovies[i]) else Search3 := 0;
+        if Search4OK then Search4 := Pos(SearchKey4, IndexMovies[i]) else Search4 := 0;
+
+        if (Search1OK and (Search1 > 0)) then Matched := True;
+        if (Search2OK and (Search2 > 0)) then Matched := True;
+        if (Search3OK and (Search3 > 0)) then Matched := True;
+        if (Search4OK and (Search4 > 0)) then Matched := True;
+
+        // Exclude if something doesn't match
+        if Matched then
+        begin
+          if (Search1OK and (Search1 = 0)) then Matched := False;
+          if (Search2OK and (Search2 = 0)) then Matched := False;
+          if (Search3OK and (Search3 = 0)) then Matched := False;
+          if (Search4OK and (Search4 = 0)) then Matched := False;
+        end;
+      end;
+    end;
+
+    if Matched then Matches.Add(IndexMovies[i]);
+    i := i + 1;
+  end;
+
+//  LogEvent('First Matches '+IntToStr(Matches.Count)+' out of '+IntToStr(Length(IndexMovies)));
+
+  // Do a more exhaustive review to come up with a relevance score for each
+  i := 0;
+  while i < Matches.Count do
+  begin
+    // These are the points assigned by the Actorious ranking algorithm (as opposed to the TMDb ranking)
+    Points := StrToIntDef(RightStr(Matches[i],6),0);
+
+    // Get the list - 1st is id, 2nd is name, then all the roles, and last is points
+    MatchList := TStringLIst.Create;
+    MatchList.Delimiter := ':';
+    MatchList.DelimitedText := Matches[i];
+
+    if MatchList.Count < 3
+    then MatchList.DelimitedText := 'N0:DoNotMatchName:DoNotMatchRole0';
+
+    // We don't need to search the whole thing technically, but most of it
+    // Here we're just removing the ranking at the end as we don't want it to be matched
+    // We could do the same for the ref# in the beginning, but it might be fun to match that in some cases
+//    MatchSearch := LeftStr(Matches[i], Length(Matches[i]) - 6);
+//    MatchSearch := Copy(Matches[i], 10, Length(Matches[i]));    // Remove the Ref# at the beginning of the searched string
+
+    // To start with, the relevance will be the points from the Actorious algorithm
+    Relevance := Points / 1000;
+
+    // If the search terms appear early in the search (starting within the name),
+    // we want the relevance to be much higher (as in, if it is the name and not a role)
+    // and a super-bonus if the name matches exactly.
+    MatchName := MatchList[1];
+    if Trim(MatchName) = '' then Relevance := 0;
+
+//    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
+
+    // Search term is a perfect match to name
+    if (SearchKey1 = MatchName) or
+       (SearchKey2 = MatchName) or
+       (SearchKey3 = MatchName) or
+       (SearchKey4 = MatchName)
+    then Relevance := Relevance + 10000
+
+    // Search term combo is perfect match to name
+    else if (Search1OK and Search2OK) and
+            (SearchKey1 + SearchKey2 = MatchName)
+    then Relevance := Relevance + 10000
+
+    else if (Search1OK and Search2OK and Search3OK) and
+            (SearchKey1 + SearchKey2 + SearchKey3 = MatchName)
+    then Relevance := Relevance + 10000
+
+    else if (Search1OK and Search3OK) and
+            (SearchKey1 + SearchKey3 = MatchName)
+    then Relevance := Relevance + 10000
+
+    else if (Search2OK and Search3OK) and
+            (SearchKey2 + SearchKey3 = MatchName)
+    then Relevance := Relevance + 10000;
+
+    for j := 2 to MatchList.Count - 2 do // Skip the id, name and points
+    begin
+
+      // Search term is a perfect match to role
+      if (SearchKey1 = MatchList[j]) or
+         (SearchKey2 = MatchList[j]) or
+         (SearchKey3 = MatchList[j]) or
+         (SearchKey4 = MatchList[j])
+      then Relevance := Relevance + 1000
+
+      // Search term combo is a perfect match to role
+      else if (SearchKey1 + SearchKey2 = MatchList[j]) or
+              (SearchKey1 + SearchKey2 + SearchKey3 = MatchList[j]) or
+              (SearchKey1 + SearchKey3 = MatchList[j]) or
+              (SearchKey2 + SearchKey3 = MatchList[j])
+      then Relevance := Relevance + 1000;
+
+//    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
+
+      // Does the search appear in a role?
+      Search1 := Pos(SearchKey1, MatchList[j]);
+      Search2 := Pos(SearchKey2, MatchList[j]);
+      Search3 := Pos(SearchKey3, MatchList[j]);
+      Search4 := Pos(SearchKey4, MatchList[j]);
+
+      // Otherwise, we want the relevance to increase if the name appears a lot.  For example, if the search is for Spok,
+      // an index item where this appears many times should be ranked higher than if it appears just once. But we also
+      // factor in how long the search term is, and give a heigher weighting for longer terms.
+      // Successive terms are weighted slightly less as well
+      if (Search1OK and (Search1 = 0)) or
+         (Search2OK and (Search2 = 0)) or
+         (Search3OK and (Search3 = 0)) or
+         (Search4OK and (Search4 = 0))
+      then
+      begin
+        // We've got an initial match based on a crude search, but here we see it isn't
+        // really a match, so nothing needs to be done. If no matches are found, then
+        // the relevance will not be improved, and thus will be eliminated
+      end
+      else
+      begin
+        if Search1OK and (Search1 > 0) then Relevance := Relevance + Points/1000;
+        if Search2OK and (Search2 > 0) then Relevance := Relevance + Points/2000;
+        if Search3OK and (Search3 > 0) then Relevance := Relevance + Points/3000;
+        if Search4OK and (Search4 > 0) then Relevance := Relevance + Points/4000;
+      end;
+
+    end;
+    MatchList.Free;
+
+//    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
+//    LogEvent(' ');
+
+    if Relevance = Points / 1000
+    then Relevance := 0;
+
+    // Relevance is added to beginning of term
+    Matches[i] := RightStr('0000000000'+IntToStr(Trunc(Relevance)),10)+Copy(Matches[i],1,10);
+
+    i := i + 1;
+  end;
+
+  // Sort based on relevance. Might still be a large number here.
+  Matches.Sort;
+
+  // Return the ___bottom___  50
+  i := Matches.Count - 1;
+  j := 0;
+  while i >= 0 do
+  begin
+    if ((Matches[i] <> '') and (Copy(Matches[i],1,10) <> '0000000000')) then
+    begin
+      if Result = '['
+      then Result := Result + '{"Person":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}'
+      else Result := Result + ',{"Person":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}';
+      i := i - 1;
+
+      j := j + 1;
+      if j = 50 then i := -1;
+    end
+    else
+    begin
+      i := i - 1;
+    end;
+  end;
+
+  Result := Result + ']';
+
+//  LogEvent('Second Matches '+IntToStr(Matches.Count)+' out of '+IntToStr(Length(IndexMovies)));
 //  LogEvent(Result);
 
   Matches.Free;

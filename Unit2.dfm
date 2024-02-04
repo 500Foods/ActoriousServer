@@ -375,7 +375,7 @@ object MainForm: TMainForm
     end
     object lblSearchTVShow: TLabel
       Left = 337
-      Top = 121
+      Top = 122
       Width = 64
       Height = 24
       Cursor = crHandPoint
@@ -715,8 +715,8 @@ object MainForm: TMainForm
       OnChange = edtClientVersionChange
     end
     object btUpdateVersion: TButton
-      Left = 405
-      Top = 78
+      Left = 406
+      Top = 74
       Width = 70
       Height = 25
       Caption = 'Client Check'
