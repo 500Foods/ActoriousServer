@@ -1431,13 +1431,13 @@ begin
     // These are the points assigned by the Actorious ranking algorithm (as opposed to the TMDb ranking)
     Points := StrToIntDef(RightStr(Matches[i],6),0);
 
-    // Get the list - 1st is id, 2nd is name, then all the roles, and last is points
+    // Get the list - 1st is id, 2nd is title, then a tagline if available, and last is points
     MatchList := TStringLIst.Create;
     MatchList.Delimiter := ':';
     MatchList.DelimitedText := Matches[i];
 
     if MatchList.Count < 3
-    then MatchList.DelimitedText := 'N0:DoNotMatchName:DoNotMatchRole0';
+    then MatchList.DelimitedText := 'M0:DoNotMatchName:DoNotMatchTagline0';
 
     // We don't need to search the whole thing technically, but most of it
     // Here we're just removing the ranking at the end as we don't want it to be matched
@@ -1446,7 +1446,7 @@ begin
 //    MatchSearch := Copy(Matches[i], 10, Length(Matches[i]));    // Remove the Ref# at the beginning of the searched string
 
     // To start with, the relevance will be the points from the Actorious algorithm
-    Relevance := Points / 1000;
+    Relevance := Points;
 
     // If the search terms appear early in the search (starting within the name),
     // we want the relevance to be much higher (as in, if it is the name and not a role)
@@ -1483,7 +1483,7 @@ begin
     for j := 2 to MatchList.Count - 2 do // Skip the id, name and points
     begin
 
-      // Search term is a perfect match to role
+      // Search term is a perfect match to tagline
       if (SearchKey1 = MatchList[j]) or
          (SearchKey2 = MatchList[j]) or
          (SearchKey3 = MatchList[j]) or
@@ -1499,7 +1499,7 @@ begin
 
 //    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
 
-      // Does the search appear in a role?
+      // Does the search appear in a tagline?
       Search1 := Pos(SearchKey1, MatchList[j]);
       Search2 := Pos(SearchKey2, MatchList[j]);
       Search3 := Pos(SearchKey3, MatchList[j]);
@@ -1530,9 +1530,6 @@ begin
     end;
     MatchList.Free;
 
-//    LogEvent(Copy(MatchSearch,1,9)+': '+MatchName.PadRight(20)+': ' + IntToStr(Points).PadLeft(10) + ' -> ' +IntToStr(Trunc(Relevance)).PadLeft(10));
-//    LogEvent(' ');
-
     if Relevance = Points / 1000
     then Relevance := 0;
 
@@ -1550,11 +1547,13 @@ begin
   j := 0;
   while i >= 0 do
   begin
+//    MainForm.mmInfo.Lines.Add(Matches[i]);
+
     if ((Matches[i] <> '') and (Copy(Matches[i],1,10) <> '0000000000')) then
     begin
       if Result = '['
-      then Result := Result + '{"Person":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}'
-      else Result := Result + ',{"Person":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}';
+      then Result := Result + '{"Movie":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}'
+      else Result := Result + ',{"Movie":"'+Copy(Matches[i],12,8)+'","Relevance":"'+Copy(Matches[i],1,10)+'"}';
       i := i - 1;
 
       j := j + 1;

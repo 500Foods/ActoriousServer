@@ -3194,6 +3194,9 @@ begin
         SearchData := SearchData + REST.JSON.TJSON.JSONEncode(TMDB_Data.getValue('tagline') as TJSONString)+':';
       end;
     end;
+    // Just to make sure we've got enough segments
+    SearchData := SearchData+'::';
+
     if not(TMDB_Data.getValue('popularity') = nil) and not((TMDB_Data.getValue('popularity') is TJSONNULL))
     then SearchData := SearchData + RightStr('000000'+IntToStr(Trunc(100.0*((TMDB_Data.getValue('popularity') as TJSONNumber).AsDouble))),6)
     else Searchdata := SearchData + '000000';
@@ -4733,7 +4736,7 @@ begin
   MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Acquiring Local Search Results for '+QuotedStr(SearchTerm)+'","TP":'+FloatToStr(Now)+'}';
 
   Data := TJSONObject.ParseJSONValue(MainForm.LocalSearchPeople(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Checking Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(Data.Count)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Checking Local Search Results for '+QuotedStr(SearchTerm)+': Actor '+IntToStr(Data.Count)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
 
   Response := TStringList.Create;
 
@@ -4790,12 +4793,12 @@ begin
 
   Data.Free;
   Data := TJSONObject.ParseJSONValue(MainForm.LocalSearchMovies(SearchTerm, Pos('Adult',Progress) > 0)) as TJSONArray;
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Checking Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(Data.Count)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Checking Local Search Results for '+QuotedStr(SearchTerm)+': Movie '+IntToStr(Data.Count)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
 
   MovieCount := 0;
   for i := 0 to Data.Count - 1 do
   begin
-    MovieNum := ((data.items[i] as TJSONObject).getValue('Person') as TJSONString).Value;
+    MovieNum := ((data.items[i] as TJSONObject).getValue('Movie') as TJSONString).Value;
     CacheFile := MainForm.AppCacheDir+'cache/movies/actorious/'+
       RightStr(MovieNum,3)+
       '/movie-'+
@@ -4843,7 +4846,7 @@ begin
   SearchResults := SearchResults+']}';
 
   Response.Text := SearchResults;
-  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(ActorCount)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
+  MainForm.Progress[ProgressKey] := ProgressPrefix+',"PR":"Processing Local Search Results for '+QuotedStr(SearchTerm)+': '+IntToStr(ActorCount)+' / '+INtToStr(MovieCount)+' Match(es) Found","TP":'+FloatToStr(Now)+'}';
 
   // This is what we're sending back
   NotBrotli := TMemoryStream.Create;
