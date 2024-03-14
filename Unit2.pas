@@ -256,6 +256,8 @@ type
     MailServerName: String;
 
     LookupCache: TDictionary<String,String>;
+    CacheFiles: String;
+    CacheSize: String;
 
   strict private
     procedure UpdateGUI;
@@ -563,6 +565,18 @@ begin
       if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
       Data.Free();
 
+      Endpoint := '/api/states/sensor.actorious_server_cache_files';
+      Data := TStringStream.Create('{"state":"'+CacheFiles+'", "attributes":{"unit_of_measurement":"Files"}}');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
+
+      Endpoint := '/api/states/sensor.actorious_server_cache_size';
+      Data := TStringStream.Create('{"state":"'+CacheSize+'", "attributes":{"unit_of_measurement":"GB"}}');
+      Response := Client.Post(URL+Endpoint, Data).ContentAsString;
+      if Pos('"entity_id"', Response) = 0 then LogEvent(Response);
+      Data.Free();
+
       Endpoint := '/api/states/sensor.actorious_server_statistics';
       Data := TStringStream.Create('{"state":"'+BirthDaysCount+' / '+lblBirthDays.Caption+' / '+lblDeathDays.Caption+' / '+lblReleaseDays.Caption+'"}');
       Response := Client.Post(URL+Endpoint, Data).ContentAsString;
@@ -720,6 +734,9 @@ begin
   mmStats.Lines.Add('  Memory (Small  ): '+FloatToStrF(mem1/1024/1024,ffNumber,10,3).PadLeft(9)+' MB');
   mmStats.Lines.Add('  Memory (Total  ): '+FloatToStrF(mem2/1024/1024,ffNumber,10,3).PadLeft(9)+' MB');
   mmStats.Lines.Add('');
+  mmStats.Lines.Add('  Cache  (Files  ): '+CacheFiles.PadLeft(9)+' Files');
+  mmStats.Lines.Add('  Cache  (Size   ): '+CacheSize.PadLeft(9)+' GB');
+  mmStats.Lines.Add('');
   mmStats.Lines.Add('  Threads: '+IntToStr(GetProcessThreadCount(GetCurrentProcessId)));
 
   MemoryUsage := FloatToStrF(mem2/1024/1024,ffFixed,10,3);
@@ -739,7 +756,6 @@ begin
   mmStats.Lines.Add('  History: '+IntToStr(Progress.Count)+' entries / '+FloatToStrF(ProgressSize/1024,ffNumber,10,1)+' KB');
 
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  PERSON CACHE INFORMATION');
   mmStats.Lines.Add('  ========================================');
@@ -753,7 +769,6 @@ begin
     mmStats.Lines.Add('  Person Cache Force:   '+FloatToStrF(PersonCacheForce,ffNumber,9,0).PadLeft(9)+FloatToStrF(100.0*PersonCacheForce/PersonCacheRequests,ffNumber,6,1).Padleft(6)+' %');
   end;
 
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  MOVIE CACHE INFORMATION');
@@ -769,7 +784,6 @@ begin
   end;
 
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  TVSHOW CACHE INFORMATION');
   mmStats.Lines.Add('  ========================================');
@@ -784,7 +798,6 @@ begin
   end;
 
   mmStats.Lines.Add('');
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  SEARCH INDEX INFORMATION');
   mmStats.Lines.Add('  ========================================');
@@ -793,7 +806,6 @@ begin
   mmStats.Lines.Add('  Movies Index Size:    '+FloatToStrF(IndexMoviesSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
   mmStats.Lines.Add('  TVShow Index Size:    '+FloatToStrF(IndexTVShowSize/1024/1024,ffNumber,9,3).PadLeft(9)+' MB');
 
-  mmStats.Lines.Add('');
   mmStats.Lines.Add('');
   mmStats.Lines.Add('  ========================================');
   mmStats.Lines.Add('  CACHE CLEANING INFORMATION');
@@ -2871,6 +2883,50 @@ begin
   end;
 end;
 
+// https://stackoverflow.com/questions/3307722/delphi-calculate-directory-size-api
+function GetDirSize(dir: string; subdir: Boolean): Int64;
+var
+  rec: TSearchRec;
+  found: Integer;
+begin
+  Application.ProcessMessages;
+  Result := 0;
+  if dir[Length(dir)] <> '\' then
+    dir := dir + '\';
+  found := FindFirst(dir + '*.*', faAnyFile, rec);
+  while found = 0 do
+  begin
+    Inc(Result, rec.Size);
+    if (rec.Attr and faDirectory > 0) and (rec.Name[1] <> '.') and
+      (subdir = True) then
+      Inc(Result, GetDirSize(dir + rec.Name, True));
+    found := FindNext(rec);
+  end;
+  System.SysUtils.FindClose(rec);
+end;
+
+// https://stackoverflow.com/questions/3307722/delphi-calculate-directory-size-api
+function GetDirCount(dir: string; subdir: Boolean): Int64;
+var
+  rec: TSearchRec;
+  found: Integer;
+begin
+  Application.ProcessMessages;
+  Result := 0;
+  if dir[Length(dir)] <> '\' then
+    dir := dir + '\';
+  found := FindFirst(dir + '*.*', faAnyFile, rec);
+  while found = 0 do
+  begin
+    Inc(Result,1);
+    if (rec.Attr and faDirectory > 0) and (rec.Name[1] <> '.') and
+      (subdir = True) then
+      Inc(Result, GetDirCount(dir + rec.Name, True));
+    found := FindNext(rec);
+  end;
+  System.SysUtils.FindClose(rec);
+end;
+
 procedure TMainForm.StartTimerTimer(Sender: TObject);
 var
   i: integer;
@@ -3206,7 +3262,7 @@ begin
       oldestchks := 367;
       oldestmesg := ' (missing)';
     end
-    else if TFile.getLAstWriteTime(oldestname) < oldesttime then
+    else if TFile.getLastWriteTime(oldestname) < oldesttime then
     begin
       oldesttime := TFile.getLastWriteTime(oldestname);
       oldestdate := oldestfile;
@@ -3225,6 +3281,12 @@ begin
   progMonth.Text := FormatDateTime('mmm',EncodeDate(2020, 1, 1) + (oldestdate - 1));
   progDay.Text   := FormatDateTime('dd',EncodeDate(2020, 1, 1) + (oldestdate - 1));
   CacheTimer.Tag := oldestdate;
+
+  // Calculate cache size - number of files and space on disk
+  CacheFiles := Format('%.0n', [GetDirCount(AppCacheDir+'cache', true) + 0.0]);
+  CacheSize := Format('%.1n', [GetDirSize(AppCacheDir+'cache', true) / 1024.0 / 1024.0 / 1024.0]);
+  LogEvent('Cache contains '+CacheFiles+' Files, using '+CacheSize+' GB');
+
 
   // Check for new ActoriousClient Version right away
   UpdateProgress(1, 'Retrieving Current Client Version','Server Startup', '16 of 17','');
